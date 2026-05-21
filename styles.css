@@ -1,0 +1,2201 @@
+/* ==========================================================================
+   다 때려쳐 @office — Doodle / Hand-drawn
+   - 평소: 내 책상이 화면 가득 (모니터 + 수첩 + 물컵)
+   - 액션: 모니터가 내려가며 뒤에 숨은 상사 뒷모습 노출
+   - 투척: 물건이 모니터 너머로 날아가 뒤통수에 맞는 연출
+   ========================================================================== */
+
+:root {
+  --ink: #141414;
+  --paper: #fefefe;
+  --sketch-width: 3px;
+  --font-hand: "Nanum Pen Script", "Caveat Brush", cursive;
+  --font-accent: "Caveat Brush", cursive;
+  --font-shout: "Anton", "Arial Black", sans-serif;
+  --boss-head-y: 22%;
+  --boss-head-x: 50%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-hand);
+}
+
+body {
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0.45rem;
+  gap: 0.45rem;
+}
+
+.sketch-border {
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 255px 12px 225px 18px / 12px 225px 18px 255px;
+  box-shadow: 2px 3px 0 var(--ink);
+  background: var(--paper);
+}
+
+.title-bar {
+  padding: 0.3rem 1rem 0.05rem;
+  text-align: center;
+  transform: rotate(-0.4deg);
+}
+
+.game-title {
+  margin: 0;
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 400;
+}
+
+.game-subtitle {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+  opacity: 0.75;
+}
+
+/* --- Game Screen --- */
+.game-screen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  transform: rotate(0.15deg);
+}
+
+.office-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ========== 모니터 뒤 (상사) — 평소 숨김 ========== */
+.behind-zone {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s;
+  pointer-events: none;
+}
+
+.game-screen.is-revealed .behind-zone {
+  z-index: 16;
+  opacity: 1;
+  visibility: visible;
+}
+
+.office-wall {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  font-size: 0.95rem;
+  opacity: 0.45;
+}
+
+.boss-desk {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  width: 55%;
+  max-width: 320px;
+  height: 18px;
+  margin-left: -27.5%;
+  transform: rotate(-1deg);
+}
+
+.boss-desk-top {
+  height: 100%;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 6px 30px 8px 28px;
+  background: repeating-linear-gradient(
+    -10deg,
+    transparent,
+    transparent 5px,
+    rgba(20, 20, 20, 0.05) 5px,
+    rgba(20, 20, 20, 0.05) 7px
+  );
+}
+
+.boss-desk.is-flipping .boss-desk-top {
+  animation: boss-desk-flip 0.55s ease-in forwards;
+  transform-origin: 20% 100%;
+}
+
+.boss-desk.is-flipped .boss-desk-top {
+  transform: rotate(-85deg) translate(-12px, 8px);
+}
+
+@keyframes boss-desk-flip {
+  to {
+    transform: rotate(-85deg) translate(-12px, 8px);
+  }
+}
+
+/* 상사 뒷모습 — 모니터 너머 중앙 */
+.boss {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  width: clamp(160px, 42vw, 220px);
+  height: clamp(170px, 38vh, 230px);
+  z-index: 2;
+  opacity: 0;
+  transform: translateX(-50%) translateY(-16px) rotate(0.5deg);
+  transition: opacity 0.35s ease, transform 0.4s ease;
+  overflow: visible;
+}
+
+.game-screen.is-revealed .boss {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) rotate(0.5deg);
+}
+
+.boss-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 96px;
+  height: 108px;
+  margin-left: -48px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 48% 52% 44% 50% / 54% 46% 58% 48%;
+  background: var(--paper);
+  transform-origin: 50% 90%;
+  box-shadow: inset -6px -8px 0 rgba(20, 20, 20, 0.06);
+  overflow: visible;
+}
+
+/* 상사 뒤통수 머리숱 + 쥐어뜯기 */
+.boss-hair-back {
+  position: absolute;
+  inset: -8px -6px 20% -6px;
+  border-radius: 50% 50% 42% 42%;
+  background: repeating-linear-gradient(
+    175deg,
+    rgba(20, 20, 20, 0.07) 0,
+    rgba(20, 20, 20, 0.07) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+  opacity: 0.55;
+}
+
+.boss-hair-pull {
+  position: absolute;
+  inset: -4px -20px 10% -24px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boss.is-hair-pull-visible .boss-hair-pull {
+  opacity: 1;
+}
+
+.pulled-strand {
+  position: absolute;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transform-origin: right center;
+  opacity: 0.8;
+  box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.05);
+}
+
+.pulled-strand--1 {
+  top: 18%;
+  right: 8%;
+  width: 42px;
+  animation: strand-1 0.35s ease-in-out infinite alternate;
+}
+
+.pulled-strand--2 {
+  top: 26%;
+  right: 4%;
+  width: 48px;
+  animation: strand-2 0.35s ease-in-out infinite alternate;
+}
+
+.pulled-strand--3 {
+  top: 34%;
+  right: 0;
+  width: 52px;
+  animation: strand-3 0.35s ease-in-out infinite alternate;
+}
+
+.pulled-strand--4 {
+  top: 42%;
+  right: 2%;
+  width: 46px;
+  animation: strand-4 0.35s ease-in-out infinite alternate;
+}
+
+.pulled-strand--5 {
+  top: 14%;
+  right: 14%;
+  width: 36px;
+  height: 1.5px;
+  opacity: 0.55;
+  animation: strand-5 0.32s ease-in-out infinite alternate;
+}
+
+.pulled-strand--6 {
+  top: 48%;
+  right: 6%;
+  width: 40px;
+  height: 1.5px;
+  opacity: 0.6;
+  animation: strand-6 0.34s ease-in-out infinite alternate;
+}
+
+.pulled-strand--7 {
+  top: 30%;
+  right: 10%;
+  width: 44px;
+  animation: strand-7 0.36s ease-in-out infinite alternate;
+}
+
+@keyframes strand-1 {
+  0% {
+    transform: rotate(-14deg) scaleX(0.88);
+  }
+  100% {
+    transform: rotate(-8deg) scaleX(1.1);
+  }
+}
+
+@keyframes strand-2 {
+  0% {
+    transform: rotate(-8deg) scaleX(0.9);
+  }
+  100% {
+    transform: rotate(-2deg) scaleX(1.08);
+  }
+}
+
+@keyframes strand-3 {
+  0% {
+    transform: rotate(0deg) scaleX(0.9);
+  }
+  100% {
+    transform: rotate(6deg) scaleX(1.1);
+  }
+}
+
+@keyframes strand-4 {
+  0% {
+    transform: rotate(6deg) scaleX(0.88);
+  }
+  100% {
+    transform: rotate(12deg) scaleX(1.08);
+  }
+}
+
+@keyframes strand-5 {
+  0% {
+    transform: rotate(-20deg) scaleX(0.85);
+  }
+  100% {
+    transform: rotate(-14deg) scaleX(1.05);
+  }
+}
+
+@keyframes strand-6 {
+  0% {
+    transform: rotate(10deg) scaleX(0.86);
+  }
+  100% {
+    transform: rotate(16deg) scaleX(1.06);
+  }
+}
+
+@keyframes strand-7 {
+  0% {
+    transform: rotate(-4deg) scaleX(0.9);
+  }
+  100% {
+    transform: rotate(2deg) scaleX(1.1);
+  }
+}
+
+/* 손↔뒤통수 연결 머리카락 */
+.hair-pull-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 17;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hair-pull-fx.is-active {
+  opacity: 1;
+}
+
+.pull-rope {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, var(--ink), rgba(20, 20, 20, 0.35));
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: rope-pull 0.4s ease-in-out infinite alternate;
+}
+
+.pull-rope--1 {
+  top: 20%;
+  left: 18%;
+  width: 28%;
+  transform: rotate(-4deg);
+}
+
+.pull-rope--2 {
+  top: 24%;
+  left: 20%;
+  width: 30%;
+  transform: rotate(0deg);
+}
+
+.pull-rope--3 {
+  top: 28%;
+  left: 19%;
+  width: 32%;
+  transform: rotate(3deg);
+  height: 1.5px;
+}
+
+.pull-rope--4 {
+  top: 32%;
+  left: 21%;
+  width: 29%;
+  transform: rotate(-2deg);
+  height: 1.5px;
+  opacity: 0.7;
+}
+
+.pull-rope--5 {
+  top: 18%;
+  left: 17%;
+  width: 26%;
+  transform: rotate(-8deg);
+  opacity: 0.55;
+}
+
+@keyframes rope-pull {
+  0% {
+    transform: rotate(-6deg) scaleX(0.94);
+  }
+  100% {
+    transform: rotate(4deg) scaleX(1.06);
+  }
+}
+
+.boss-label-top {
+  position: absolute;
+  top: -46px;
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%) rotate(-2deg);
+  font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+  white-space: nowrap;
+  z-index: 4;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 4px;
+}
+
+.boss-head-back {
+  position: absolute;
+  inset: 18% 20% 28%;
+  font-size: 0.85rem;
+  opacity: 0.35;
+  transform: rotate(-8deg);
+  text-align: center;
+}
+
+/* 등·어깨에 붙은 옷 태그 */
+.boss-tag {
+  position: absolute;
+  top: 6px;
+  right: -8px;
+  padding: 0.15rem 0.4rem 0.2rem;
+  font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+  letter-spacing: -0.03em;
+  border: 2px solid var(--ink);
+  border-radius: 4px 10px 6px 8px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: rotate(14deg);
+  z-index: 3;
+}
+
+.boss-tag::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 8px;
+  width: 2px;
+  height: 10px;
+  background: var(--ink);
+  transform: rotate(-12deg);
+  opacity: 0.7;
+}
+
+.boss-tag::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.boss-neck {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  width: 40px;
+  height: 26px;
+  margin-left: -20px;
+  border-left: var(--sketch-width) solid var(--ink);
+  border-right: var(--sketch-width) solid var(--ink);
+}
+
+.boss-shoulders {
+  position: absolute;
+  top: 120px;
+  left: 50%;
+  width: 170px;
+  height: 40px;
+  margin-left: -85px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 42% 40% 14% 16% / 32% 30% 72% 70%;
+  background: var(--paper);
+  overflow: visible;
+}
+
+.boss-chair-back {
+  position: absolute;
+  top: 155px;
+  left: 50%;
+  width: 100px;
+  height: 55px;
+  margin-left: -50px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 18px 22px 8px 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--paper) 0,
+    var(--paper) 6px,
+    rgba(20, 20, 20, 0.04) 6px,
+    rgba(20, 20, 20, 0.04) 8px
+  );
+}
+
+.boss-speech {
+  position: absolute;
+  top: -72px;
+  left: 50%;
+  z-index: 8;
+  padding: 0.3rem 0.6rem 0.4rem;
+  font-size: clamp(1rem, 3.2vw, 1.3rem);
+  white-space: nowrap;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 16px 20px 12px 18px;
+  background: var(--paper);
+  box-shadow: 2px 3px 0 var(--ink);
+  opacity: 0;
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.boss-speech.is-visible {
+  animation: speech-pain 0.45s ease-out forwards;
+  font-size: clamp(1.15rem, 3.8vw, 1.5rem);
+  letter-spacing: 0.02em;
+}
+
+@keyframes speech-pain {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.4) rotate(-12deg);
+  }
+  35% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.2) rotate(4deg);
+  }
+  55% {
+    transform: translateX(-50%) scale(0.95) rotate(-6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.05) rotate(2deg);
+  }
+}
+
+@keyframes speech-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5) rotate(-10deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.1) rotate(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) rotate(-3deg);
+  }
+}
+
+/* 맞는 지점 스파크 */
+.hit-spark {
+  position: absolute;
+  top: var(--boss-head-y);
+  left: var(--boss-head-x);
+  width: 70px;
+  height: 70px;
+  margin: -35px 0 0 -35px;
+  z-index: 9;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hit-spark::before,
+.hit-spark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 50%;
+}
+
+.hit-spark::after {
+  inset: 12px;
+  border-style: dashed;
+}
+
+.hit-spark.is-active {
+  animation: hit-burst 0.45s ease-out forwards;
+}
+
+@keyframes hit-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* ========== 내 책상 (화면 가득) ========== */
+.my-desk {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  transform-origin: 50% 88%;
+  transition: transform 0.5s ease;
+}
+
+.my-desk.is-flipping {
+  animation: flip-my-desk 0.6s ease-in forwards;
+}
+
+.my-desk.is-flipped {
+  transform: rotate(-78deg) translate(8%, 6%);
+}
+
+@keyframes flip-my-desk {
+  0% {
+    transform: rotate(0deg);
+  }
+  55% {
+    transform: rotate(-95deg) translate(4%, 2%);
+  }
+  100% {
+    transform: rotate(-78deg) translate(8%, 6%);
+  }
+}
+
+.my-desk-surface {
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  bottom: 0;
+  height: 42%;
+  border-top: var(--sketch-width) solid var(--ink);
+  border-radius: 40% 60% 0 0 / 18px 22px 0 0;
+  background: repeating-linear-gradient(
+    92deg,
+    var(--paper) 0,
+    var(--paper) 14px,
+    rgba(20, 20, 20, 0.03) 14px,
+    rgba(20, 20, 20, 0.03) 16px
+  );
+  transform: rotate(-0.5deg);
+  box-shadow: 0 -4px 0 rgba(20, 20, 20, 0.08);
+}
+
+/* 책상 위 소품 */
+.my-item {
+  position: absolute;
+  z-index: 14;
+  border: var(--sketch-width) solid var(--ink);
+  background: var(--paper);
+  font-size: clamp(0.9rem, 2.8vw, 1.1rem);
+  padding: 0.2rem 0.45rem;
+  border-radius: 10px 14px 8px 16px;
+  transition: opacity 0.2s;
+}
+
+.game-screen.is-action .my-item--notebook,
+.game-screen.is-action .my-item--cup,
+.game-screen.is-action .my-item--phone,
+.game-screen.is-action .my-papers,
+.game-screen.is-action .my-keyboard,
+.game-screen.is-action .my-mouse {
+  opacity: 0.25;
+}
+
+.my-item--notebook {
+  bottom: 14%;
+  left: 6%;
+  width: 52px;
+  height: 58px;
+  transform: rotate(-12deg);
+  padding-top: 1.2rem;
+  text-align: center;
+}
+
+.my-item--cup {
+  bottom: 13%;
+  right: 8%;
+  width: 44px;
+  height: 48px;
+  border-radius: 4px 4px 16px 18px;
+  transform: rotate(8deg);
+  text-align: center;
+  padding-top: 1rem;
+}
+
+.my-item--phone {
+  bottom: 17%;
+  left: 14%;
+  width: 36px;
+  height: 52px;
+  transform: rotate(6deg);
+  font-size: 1.1rem;
+  padding-top: 0.9rem;
+  text-align: center;
+}
+
+/* 널부러진 인쇄 종이 */
+.my-papers {
+  position: absolute;
+  z-index: 13;
+  inset: 0;
+  pointer-events: none;
+}
+
+.my-paper {
+  position: absolute;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.3rem;
+  box-shadow: 1px 2px 0 rgba(20, 20, 20, 0.15);
+}
+
+.my-paper--1 {
+  bottom: 11%;
+  left: 32%;
+  width: 54px;
+  height: 38px;
+  transform: rotate(-18deg);
+}
+
+.my-paper--2 {
+  bottom: 9%;
+  left: 42%;
+  width: 48px;
+  height: 34px;
+  transform: rotate(11deg);
+}
+
+.my-paper--3 {
+  bottom: 12%;
+  right: 28%;
+  width: 46px;
+  height: 32px;
+  transform: rotate(-7deg);
+  font-size: 0.65rem;
+}
+
+.my-paper--4 {
+  bottom: 8%;
+  right: 20%;
+  width: 40px;
+  height: 28px;
+  transform: rotate(22deg);
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 4px,
+    rgba(20, 20, 20, 0.08) 4px,
+    rgba(20, 20, 20, 0.08) 5px
+  );
+}
+
+/* 키보드 · 마우스 */
+.my-keyboard {
+  position: absolute;
+  bottom: 11%;
+  left: 50%;
+  width: min(42%, 200px);
+  height: 28px;
+  z-index: 14;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 8px 12px 6px 14px;
+  background: var(--paper);
+  transform: translateX(-50%) rotate(-1deg);
+  box-shadow: 2px 3px 0 var(--ink);
+}
+
+.my-keyboard::before {
+  content: "";
+  position: absolute;
+  inset: 5px 8px 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink) 0,
+    var(--ink) 1px,
+    transparent 1px,
+    transparent 9px
+  ),
+  repeating-linear-gradient(
+    var(--ink) 0,
+    var(--ink) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  opacity: 0.2;
+}
+
+.my-keyboard-label {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  opacity: 0.45;
+  white-space: nowrap;
+}
+
+.my-mouse {
+  position: absolute;
+  bottom: 12%;
+  right: 16%;
+  width: 34px;
+  height: 48px;
+  z-index: 14;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 40% 40% 45% 45% / 55% 55% 35% 35%;
+  background: var(--paper);
+  transform: rotate(14deg);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.my-mouse::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 2px;
+  height: 14px;
+  margin-left: -1px;
+  background: var(--ink);
+  opacity: 0.35;
+}
+
+.my-mouse::after {
+  content: "";
+  position: absolute;
+  bottom: -18px;
+  right: 50%;
+  width: 50px;
+  height: 20px;
+  border-bottom: 2px solid var(--ink);
+  border-radius: 0 0 40px 0;
+  opacity: 0.35;
+  transform: rotate(-8deg);
+}
+
+.my-mouse-label {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  opacity: 0.45;
+  white-space: nowrap;
+}
+
+/* 내 모니터 — 화면 중앙을 가득 채움, 상사를 가림 */
+.my-monitor {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: min(88%, 520px);
+  height: 58%;
+  z-index: 20;
+  transform: translateX(-50%) rotate(-0.3deg);
+  transition: transform 0.45s cubic-bezier(0.3, 0.8, 0.2, 1);
+}
+
+.game-screen.is-revealed .my-monitor {
+  transform: translateX(-50%) translateY(52%) scale(0.58) rotate(-1deg);
+}
+
+.game-screen.is-revealed .my-monitor-screen {
+  opacity: 0.55;
+}
+
+.my-monitor.is-throwing {
+  animation: monitor-launch 0.85s cubic-bezier(0.2, 0.85, 0.3, 1) forwards;
+  z-index: 25;
+}
+
+@keyframes monitor-launch {
+  0% {
+    transform: translateX(-50%) translateY(28%) scale(0.72) rotate(-1deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-50%) translateY(-5%) scale(0.65) rotate(-8deg);
+  }
+  70% {
+    transform: translateX(-48%) translateY(-38%) scale(0.5) rotate(5deg);
+  }
+  100% {
+    transform: translateX(-46%) translateY(-42%) scale(0.15) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+.my-monitor-bezel {
+  height: calc(100% - 28px);
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 12px 14px 10px 16px;
+  padding: 8px;
+  background: var(--paper);
+  box-shadow: 4px 5px 0 var(--ink);
+}
+
+.my-monitor-screen {
+  position: relative;
+  height: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 6px 8px 5px 10px;
+  background: #f8f8f8;
+  overflow: hidden;
+}
+
+.screen-apps {
+  position: absolute;
+  inset: 6px;
+}
+
+.app-window {
+  position: absolute;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  border-radius: 6px 8px 5px 7px;
+  box-shadow: 2px 3px 0 var(--ink);
+  overflow: hidden;
+}
+
+.app-titlebar {
+  padding: 0.12rem 0.35rem;
+  font-family: var(--font-accent);
+  font-size: 0.75rem;
+  border-bottom: 2px solid var(--ink);
+}
+
+.app-titlebar--excel {
+  background: rgba(30, 120, 60, 0.12);
+}
+
+.app-titlebar--ppt {
+  background: rgba(180, 70, 30, 0.12);
+}
+
+/* 엑셀 창 */
+.app-window--excel {
+  top: 4%;
+  left: 2%;
+  width: 58%;
+  height: 52%;
+  transform: rotate(-1deg);
+  z-index: 1;
+}
+
+.excel-grid {
+  position: relative;
+  height: calc(100% - 22px);
+  background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      rgba(20, 20, 20, 0.1) 11px,
+      rgba(20, 20, 20, 0.1) 12px
+    ),
+    repeating-linear-gradient(
+      transparent,
+      transparent 9px,
+      rgba(20, 20, 20, 0.08) 9px,
+      rgba(20, 20, 20, 0.08) 10px
+    );
+}
+
+.excel-grid::after {
+  content: "A1";
+  position: absolute;
+  top: 26px;
+  left: 6px;
+  font-size: 0.55rem;
+  opacity: 0.4;
+}
+
+/* PPT 창 */
+.app-window--ppt {
+  top: 18%;
+  right: 2%;
+  width: 52%;
+  height: 62%;
+  transform: rotate(2deg);
+  z-index: 2;
+}
+
+.ppt-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 22px);
+  padding: 0.35rem;
+  background: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 10px,
+    rgba(20, 20, 20, 0.03) 10px,
+    rgba(20, 20, 20, 0.03) 12px
+  );
+}
+
+.ppt-rant {
+  margin: 0;
+  font-size: clamp(0.55rem, 1.8vw, 0.72rem);
+  line-height: 1.25;
+  text-align: center;
+  transform: rotate(-3deg);
+  opacity: 0.85;
+  letter-spacing: -0.02em;
+}
+
+.my-monitor-status {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 0.7rem;
+  opacity: 0.4;
+  transform: rotate(-2deg);
+  z-index: 3;
+}
+
+.my-monitor-stand {
+  width: 42%;
+  height: 22px;
+  margin: 4px auto 0;
+  border: var(--sketch-width) solid var(--ink);
+  border-top: none;
+  border-radius: 0 0 12px 14px;
+  background: var(--paper);
+}
+
+/* ========== 투사체 — 책상 → 모니터 너머 → 뒤통수 ========== */
+.proj-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.proj {
+  position: absolute;
+  border: none;
+  background: transparent;
+  transform-origin: center center;
+}
+
+/* ---- 수첩 ---- */
+.proj-notebook {
+  left: 10%;
+  bottom: 22%;
+  width: 56px;
+  height: 64px;
+  animation: throw-to-head 0.75s cubic-bezier(0.15, 0.9, 0.25, 1) forwards;
+}
+
+.proj-notebook-cover {
+  position: absolute;
+  inset: 4px 4px 4px 12px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 4px 10px 8px 12px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.proj-notebook-spine {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 12px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 6px 0 0 8px;
+  background: rgba(20, 20, 20, 0.06);
+}
+
+.proj-notebook-lines {
+  position: absolute;
+  left: 18px;
+  right: 8px;
+  top: 14px;
+  bottom: 10px;
+  background: repeating-linear-gradient(
+    var(--ink) 0,
+    var(--ink) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  opacity: 0.2;
+}
+
+/* ---- 물컵 ---- */
+.proj-cup {
+  right: 12%;
+  bottom: 21%;
+  width: 48px;
+  height: 52px;
+  animation: throw-to-head 0.7s cubic-bezier(0.2, 0.88, 0.3, 1) forwards;
+}
+
+.proj-cup-body {
+  position: absolute;
+  left: 8px;
+  right: 14px;
+  bottom: 4px;
+  height: 38px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 4px 4px 16px 18px;
+  background: var(--paper);
+}
+
+.proj-cup-rim {
+  position: absolute;
+  left: 6px;
+  right: 12px;
+  top: 6px;
+  height: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+.proj-cup-handle {
+  position: absolute;
+  right: 0;
+  top: 16px;
+  width: 14px;
+  height: 22px;
+  border: var(--sketch-width) solid var(--ink);
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  background: transparent;
+}
+
+/* ---- 휴대폰 ---- */
+.proj-phone {
+  left: 24%;
+  bottom: 23%;
+  width: 44px;
+  height: 68px;
+  animation: throw-to-head 0.72s ease-out forwards;
+}
+
+.proj-phone-body {
+  position: absolute;
+  inset: 0;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 10px 12px 14px 10px;
+  background: var(--paper);
+  box-shadow: 2px 3px 0 var(--ink);
+}
+
+.proj-phone-screen {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 8px;
+  bottom: 16px;
+  border: 2px dashed var(--ink);
+  border-radius: 4px;
+  opacity: 0.45;
+}
+
+.proj-phone-home {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+
+/* ---- 모니터 (투척용 미니) ---- */
+.proj-monitor {
+  left: 38%;
+  bottom: 20%;
+  width: 64px;
+  height: 56px;
+  animation: throw-to-head 0.8s ease-out forwards;
+}
+
+.proj-mon-bezel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  padding: 4px;
+}
+
+.proj-mon-screen {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--ink);
+  background: #eee;
+}
+
+.proj-mon-stand {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 28px;
+  height: 10px;
+  margin-left: -14px;
+  border: 2px solid var(--ink);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: var(--paper);
+}
+
+/* ---- 의자 ---- */
+.proj-chair {
+  left: 4%;
+  bottom: 8%;
+  width: 68px;
+  height: 80px;
+  animation: throw-chair-to-head 0.9s cubic-bezier(0.12, 0.8, 0.2, 1) forwards;
+}
+
+.proj-chair-seat {
+  position: absolute;
+  bottom: 18px;
+  left: 8px;
+  width: 52px;
+  height: 14px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 8px 16px 6px 12px;
+  background: var(--paper);
+}
+
+.proj-chair-back {
+  position: absolute;
+  bottom: 28px;
+  left: 18px;
+  width: 28px;
+  height: 44px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 10px 22px 8px 16px;
+  background: var(--paper);
+}
+
+.proj-chair-base {
+  position: absolute;
+  bottom: 8px;
+  left: 22px;
+  width: 8px;
+  height: 14px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+.proj-chair-wheel {
+  position: absolute;
+  bottom: 0;
+  left: 14px;
+  width: 40px;
+  height: 12px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+/* 공통: 모니터 위로 넘어가 뒤통수에 박힘 */
+@keyframes throw-to-head {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-20deg) scale(0.5);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(4vw, -12vh) rotate(40deg) scale(1);
+  }
+  40% {
+    transform: translate(2vw, -38vh) rotate(140deg) scale(1.08);
+  }
+  65% {
+    transform: translate(0, -58vh) rotate(220deg) scale(1);
+  }
+  82% {
+    transform: translate(-1vw, -68vh) rotate(280deg) scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -74vh) rotate(320deg) scale(0.2);
+  }
+}
+
+@keyframes throw-chair-to-head {
+  0% {
+    opacity: 0;
+    transform: translate(0, 10%) rotate(-15deg) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(15%, -30%) rotate(40deg) scale(1);
+  }
+  55% {
+    transform: translate(32%, -110%) rotate(100deg) scale(1.15);
+  }
+  85% {
+    transform: translate(0, -70vh) rotate(180deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(2%, -76vh) rotate(220deg) scale(0.15);
+  }
+}
+
+/* ========== 상사 맞음 반응 ========== */
+.boss.is-thrown-hit .boss-head {
+  animation: head-lurch-forward 0.55s ease-out;
+}
+
+.boss.is-thrown-hit .boss-neck {
+  animation: neck-lurch 0.5s ease-out;
+}
+
+.boss.is-thrown-hit.is-heavy-hit .boss-head,
+.boss.is-thrown-hit.is-monitor-hit .boss-head {
+  animation: head-lurch-heavy 0.7s ease-out;
+}
+
+.boss.is-thrown-hit .boss-shoulders {
+  animation: shoulder-jolt 0.45s ease-out 0.06s;
+}
+
+@keyframes head-lurch-forward {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  22% {
+    transform: translateY(22px) rotate(5deg) scale(0.96, 1.04);
+  }
+  50% {
+    transform: translateY(12px) rotate(2deg);
+  }
+}
+
+@keyframes head-lurch-heavy {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(32px) rotate(8deg) scale(0.92, 1.08);
+  }
+  45% {
+    transform: translateY(18px) rotate(4deg);
+  }
+}
+
+@keyframes neck-lurch {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(10px);
+  }
+}
+
+@keyframes shoulder-jolt {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(12px);
+  }
+}
+
+.boss.is-panicked .boss-head {
+  animation: head-panic 0.32s ease-in-out 2;
+}
+
+/* 진짜 때려치기: 머리 쥐어뜯기 */
+.boss.is-hair-pulled .boss-head {
+  animation: head-hair-pulled 0.4s ease-in-out infinite;
+}
+
+.boss.is-hair-pulled .boss-shoulders {
+  animation: shoulder-jolt 0.35s ease-in-out infinite;
+}
+
+.boss-speech.is-scream {
+  font-size: clamp(1.2rem, 4vw, 1.55rem);
+  animation: speech-scream 0.35s ease-in-out infinite;
+}
+
+@keyframes head-hair-pulled {
+  0%,
+  100% {
+    transform: translate(8px, 12px) rotate(10deg);
+  }
+  50% {
+    transform: translate(14px, 18px) rotate(16deg) scale(0.96);
+  }
+}
+
+@keyframes speech-scream {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1) rotate(-4deg);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.08) rotate(6deg);
+  }
+}
+
+/* 여직원 — 누끼 PNG + 머리 쥐어뜯기 연출 */
+.heroine-scene {
+  position: absolute;
+  bottom: 2%;
+  left: 0;
+  width: min(36%, 220px);
+  max-height: 88%;
+  z-index: 18;
+  opacity: 0;
+  pointer-events: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.heroine-scene.is-active {
+  opacity: 1;
+  animation: heroine-enter 0.55s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+}
+
+.heroine-caption {
+  position: absolute;
+  top: -18px;
+  left: 12px;
+  font-size: 0.82rem;
+  opacity: 0.6;
+  transform: rotate(-4deg);
+  z-index: 2;
+}
+
+.heroine-stage {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.heroine-cutout {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(52vh, 340px);
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  filter: drop-shadow(3px 5px 0 rgba(20, 20, 20, 0.12))
+    drop-shadow(0 0 1px rgba(20, 20, 20, 0.2));
+}
+
+.heroine-scene.is-active .heroine-cutout {
+  animation: heroine-breathe 2.4s ease-in-out infinite;
+}
+
+.heroine-scene.is-active .heroine-stage {
+  animation: heroine-rage-shake 0.42s ease-in-out 0.5s infinite;
+}
+
+@keyframes heroine-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.01);
+  }
+}
+
+@keyframes heroine-rage-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(2px, -1px) rotate(0.4deg);
+  }
+  75% {
+    transform: translate(-2px, 1px) rotate(-0.4deg);
+  }
+}
+
+/* 손에서 상사 머리로 뻗는 가닥 (누끼 위 오버레이) */
+.heroine-hair-grab {
+  position: absolute;
+  top: 34%;
+  left: 48%;
+  width: 58%;
+  height: 22%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.heroine-scene.is-active .heroine-hair-grab {
+  opacity: 1;
+  animation: heroine-grasp-fade 0.35s ease-out 0.2s forwards;
+}
+
+.heroine-hair-grab .grab-strand {
+  position: absolute;
+  left: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #2a1810 0%, #141414 55%, rgba(20, 20, 20, 0.35) 100%);
+  border-radius: 2px;
+  transform-origin: left center;
+}
+
+.heroine-hair-grab .grab-strand--1 {
+  top: 8%;
+  width: 72%;
+  transform: rotate(-14deg);
+  animation: grab-tug 0.32s ease-in-out infinite alternate;
+}
+
+.heroine-hair-grab .grab-strand--2 {
+  top: 28%;
+  width: 78%;
+  transform: rotate(-8deg);
+  animation: grab-tug 0.34s ease-in-out 0.04s infinite alternate-reverse;
+}
+
+.heroine-hair-grab .grab-strand--3 {
+  top: 48%;
+  width: 82%;
+  transform: rotate(-4deg);
+  height: 2px;
+  animation: grab-tug 0.3s ease-in-out 0.08s infinite alternate;
+}
+
+.heroine-hair-grab .grab-strand--4 {
+  top: 68%;
+  width: 70%;
+  transform: rotate(-10deg);
+  height: 1.8px;
+  opacity: 0.8;
+  animation: grab-tug 0.36s ease-in-out infinite alternate-reverse;
+}
+
+.heroine-hair-grab .grab-strand--5 {
+  top: 0;
+  width: 65%;
+  transform: rotate(-18deg);
+  height: 1.5px;
+  opacity: 0.65;
+  animation: grab-tug 0.38s ease-in-out infinite alternate;
+}
+
+.heroine-anger {
+  position: absolute;
+  top: 6%;
+  right: 8%;
+  font-size: 1.8rem;
+  z-index: 4;
+  opacity: 0;
+  transform: scale(0.5);
+  filter: drop-shadow(1px 1px 0 var(--ink));
+}
+
+.heroine-scene.is-active .heroine-anger {
+  animation: anger-pop 0.4s ease-out 0.15s forwards;
+}
+
+@keyframes heroine-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes heroine-grasp-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes grab-tug {
+  0% {
+    transform: translate(0, 0) scaleX(0.92);
+  }
+  100% {
+    transform: translate(8px, -4px) scaleX(1.06);
+  }
+}
+
+@keyframes anger-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-20deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.25) rotate(8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* 손↔상사 머리 연결 가닥 */
+.hair-pull-fx.is-active .pull-rope {
+  height: 2.5px;
+  background: linear-gradient(90deg, #141414 0%, #2a2a2a 40%, rgba(20, 20, 20, 0.35) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.hair-pull-fx.is-active .pull-rope--1 {
+  top: 11%;
+  left: 36%;
+  width: 44%;
+  transform: rotate(-16deg);
+}
+
+.hair-pull-fx.is-active .pull-rope--2 {
+  top: 14%;
+  left: 37%;
+  width: 46%;
+  transform: rotate(-12deg);
+}
+
+.hair-pull-fx.is-active .pull-rope--3 {
+  top: 17%;
+  left: 36%;
+  width: 48%;
+  transform: rotate(-8deg);
+}
+
+.hair-pull-fx.is-active .pull-rope--4 {
+  top: 20%;
+  left: 38%;
+  width: 45%;
+  transform: rotate(-14deg);
+  height: 1.5px;
+  opacity: 0.75;
+}
+
+.hair-pull-fx.is-active .pull-rope--5 {
+  top: 9%;
+  left: 34%;
+  width: 42%;
+  transform: rotate(-18deg);
+}
+
+/* 준비중 메시지 */
+.fx-coming-soon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  z-index: 35;
+  padding: 0.6rem 1rem 0.7rem;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  text-align: center;
+  white-space: nowrap;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 20px 24px 18px 22px;
+  background: var(--paper);
+  box-shadow: 4px 5px 0 var(--ink);
+  animation: coming-soon-pop 0.45s ease-out forwards;
+}
+
+/* 진짜 때려치기: 하단 메시지 */
+.fx-coming-soon--bottom {
+  top: auto;
+  bottom: 5%;
+  transform: translateX(-50%) rotate(-2deg);
+  animation: coming-soon-pop-bottom 0.45s ease-out forwards;
+}
+
+@keyframes coming-soon-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+  }
+}
+
+@keyframes coming-soon-pop-bottom {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.06) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) rotate(-2deg);
+  }
+}
+
+@keyframes head-panic {
+  50% {
+    transform: rotate(5deg) translate(4px, 0);
+  }
+}
+
+/* ========== FX ========== */
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+/* 소리지르기 — Sibal + 소리선 + 느낌표 */
+.fx-yell-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.08em;
+  padding: 1.5rem 2rem;
+  animation: yell-pop 0.6s cubic-bezier(0.2, 1.1, 0.3, 1) forwards;
+}
+
+.fx-yell-burst {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+}
+
+.fx-yell-line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: clamp(70px, 22vw, 140px);
+  margin-left: -1.5px;
+  background: var(--ink);
+  transform-origin: 50% 0;
+  transform: rotate(calc(var(--i) * 36deg)) scaleY(0);
+  opacity: 0.85;
+  border-radius: 2px;
+  animation: yell-line-pop 0.55s ease-out calc(var(--i) * 0.02s) forwards;
+}
+
+@keyframes yell-line-pop {
+  0% {
+    transform: rotate(calc(var(--i) * 36deg)) scaleY(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(calc(var(--i) * 36deg)) scaleY(1);
+    opacity: 0.7;
+  }
+}
+
+.fx-yell-burst::before,
+.fx-yell-burst::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: yell-ring 0.7s ease-out forwards;
+}
+
+.fx-yell-burst::before {
+  width: clamp(120px, 40vw, 280px);
+  height: clamp(80px, 28vw, 200px);
+  border-style: dashed;
+  opacity: 0.5;
+}
+
+.fx-yell-burst::after {
+  width: clamp(160px, 52vw, 360px);
+  height: clamp(100px, 34vw, 240px);
+  border-width: 2px;
+  opacity: 0.35;
+  animation-delay: 0.08s;
+}
+
+@keyframes yell-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.2;
+  }
+}
+
+.fx-yell-word {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-shout);
+  font-size: clamp(4rem, 20vw, 9.5rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow:
+    0 0 0 var(--ink),
+    3px 3px 0 var(--paper),
+    5px 5px 0 var(--ink),
+    -2px -2px 0 var(--paper),
+    6px 0 0 rgba(20, 20, 20, 0.15),
+    -6px 0 0 rgba(20, 20, 20, 0.15),
+    0 6px 0 rgba(20, 20, 20, 0.12),
+    0 -6px 0 rgba(20, 20, 20, 0.12);
+  animation: yell-word-shake 0.35s ease-in-out 0.15s 3;
+}
+
+@keyframes yell-word-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-3px, 2px) rotate(-2deg);
+  }
+  75% {
+    transform: translate(3px, -2px) rotate(2deg);
+  }
+}
+
+.fx-yell-mark {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-shout);
+  font-size: clamp(2rem, 10vw, 4.5rem);
+  line-height: 1;
+  color: var(--ink);
+  animation: yell-mark-pop 0.5s ease-out forwards;
+}
+
+.fx-yell-mark--left {
+  transform: rotate(-18deg) translateY(8px);
+  animation-delay: 0.05s;
+}
+
+.fx-yell-mark--right {
+  transform: rotate(14deg) translateY(-6px);
+  animation-delay: 0.1s;
+}
+
+@keyframes yell-mark-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-30deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15) rotate(-18deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-18deg);
+  }
+}
+
+.fx-yell-mark--right {
+  animation-name: yell-mark-pop-right;
+}
+
+@keyframes yell-mark-pop-right {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(30deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15) rotate(14deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(14deg) translateY(-6px);
+  }
+}
+
+@keyframes yell-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.15) rotate(-14deg);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.14) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-5deg);
+  }
+}
+
+.fx-impact {
+  position: absolute;
+  font-family: var(--font-accent);
+  font-weight: 700;
+  animation: impact-pop 0.7s ease-out forwards;
+  text-shadow: 3px 3px 0 var(--paper), 4px 4px 0 var(--ink);
+}
+
+.fx-impact--sm {
+  top: 18%;
+  right: 12%;
+  font-size: clamp(2.2rem, 9vw, 3.8rem);
+}
+
+.fx-impact--lg {
+  top: 14%;
+  left: 50%;
+  margin-left: -1.2em;
+  font-size: clamp(2.8rem, 12vw, 5rem);
+}
+
+.fx-sub {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: sub-fade 0.85s ease-out 0.1s forwards;
+}
+
+@keyframes impact-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes sub-fade {
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.game-screen.is-shaking {
+  animation: screen-shake 0.35s ease-in-out;
+}
+
+.game-screen.is-shaking-hard {
+  animation: screen-shake-hard 0.5s ease-in-out;
+}
+
+@keyframes screen-shake {
+  25% {
+    transform: rotate(0.5deg) translate(-4px, 2px);
+  }
+  50% {
+    transform: rotate(-0.3deg) translate(5px, -2px);
+  }
+}
+
+@keyframes screen-shake-hard {
+  20% {
+    transform: rotate(1deg) translate(-8px, 4px);
+  }
+  50% {
+    transform: rotate(-0.7deg) translate(10px, -5px);
+  }
+}
+
+/* ========== Control Pad ========== */
+.control-pad {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem 0.6rem;
+}
+
+.control-pad__label {
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.control-pad__throws {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+}
+
+.control-pad__extra {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.control-pad__promo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.sketch-btn--promo {
+  font-size: clamp(0.78rem, 2.2vw, 1rem);
+  padding: 0.45rem 0.25rem;
+  line-height: 1.15;
+}
+
+.sketch-btn--adult {
+  border-style: dashed;
+}
+
+.control-pad__promo .sketch-btn:nth-child(1) {
+  border-radius: 14px 28px 12px 22px;
+  transform: rotate(-0.5deg);
+}
+
+.control-pad__promo .sketch-btn:nth-child(2) {
+  border-radius: 22px 12px 28px 14px;
+  transform: rotate(0.8deg);
+}
+
+@media (max-width: 560px) {
+  .control-pad__throws {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .control-pad__throws .sketch-btn:nth-child(4) {
+    grid-column: 1;
+  }
+
+  .control-pad__throws .sketch-btn:nth-child(5) {
+    grid-column: 2 / 4;
+  }
+
+  .control-pad__promo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sketch-btn {
+  font-family: var(--font-hand);
+  font-size: clamp(0.95rem, 2.8vw, 1.25rem);
+  color: var(--ink);
+  background: var(--paper);
+  cursor: pointer;
+  padding: 0.5rem 0.3rem;
+  border: var(--sketch-width) solid var(--ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.control-pad__throws .sketch-btn:nth-child(1) {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  transform: rotate(-1.5deg);
+}
+
+.control-pad__throws .sketch-btn:nth-child(2) {
+  border-radius: 12px 255px 18px 225px / 225px 12px 255px 18px;
+}
+
+.control-pad__throws .sketch-btn:nth-child(3) {
+  border-radius: 18px 225px 255px 12px / 255px 18px 12px 225px;
+  transform: rotate(-0.8deg);
+}
+
+.control-pad__throws .sketch-btn:nth-child(4) {
+  border-radius: 225px 18px 12px 255px / 12px 255px 225px 18px;
+  transform: rotate(1.5deg);
+}
+
+.control-pad__throws .sketch-btn:nth-child(5) {
+  border-radius: 15px 225px 255px 18px / 255px 15px 18px 225px;
+}
+
+.sketch-btn:hover {
+  box-shadow: 3px 4px 0 var(--ink);
+  transform: scale(1.02);
+}
+
+.sketch-btn:active {
+  transform: scale(0.97);
+}
+
+.control-pad.is-busy .sketch-btn {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.sketch-btn:focus-visible {
+  outline: 3px dashed var(--ink);
+  outline-offset: 2px;
+}
+
+.app-footer {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.15rem 0 0.2rem;
+  text-align: center;
+  transform: rotate(-0.3deg);
+}
+
+.app-copyright {
+  margin: 0;
+  font-size: clamp(0.72rem, 2.2vw, 0.88rem);
+  opacity: 0.55;
+  letter-spacing: 0.01em;
+}
+
+.app-partner {
+  margin: 0.12rem 0 0;
+  font-size: clamp(0.7rem, 2vw, 0.84rem);
+  opacity: 0.65;
+}
+
+.app-partner__label {
+  margin-right: 0.35rem;
+  opacity: 0.85;
+}
+
+.app-partner__link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  font-family: var(--font-accent);
+}
+
+.app-partner__link:hover {
+  opacity: 0.85;
+}
+
+.app-partner__link:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 2px;
+}
+
+@media (max-height: 700px), (max-width: 520px) {
+  .heroine-scene {
+    width: min(34%, 180px);
+  }
+
+  .heroine-cutout {
+    max-height: min(44vh, 280px);
+  }
+}

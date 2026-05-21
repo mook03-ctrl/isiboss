@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>다 때려쳐 @office</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=14" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="title-bar sketch-border">
+        <h1 class="game-title">다 때려쳐 @office</h1>
+        <p class="game-subtitle">(내 책상 풀뷰 → 모니터 뒤에 숨은 상사)</p>
+      </header>
+
+      <main id="game-screen" class="game-screen sketch-border" aria-label="게임 화면">
+        <div id="office-scene" class="office-scene">
+          <!-- 모니터 뒤: 평소엔 가려짐 -->
+          <div id="behind-zone" class="behind-zone" aria-hidden="true">
+            <div class="office-wall">사무실</div>
+            <div id="boss-desk" class="boss-desk">
+              <div class="boss-desk-top"></div>
+            </div>
+            <figure id="boss" class="boss" aria-label="상사">
+              <p class="boss-label-top">직장 상사</p>
+              <div id="boss-speech" class="boss-speech" hidden>으악~~</div>
+              <div class="boss-head">
+                <div class="boss-hair-back" aria-hidden="true"></div>
+                <span class="boss-head-back" aria-hidden="true">뒤통수</span>
+                <div class="boss-hair-pull" aria-hidden="true">
+                  <span class="pulled-strand pulled-strand--1"></span>
+                  <span class="pulled-strand pulled-strand--2"></span>
+                  <span class="pulled-strand pulled-strand--3"></span>
+                  <span class="pulled-strand pulled-strand--4"></span>
+                  <span class="pulled-strand pulled-strand--5"></span>
+                  <span class="pulled-strand pulled-strand--6"></span>
+                  <span class="pulled-strand pulled-strand--7"></span>
+                </div>
+              </div>
+              <div class="boss-neck"></div>
+              <div class="boss-shoulders">
+                <span class="boss-tag" aria-label="옷 태그">개ㅅㄲ</span>
+              </div>
+              <div class="boss-chair-back"></div>
+            </figure>
+            <div id="hit-spark" class="hit-spark" aria-hidden="true"></div>
+
+            <div id="hair-pull-fx" class="hair-pull-fx" hidden aria-hidden="true">
+              <span class="pull-rope pull-rope--1"></span>
+              <span class="pull-rope pull-rope--2"></span>
+              <span class="pull-rope pull-rope--3"></span>
+              <span class="pull-rope pull-rope--4"></span>
+              <span class="pull-rope pull-rope--5"></span>
+            </div>
+
+            <figure id="heroine-scene" class="heroine-scene" hidden aria-hidden="true">
+              <figcaption class="heroine-caption">여직원 출동</figcaption>
+              <div class="heroine-stage">
+                <img
+                  class="heroine-cutout"
+                  src="assets/heroine-cutout.png"
+                  alt="화난 여직원이 상사 머리를 쥐어뜯는 모습"
+                  width="301"
+                  height="600"
+                />
+                <div class="heroine-hair-grab" aria-hidden="true">
+                  <span class="grab-strand grab-strand--1"></span>
+                  <span class="grab-strand grab-strand--2"></span>
+                  <span class="grab-strand grab-strand--3"></span>
+                  <span class="grab-strand grab-strand--4"></span>
+                  <span class="grab-strand grab-strand--5"></span>
+                </div>
+                <span class="heroine-anger" aria-hidden="true">💢</span>
+              </div>
+            </figure>
+          </div>
+
+          <!-- 내 책상: 화면 가득 -->
+          <div id="my-desk" class="my-desk">
+            <div class="my-desk-surface"></div>
+
+            <!-- 널부러진 인쇄 종이 -->
+            <div class="my-papers" aria-hidden="true">
+              <div class="my-paper my-paper--1">인쇄물</div>
+              <div class="my-paper my-paper--2">보고서</div>
+              <div class="my-paper my-paper--3">★긴급</div>
+              <div class="my-paper my-paper--4"></div>
+            </div>
+
+            <div class="my-keyboard" aria-hidden="true">
+              <span class="my-keyboard-label">키보드</span>
+            </div>
+            <div class="my-mouse" aria-hidden="true">
+              <span class="my-mouse-label">마우스</span>
+            </div>
+
+            <div id="my-notebook" class="my-item my-item--notebook">수첩</div>
+            <div id="my-cup" class="my-item my-item--cup">물컵</div>
+            <div id="my-phone" class="my-item my-item--phone">휴대폰</div>
+
+            <div id="my-monitor" class="my-monitor">
+              <div class="my-monitor-bezel">
+                <div class="my-monitor-screen">
+                  <div class="screen-apps">
+                    <div class="app-window app-window--excel" aria-label="엑셀">
+                      <div class="app-titlebar app-titlebar--excel">Excel</div>
+                      <div class="excel-grid" aria-hidden="true"></div>
+                    </div>
+                    <div class="app-window app-window--ppt" aria-label="파워포인트">
+                      <div class="app-titlebar app-titlebar--ppt">PPT</div>
+                      <div class="ppt-slide">
+                        <p class="ppt-rant">ㅅㅂ 자료 ㅈㄴ 시키네</p>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="my-monitor-status">업무중...</span>
+                </div>
+              </div>
+              <div class="my-monitor-stand"></div>
+            </div>
+          </div>
+
+          <div id="proj-layer" class="proj-layer"></div>
+        </div>
+
+        <div id="fx-layer" class="fx-layer" aria-live="polite"></div>
+      </main>
+
+      <footer id="control-pad" class="control-pad sketch-border" aria-label="행동 버튼">
+        <p class="control-pad__label">던지기</p>
+        <div class="control-pad__throws" aria-label="투척">
+          <button type="button" class="action-btn sketch-btn" data-action="notebook">수첩</button>
+          <button type="button" class="action-btn sketch-btn" data-action="cup">물컵</button>
+          <button type="button" class="action-btn sketch-btn" data-action="monitor">모니터</button>
+          <button type="button" class="action-btn sketch-btn" data-action="phone">휴대폰</button>
+          <button type="button" class="action-btn sketch-btn" data-action="chair">의자</button>
+        </div>
+        <div class="control-pad__extra" aria-label="기타 행동">
+          <button type="button" class="action-btn sketch-btn" data-action="yell">소리지르기</button>
+          <button type="button" class="action-btn sketch-btn" data-action="flip">책상 엎기</button>
+        </div>
+        <div class="control-pad__promo" aria-label="광고 보상">
+          <button type="button" class="action-btn sketch-btn sketch-btn--promo" data-action="ad-special">
+            광고보고 특별한 아이템 얻기
+          </button>
+          <button type="button" class="action-btn sketch-btn sketch-btn--promo sketch-btn--adult" data-action="ad-real">
+            성인광고보고 진짜 때려치기
+          </button>
+        </div>
+      </footer>
+
+      <footer class="app-footer">
+        <p class="app-copyright">Copyright 2026 isiboss (v0.1 by mook)</p>
+        <p class="app-partner">
+          <span class="app-partner__label">파트너 서비스</span>
+          <a
+            class="app-partner__link"
+            href="https://saju-match.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            >saju-match.com</a>
+        </p>
+      </footer>
+    </div>
+
+    <script src="game.js?v=14"></script>
+  </body>
+</html>
