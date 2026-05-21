@@ -64,12 +64,6 @@ body {
   font-weight: 400;
 }
 
-.game-subtitle {
-  margin: 0 0 0.2rem;
-  font-size: 1.05rem;
-  opacity: 0.75;
-}
-
 /* --- Game Screen --- */
 .game-screen {
   position: relative;
@@ -94,6 +88,12 @@ body {
   visibility: hidden;
   transition: opacity 0.35s ease, visibility 0.35s;
   pointer-events: none;
+  overflow: visible;
+}
+
+.game-screen.is-revealed .office-scene,
+.game-screen.is-action .office-scene {
+  overflow: visible;
 }
 
 .game-screen.is-revealed .behind-zone {
@@ -408,7 +408,7 @@ body {
 
 .boss-label-top {
   position: absolute;
-  top: -46px;
+  top: -38px;
   left: 50%;
   margin: 0;
   transform: translateX(-50%) rotate(-2deg);
@@ -513,14 +513,14 @@ body {
 
 .boss-speech {
   position: absolute;
-  top: -72px;
+  top: -42px;
   left: 50%;
   z-index: 8;
-  padding: 0.3rem 0.6rem 0.4rem;
-  font-size: clamp(1rem, 3.2vw, 1.3rem);
+  padding: 0.2rem 0.45rem 0.28rem;
+  font-size: clamp(0.82rem, 2.6vw, 1rem);
   white-space: nowrap;
-  border: var(--sketch-width) solid var(--ink);
-  border-radius: 16px 20px 12px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 12px 16px 10px 14px;
   background: var(--paper);
   box-shadow: 2px 3px 0 var(--ink);
   opacity: 0;
@@ -529,8 +529,8 @@ body {
 
 .boss-speech.is-visible {
   animation: speech-pain 0.45s ease-out forwards;
-  font-size: clamp(1.15rem, 3.8vw, 1.5rem);
-  letter-spacing: 0.02em;
+  font-size: clamp(0.9rem, 2.8vw, 1.1rem);
+  letter-spacing: 0.01em;
 }
 
 @keyframes speech-pain {
@@ -540,14 +540,14 @@ body {
   }
   35% {
     opacity: 1;
-    transform: translateX(-50%) scale(1.2) rotate(4deg);
+    transform: translateX(-50%) scale(1.05) rotate(4deg);
   }
   55% {
-    transform: translateX(-50%) scale(0.95) rotate(-6deg);
+    transform: translateX(-50%) scale(0.92) rotate(-6deg);
   }
   100% {
     opacity: 1;
-    transform: translateX(-50%) scale(1.05) rotate(2deg);
+    transform: translateX(-50%) scale(1) rotate(2deg);
   }
 }
 
@@ -1052,7 +1052,7 @@ body {
   inset: 0;
   z-index: 22;
   pointer-events: none;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .proj {
@@ -1062,76 +1062,77 @@ body {
   transform-origin: center center;
 }
 
-/* ---- 수첩 ---- */
+/* ---- 수첩 (사람 키 크기) ---- */
 .proj-notebook {
-  left: 10%;
-  bottom: 22%;
-  width: 56px;
-  height: 64px;
-  animation: throw-to-head 0.75s cubic-bezier(0.15, 0.9, 0.25, 1) forwards;
+  left: 0;
+  bottom: 2%;
+  width: 92px;
+  height: 124px;
+  animation: throw-to-head-from-left 0.9s cubic-bezier(0.15, 0.9, 0.25, 1) forwards;
 }
 
 .proj-notebook-cover {
   position: absolute;
-  inset: 4px 4px 4px 12px;
+  inset: 8px 8px 8px 26px;
   border: var(--sketch-width) solid var(--ink);
-  border-radius: 4px 10px 8px 12px;
+  border-radius: 8px 18px 14px 20px;
   background: var(--paper);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .proj-notebook-spine {
   position: absolute;
   left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 12px;
+  top: 8px;
+  bottom: 8px;
+  width: 24px;
   border: var(--sketch-width) solid var(--ink);
-  border-radius: 6px 0 0 8px;
+  border-radius: 10px 0 0 12px;
   background: rgba(20, 20, 20, 0.06);
 }
 
 .proj-notebook-lines {
   position: absolute;
-  left: 18px;
-  right: 8px;
-  top: 14px;
-  bottom: 10px;
+  left: 34px;
+  right: 14px;
+  top: 22px;
+  bottom: 18px;
   background: repeating-linear-gradient(
     var(--ink) 0,
-    var(--ink) 1px,
-    transparent 1px,
-    transparent 7px
+    var(--ink) 1.5px,
+    transparent 1.5px,
+    transparent 10px
   );
-  opacity: 0.2;
+  opacity: 0.22;
 }
 
-/* ---- 물컵 ---- */
+/* ---- 물컵 (사람 키 크기) ---- */
 .proj-cup {
-  right: 12%;
-  bottom: 21%;
-  width: 48px;
-  height: 52px;
-  animation: throw-to-head 0.7s cubic-bezier(0.2, 0.88, 0.3, 1) forwards;
+  right: 0;
+  bottom: 2%;
+  width: 82px;
+  height: 104px;
+  animation: throw-to-head-from-right 0.85s cubic-bezier(0.2, 0.88, 0.3, 1) forwards;
 }
 
 .proj-cup-body {
   position: absolute;
-  left: 8px;
-  right: 14px;
-  bottom: 4px;
-  height: 38px;
+  left: 10px;
+  right: 22px;
+  bottom: 6px;
+  height: 78px;
   border: var(--sketch-width) solid var(--ink);
-  border-radius: 4px 4px 16px 18px;
+  border-radius: 8px 8px 28px 32px;
   background: var(--paper);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .proj-cup-rim {
   position: absolute;
-  left: 6px;
-  right: 12px;
-  top: 6px;
-  height: 10px;
+  left: 8px;
+  right: 20px;
+  top: 10px;
+  height: 18px;
   border: 2px solid var(--ink);
   border-radius: 50%;
   opacity: 0.4;
@@ -1140,51 +1141,51 @@ body {
 .proj-cup-handle {
   position: absolute;
   right: 0;
-  top: 16px;
-  width: 14px;
-  height: 22px;
+  top: 32px;
+  width: 24px;
+  height: 44px;
   border: var(--sketch-width) solid var(--ink);
   border-left: none;
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 20px 20px 0;
   background: transparent;
 }
 
-/* ---- 휴대폰 ---- */
+/* ---- 휴대폰 (사람 키 크기) ---- */
 .proj-phone {
-  left: 24%;
-  bottom: 23%;
-  width: 44px;
-  height: 68px;
-  animation: throw-to-head 0.72s ease-out forwards;
+  left: 6%;
+  bottom: 2%;
+  width: 58px;
+  height: 136px;
+  animation: throw-to-head-from-left 0.88s ease-out forwards;
 }
 
 .proj-phone-body {
   position: absolute;
   inset: 0;
   border: var(--sketch-width) solid var(--ink);
-  border-radius: 10px 12px 14px 10px;
+  border-radius: 16px 18px 22px 16px;
   background: var(--paper);
-  box-shadow: 2px 3px 0 var(--ink);
+  box-shadow: 4px 5px 0 var(--ink);
 }
 
 .proj-phone-screen {
   position: absolute;
-  left: 6px;
-  right: 6px;
-  top: 8px;
-  bottom: 16px;
+  left: 8px;
+  right: 8px;
+  top: 12px;
+  bottom: 28px;
   border: 2px dashed var(--ink);
-  border-radius: 4px;
+  border-radius: 8px;
   opacity: 0.45;
 }
 
 .proj-phone-home {
   position: absolute;
-  bottom: 5px;
+  bottom: 10px;
   left: 50%;
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
   border: 2px solid var(--ink);
   border-radius: 50%;
 }
@@ -1193,9 +1194,9 @@ body {
 .proj-monitor {
   left: 38%;
   bottom: 20%;
-  width: 64px;
-  height: 56px;
-  animation: throw-to-head 0.8s ease-out forwards;
+  width: 48px;
+  height: 42px;
+  animation: throw-to-head-from-center 0.8s ease-out forwards;
 }
 
 .proj-mon-bezel {
@@ -1231,43 +1232,45 @@ body {
   background: var(--paper);
 }
 
-/* ---- 의자 ---- */
+/* ---- 의자 (사람 키 크기) ---- */
 .proj-chair {
-  left: 4%;
-  bottom: 8%;
-  width: 68px;
-  height: 80px;
-  animation: throw-chair-to-head 0.9s cubic-bezier(0.12, 0.8, 0.2, 1) forwards;
+  left: 0;
+  bottom: 2%;
+  width: 102px;
+  height: 150px;
+  animation: throw-chair-to-head 1s cubic-bezier(0.12, 0.8, 0.2, 1) forwards;
 }
 
 .proj-chair-seat {
   position: absolute;
-  bottom: 18px;
-  left: 8px;
-  width: 52px;
-  height: 14px;
+  bottom: 40px;
+  left: 10px;
+  width: 78px;
+  height: 22px;
   border: var(--sketch-width) solid var(--ink);
-  border-radius: 8px 16px 6px 12px;
+  border-radius: 10px 20px 8px 14px;
   background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .proj-chair-back {
   position: absolute;
-  bottom: 28px;
-  left: 18px;
-  width: 28px;
-  height: 44px;
+  bottom: 54px;
+  left: 20px;
+  width: 58px;
+  height: 92px;
   border: var(--sketch-width) solid var(--ink);
-  border-radius: 10px 22px 8px 16px;
+  border-radius: 14px 28px 10px 20px;
   background: var(--paper);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .proj-chair-base {
   position: absolute;
-  bottom: 8px;
-  left: 22px;
-  width: 8px;
-  height: 14px;
+  bottom: 18px;
+  left: 42px;
+  width: 12px;
+  height: 26px;
   border: 2px solid var(--ink);
   background: var(--paper);
 }
@@ -1275,57 +1278,118 @@ body {
 .proj-chair-wheel {
   position: absolute;
   bottom: 0;
-  left: 14px;
-  width: 40px;
-  height: 12px;
+  left: 18px;
+  width: 72px;
+  height: 18px;
   border: var(--sketch-width) solid var(--ink);
   border-radius: 50%;
   background: var(--paper);
 }
 
+.proj-chair-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 4px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  opacity: 0.25;
+}
+
 /* 공통: 모니터 위로 넘어가 뒤통수에 박힘 */
-@keyframes throw-to-head {
+@keyframes throw-to-head-from-left {
   0% {
     opacity: 0;
-    transform: translate(0, 0) rotate(-20deg) scale(0.5);
+    transform: translate(0, 0) rotate(-20deg) scale(0.45);
   }
-  12% {
+  14% {
     opacity: 1;
-    transform: translate(4vw, -12vh) rotate(40deg) scale(1);
+    transform: translate(5vw, -6vh) rotate(35deg) scale(0.8);
   }
-  40% {
-    transform: translate(2vw, -38vh) rotate(140deg) scale(1.08);
+  42% {
+    transform: translate(9vw, -16vh) rotate(110deg) scale(0.85);
   }
-  65% {
-    transform: translate(0, -58vh) rotate(220deg) scale(1);
+  68% {
+    transform: translate(11vw, -24vh) rotate(190deg) scale(0.88);
   }
-  82% {
-    transform: translate(-1vw, -68vh) rotate(280deg) scale(1.12);
+  86% {
+    opacity: 1;
+    transform: translate(12vw, -28vh) rotate(250deg) scale(0.82);
   }
   100% {
     opacity: 0;
-    transform: translate(0, -74vh) rotate(320deg) scale(0.2);
+    transform: translate(12vw, -30vh) rotate(290deg) scale(0.55);
+  }
+}
+
+@keyframes throw-to-head-from-right {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(20deg) scale(0.45);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(-5vw, -6vh) rotate(-35deg) scale(0.8);
+  }
+  42% {
+    transform: translate(-9vw, -16vh) rotate(-110deg) scale(0.85);
+  }
+  68% {
+    transform: translate(-11vw, -24vh) rotate(-190deg) scale(0.88);
+  }
+  86% {
+    opacity: 1;
+    transform: translate(-12vw, -28vh) rotate(-250deg) scale(0.82);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-12vw, -30vh) rotate(-290deg) scale(0.55);
+  }
+}
+
+@keyframes throw-to-head-from-center {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-10deg) scale(0.45);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(2vw, -6vh) rotate(30deg) scale(0.8);
+  }
+  42% {
+    transform: translate(3vw, -16vh) rotate(100deg) scale(0.85);
+  }
+  68% {
+    transform: translate(4vw, -24vh) rotate(180deg) scale(0.88);
+  }
+  86% {
+    opacity: 1;
+    transform: translate(4vw, -28vh) rotate(240deg) scale(0.82);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(4vw, -30vh) rotate(280deg) scale(0.55);
   }
 }
 
 @keyframes throw-chair-to-head {
   0% {
     opacity: 0;
-    transform: translate(0, 10%) rotate(-15deg) scale(0.4);
+    transform: translate(0, 4%) rotate(-12deg) scale(0.35);
   }
-  20% {
+  18% {
     opacity: 1;
-    transform: translate(15%, -30%) rotate(40deg) scale(1);
+    transform: translate(8%, -8%) rotate(28deg) scale(0.62);
   }
-  55% {
-    transform: translate(32%, -110%) rotate(100deg) scale(1.15);
+  48% {
+    transform: translate(14%, -18vh) rotate(72deg) scale(0.72);
   }
-  85% {
-    transform: translate(0, -70vh) rotate(180deg) scale(1);
+  78% {
+    opacity: 1;
+    transform: translate(12vw, -26vh) rotate(125deg) scale(0.78);
   }
   100% {
     opacity: 0;
-    transform: translate(2%, -76vh) rotate(220deg) scale(0.15);
+    transform: translate(12vw, -30vh) rotate(165deg) scale(0.55);
   }
 }
 
@@ -1407,7 +1471,7 @@ body {
 }
 
 .boss-speech.is-scream {
-  font-size: clamp(1.2rem, 4vw, 1.55rem);
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
   animation: speech-scream 0.35s ease-in-out infinite;
 }
 
@@ -1427,7 +1491,7 @@ body {
     transform: translateX(-50%) scale(1) rotate(-4deg);
   }
   50% {
-    transform: translateX(-50%) scale(1.08) rotate(6deg);
+    transform: translateX(-50%) scale(1.04) rotate(6deg);
   }
 }
 
@@ -1950,16 +2014,19 @@ body {
 }
 
 .fx-impact--sm {
-  top: 18%;
-  right: 12%;
-  font-size: clamp(2.2rem, 9vw, 3.8rem);
+  top: 20%;
+  left: 52%;
+  transform: translateX(-50%);
+  font-size: clamp(1.5rem, 6vw, 2.4rem);
+  white-space: nowrap;
+  animation-name: impact-pop-center;
 }
 
 .fx-impact--lg {
-  top: 14%;
+  top: 18%;
   left: 50%;
   margin-left: -1.2em;
-  font-size: clamp(2.8rem, 12vw, 5rem);
+  font-size: clamp(1.8rem, 7vw, 3rem);
 }
 
 .fx-sub {
@@ -1983,6 +2050,21 @@ body {
   }
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes impact-pop-center {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.3);
+  }
+  40% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1);
   }
 }
 
@@ -2149,9 +2231,13 @@ body {
 
 .app-footer {
   flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.2rem 0.75rem;
   margin: 0;
-  padding: 0.15rem 0 0.2rem;
-  text-align: center;
+  padding: 0.15rem 0.55rem 0.2rem;
   transform: rotate(-0.3deg);
 }
 
@@ -2160,12 +2246,15 @@ body {
   font-size: clamp(0.72rem, 2.2vw, 0.88rem);
   opacity: 0.55;
   letter-spacing: 0.01em;
+  text-align: left;
 }
 
 .app-partner {
-  margin: 0.12rem 0 0;
+  margin: 0;
   font-size: clamp(0.7rem, 2vw, 0.84rem);
   opacity: 0.65;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .app-partner__label {
