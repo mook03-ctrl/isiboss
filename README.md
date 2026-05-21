@@ -6,6 +6,9 @@
 
 GitHub Pages: **https://mook03-ctrl.github.io/isiboss/**
 
+> 404가 나오면 저장소 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 선택한 뒤, **Actions** 탭에서 `Deploy to GitHub Pages` 워크플로를 Re-run 하세요.  
+> 그래도 안 되면 Source를 **Deploy from a branch** → `gh-pages` / `/ (root)`로 설정하세요.
+
 로컬 실행:
 
 ```bash
