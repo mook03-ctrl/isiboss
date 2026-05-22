@@ -25,5 +25,4 @@ npx --yes serve .
 
 ---
 
-Copyright 2026 isiboss (v0.1 by mook)  
-파트너 서비스: [saju-match.com](https://saju-match.com)
+Copyright 2026 isiboss (v0.2 by mook)

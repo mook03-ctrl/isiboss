@@ -64,10 +64,90 @@ body {
   font-weight: 400;
 }
 
+/* --- Game stage (화면 + 사이트 링크) --- */
+.game-stage {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.site-links {
+  flex: 0 0 clamp(5.2rem, 21vw, 7.4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  padding: 0.38rem 0.32rem;
+  min-height: 0;
+  overflow-y: auto;
+  transform: rotate(0.35deg);
+}
+
+.site-link-box {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.2rem;
+  text-align: center;
+  font-size: clamp(0.68rem, 1.9vw, 0.88rem);
+  line-height: 1.2;
+  color: var(--ink);
+  text-decoration: none;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 14px 22px 12px 18px / 18px 12px 22px 14px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.site-link-box:nth-child(1) {
+  transform: rotate(-0.6deg);
+}
+
+.site-link-box:nth-child(2) {
+  border-radius: 22px 12px 18px 14px / 12px 22px 14px 18px;
+  transform: rotate(0.5deg);
+}
+
+.site-link-box:nth-child(3) {
+  transform: rotate(-0.4deg);
+}
+
+.site-link-box:nth-child(4) {
+  border-style: dashed;
+  transform: rotate(0.3deg);
+}
+
+.site-link-box:nth-child(5) {
+  border-style: dashed;
+  transform: rotate(-0.5deg);
+}
+
+a.site-link-box:hover {
+  box-shadow: 3px 4px 0 var(--ink);
+  transform: scale(1.02) rotate(0deg);
+}
+
+a.site-link-box:focus-visible {
+  outline: 3px dashed var(--ink);
+  outline-offset: 2px;
+}
+
+.site-link-box--soon {
+  opacity: 0.42;
+  cursor: default;
+  pointer-events: none;
+  border-style: dashed;
+}
+
 /* --- Game Screen --- */
 .game-screen {
   position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   transform: rotate(0.15deg);
@@ -184,19 +264,242 @@ body {
   overflow: visible;
 }
 
-/* 상사 뒤통수 머리숱 + 쥐어뜯기 */
+/* 상사 뒤통수 머리카락 — 펜 선만 (채색 없음) */
 .boss-hair-back {
   position: absolute;
-  inset: -8px -6px 20% -6px;
-  border-radius: 50% 50% 42% 42%;
-  background: repeating-linear-gradient(
-    175deg,
-    rgba(20, 20, 20, 0.07) 0,
-    rgba(20, 20, 20, 0.07) 2px,
-    transparent 2px,
-    transparent 5px
+  inset: -12px -12px 14% -12px;
+  background: none;
+  border: none;
+  overflow: visible;
+  z-index: 1;
+  transition: opacity 0.35s ease, transform 0.4s ease;
+}
+
+.boss-hair-lines {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.boss-hair-lines path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* 맞으면 땜방 혹 */
+.boss-head-lump {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: 30px;
+  height: 26px;
+  margin-left: -15px;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.boss-lump-patch {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 48% 52% 50% 46%;
+  background: radial-gradient(circle at 32% 28%, #f0d4b8 0%, #d8a888 38%, #c07858 72%, #a86048 100%);
+  border: 2px solid var(--ink);
+  box-shadow:
+    inset -2px -3px 0 rgba(120, 50, 40, 0.25),
+    2px 3px 0 var(--ink);
+}
+
+.boss-lump-patch::before,
+.boss-lump-patch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  height: 2px;
+  margin: -1px 0 0 -35%;
+  background: var(--ink);
+  border-radius: 2px;
+}
+
+.boss-lump-patch::before {
+  transform: rotate(32deg);
+}
+
+.boss-lump-patch::after {
+  transform: rotate(-28deg);
+}
+
+.boss.is-thrown-hit:not(.is-hair-pulled) .boss-head-lump {
+  opacity: 1;
+  animation: lump-pop 0.45s cubic-bezier(0.2, 1.2, 0.3, 1) forwards;
+}
+
+@keyframes lump-pop {
+  0% {
+    transform: scale(0.2);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 머리 뜯긴 후: 대머리 + 광택 */
+.boss-scalp {
+  position: absolute;
+  inset: 2px 6px 18% 6px;
+  border-radius: 46% 46% 40% 40%;
+  background: linear-gradient(155deg, #fde8dc 0%, #ecc8b0 35%, #ddb898 70%, #d0a890 100%);
+  opacity: 0;
+  z-index: 2;
+  transition: opacity 0.4s ease;
+}
+
+.boss-scalp-shine {
+  position: absolute;
+  top: 20%;
+  left: 36%;
+  width: 26px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.35) 45%,
+    transparent 70%
   );
-  opacity: 0.55;
+  opacity: 0;
+  z-index: 5;
+  pointer-events: none;
+  transform: rotate(-18deg);
+}
+
+.boss-scratches {
+  position: absolute;
+  inset: 6px 4px 20% 4px;
+  opacity: 0;
+  z-index: 6;
+  pointer-events: none;
+  transition: opacity 0.35s ease 0.15s;
+}
+
+.boss-scratch {
+  position: absolute;
+  height: 2.5px;
+  background: linear-gradient(90deg, #6a3030, #4a2020);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(120, 30, 30, 0.35);
+}
+
+.boss-scratch--1 {
+  top: 22%;
+  left: 28%;
+  width: 22px;
+  transform: rotate(-38deg);
+}
+
+.boss-scratch--2 {
+  top: 32%;
+  left: 42%;
+  width: 26px;
+  transform: rotate(24deg);
+}
+
+.boss-scratch--3 {
+  top: 28%;
+  right: 26%;
+  width: 20px;
+  transform: rotate(-52deg);
+}
+
+.boss-scratch--4 {
+  top: 42%;
+  left: 34%;
+  width: 18px;
+  transform: rotate(48deg);
+  opacity: 0.85;
+}
+
+.boss-blood {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%, #ff5555 0%, #c62828 55%, #8b1a1a 100%);
+  border-radius: 45% 55% 50% 50%;
+  opacity: 0.9;
+  box-shadow: 0 1px 0 rgba(80, 0, 0, 0.4);
+}
+
+.boss-blood--1 {
+  top: 24%;
+  left: 34%;
+  width: 7px;
+  height: 9px;
+  transform: rotate(-20deg);
+}
+
+.boss-blood--2 {
+  top: 36%;
+  left: 48%;
+  width: 8px;
+  height: 10px;
+  transform: rotate(12deg);
+}
+
+.boss-blood--3 {
+  top: 30%;
+  right: 30%;
+  width: 6px;
+  height: 8px;
+  transform: rotate(-35deg);
+}
+
+.boss.is-hair-pulled .boss-hair-back {
+  opacity: 0;
+  transform: scale(0.55) translateY(8px);
+  pointer-events: none;
+}
+
+.boss.is-hair-pulled .boss-hair-pull {
+  opacity: 0;
+}
+
+.boss.is-hair-pulled .boss-head-back {
+  opacity: 0.15;
+}
+
+.boss.is-hair-pulled .boss-scalp {
+  opacity: 1;
+}
+
+.boss.is-hair-pulled .boss-scalp-shine {
+  opacity: 1;
+  animation: scalp-shine 1.4s ease-in-out infinite;
+}
+
+.boss.is-hair-pulled .boss-scratches {
+  opacity: 1;
+}
+
+.boss.is-hair-pulled .boss-head-lump {
+  opacity: 0;
+}
+
+@keyframes scalp-shine {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: rotate(-18deg) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-14deg) scale(1.08);
+  }
 }
 
 .boss-hair-pull {
@@ -424,9 +727,10 @@ body {
   position: absolute;
   inset: 18% 20% 28%;
   font-size: 0.85rem;
-  opacity: 0.35;
+  opacity: 0.2;
   transform: rotate(-8deg);
   text-align: center;
+  z-index: 0;
 }
 
 /* 등·어깨에 붙은 옷 태그 */
@@ -1295,6 +1599,127 @@ body {
   opacity: 0.25;
 }
 
+/* ---- 키보드 ---- */
+.proj-keyboard {
+  left: 4%;
+  bottom: 4%;
+  width: 148px;
+  height: 56px;
+  animation: throw-to-head-from-left 0.9s cubic-bezier(0.15, 0.9, 0.25, 1) forwards;
+}
+
+.proj-kb-body {
+  position: absolute;
+  inset: 0;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 10px 14px 12px 16px;
+  background: var(--paper);
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+.proj-kb-keys {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 10px;
+  height: 22px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--ink) 0,
+      var(--ink) 2px,
+      transparent 2px,
+      transparent 9px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--ink) 0,
+      var(--ink) 2px,
+      transparent 2px,
+      transparent 11px
+    );
+  background-size: 100% 8px, 100% 8px;
+  background-position: 0 0, 0 12px;
+  background-repeat: no-repeat;
+  opacity: 0.35;
+}
+
+.proj-kb-space {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 10px;
+  height: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  opacity: 0.4;
+}
+
+/* ---- 마우스 ---- */
+.proj-mouse {
+  right: 6%;
+  bottom: 6%;
+  width: 72px;
+  height: 108px;
+  animation: throw-to-head-from-right 0.86s cubic-bezier(0.2, 0.88, 0.3, 1) forwards;
+}
+
+.proj-mouse-body {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 28px;
+  bottom: 8px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 38px 38px 22px 22px;
+  background: var(--paper);
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+.proj-mouse-btn-l,
+.proj-mouse-btn-r {
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 34px;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 14px 14px 6px 6px;
+  background: var(--paper);
+}
+
+.proj-mouse-btn-l {
+  left: 4px;
+}
+
+.proj-mouse-btn-r {
+  right: 4px;
+}
+
+.proj-mouse-wheel {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  width: 8px;
+  height: 22px;
+  margin-left: -4px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+.proj-mouse-cord {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  height: 18px;
+  margin-left: -1.5px;
+  background: var(--ink);
+  border-radius: 2px;
+  transform: rotate(8deg);
+  transform-origin: top center;
+}
+
 /* 공통: 모니터 위로 넘어가 뒤통수에 박힘 */
 @keyframes throw-to-head-from-left {
   0% {
@@ -2119,10 +2544,64 @@ body {
   opacity: 0.7;
 }
 
+.control-pad__hint {
+  font-size: 0.82em;
+  opacity: 0.75;
+}
+
+.control-pad__throws-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.throws-nav {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 2rem;
+  min-height: 2.6rem;
+  padding: 0.2rem 0;
+  font-size: 0.95rem;
+  line-height: 1;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
 .control-pad__throws {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex: 1;
+  min-width: 0;
   gap: 0.35rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink) transparent;
+  padding: 0.1rem 0.15rem 0.2rem;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 0.4rem,
+    #000 calc(100% - 0.4rem),
+    transparent 100%
+  );
+}
+
+.control-pad__throws::-webkit-scrollbar {
+  height: 5px;
+}
+
+.control-pad__throws::-webkit-scrollbar-thumb {
+  background: var(--ink);
+  border-radius: 4px;
+  opacity: 0.35;
+}
+
+.control-pad__throws .sketch-btn {
+  flex: 0 0 clamp(4.5rem, 26vw, 5.5rem);
+  scroll-snap-align: start;
 }
 
 .control-pad__extra {
@@ -2158,16 +2637,8 @@ body {
 }
 
 @media (max-width: 560px) {
-  .control-pad__throws {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .control-pad__throws .sketch-btn:nth-child(4) {
-    grid-column: 1;
-  }
-
-  .control-pad__throws .sketch-btn:nth-child(5) {
-    grid-column: 2 / 4;
+  .control-pad__throws .sketch-btn {
+    flex-basis: clamp(4.2rem, 30vw, 5rem);
   }
 
   .control-pad__promo {
@@ -2186,26 +2657,26 @@ body {
   transition: transform 0.08s, box-shadow 0.08s;
 }
 
-.control-pad__throws .sketch-btn:nth-child(1) {
+.control-pad__throws .sketch-btn:nth-child(5n + 1) {
   border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
   transform: rotate(-1.5deg);
 }
 
-.control-pad__throws .sketch-btn:nth-child(2) {
+.control-pad__throws .sketch-btn:nth-child(5n + 2) {
   border-radius: 12px 255px 18px 225px / 225px 12px 255px 18px;
 }
 
-.control-pad__throws .sketch-btn:nth-child(3) {
+.control-pad__throws .sketch-btn:nth-child(5n + 3) {
   border-radius: 18px 225px 255px 12px / 255px 18px 12px 225px;
   transform: rotate(-0.8deg);
 }
 
-.control-pad__throws .sketch-btn:nth-child(4) {
+.control-pad__throws .sketch-btn:nth-child(5n + 4) {
   border-radius: 225px 18px 12px 255px / 12px 255px 225px 18px;
   transform: rotate(1.5deg);
 }
 
-.control-pad__throws .sketch-btn:nth-child(5) {
+.control-pad__throws .sketch-btn:nth-child(5n) {
   border-radius: 15px 225px 255px 18px / 255px 15px 18px 225px;
 }
 
@@ -2232,10 +2703,8 @@ body {
 .app-footer {
   flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.2rem 0.75rem;
   margin: 0;
   padding: 0.15rem 0.55rem 0.2rem;
   transform: rotate(-0.3deg);
@@ -2243,43 +2712,69 @@ body {
 
 .app-copyright {
   margin: 0;
+  width: 100%;
   font-size: clamp(0.72rem, 2.2vw, 0.88rem);
   opacity: 0.55;
   letter-spacing: 0.01em;
-  text-align: left;
+  text-align: center;
 }
 
-.app-partner {
-  margin: 0;
-  font-size: clamp(0.7rem, 2vw, 0.84rem);
-  opacity: 0.65;
-  text-align: right;
-  white-space: nowrap;
-}
+/* 모바일: 하단 버튼·푸터까지 스크롤 */
+@media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
 
-.app-partner__label {
-  margin-right: 0.35rem;
-  opacity: 0.85;
-}
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
 
-.app-partner__link {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 2px;
-  font-family: var(--font-accent);
-}
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    padding-bottom: max(0.6rem, env(safe-area-inset-bottom, 0px));
+  }
 
-.app-partner__link:hover {
-  opacity: 0.85;
-}
+  .game-stage {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    min-height: 50vh;
+    height: 50vh;
+    max-height: none;
+  }
 
-.app-partner__link:focus-visible {
-  outline: 2px dashed var(--ink);
-  outline-offset: 2px;
+  .game-screen {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+
+  .site-links {
+    flex-basis: clamp(4.6rem, 19vw, 6.2rem);
+  }
+
+  .control-pad {
+    flex-shrink: 0;
+  }
+
+  .app-footer {
+    flex-shrink: 0;
+    padding-bottom: 0.35rem;
+  }
 }
 
 @media (max-height: 700px), (max-width: 520px) {
+  .game-stage {
+    min-height: 46vh;
+    height: 46vh;
+  }
+
   .heroine-scene {
     width: min(34%, 180px);
   }

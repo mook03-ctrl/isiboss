@@ -11,6 +11,7 @@
   const projLayer = document.getElementById("proj-layer");
   const fxLayer = document.getElementById("fx-layer");
   const controlPad = document.getElementById("control-pad");
+  const throwsScroll = document.getElementById("throws-scroll");
   const myDesk = document.getElementById("my-desk");
   const myMonitor = document.getElementById("my-monitor");
   const monitorStatus = document.querySelector(".my-monitor-status");
@@ -74,6 +75,26 @@
       bossHit: "is-heavy-hit",
       useDeskMonitor: false,
     },
+    keyboard: {
+      type: "keyboard",
+      impact: "딸깍! 퍽",
+      impactSize: "sm",
+      sub: null,
+      hitAt: 700,
+      duration: 1420,
+      bossHit: "is-hit",
+      useDeskMonitor: false,
+    },
+    mouse: {
+      type: "mouse",
+      impact: "찍!",
+      impactSize: "sm",
+      sub: null,
+      hitAt: 660,
+      duration: 1380,
+      bossHit: "is-hit",
+      useDeskMonitor: false,
+    },
   };
 
   const PROJ_BUILDERS = {
@@ -107,6 +128,20 @@
         '<span class="proj-mon-bezel" aria-hidden="true"></span>' +
         '<span class="proj-mon-screen" aria-hidden="true"></span>' +
         '<span class="proj-mon-stand" aria-hidden="true"></span>';
+    },
+    keyboard(el) {
+      el.innerHTML =
+        '<span class="proj-kb-body" aria-hidden="true"></span>' +
+        '<span class="proj-kb-keys" aria-hidden="true"></span>' +
+        '<span class="proj-kb-space" aria-hidden="true"></span>';
+    },
+    mouse(el) {
+      el.innerHTML =
+        '<span class="proj-mouse-body" aria-hidden="true"></span>' +
+        '<span class="proj-mouse-btn-l" aria-hidden="true"></span>' +
+        '<span class="proj-mouse-btn-r" aria-hidden="true"></span>' +
+        '<span class="proj-mouse-wheel" aria-hidden="true"></span>' +
+        '<span class="proj-mouse-cord" aria-hidden="true"></span>';
     },
   };
 
@@ -260,6 +295,7 @@
   }
 
   function showBossScream() {
+    if (globalThis.GameSfx) globalThis.GameSfx.playBossScream();
     if (!bossSpeech) return;
     bossSpeech.textContent = BOSS_SCREAM;
     bossSpeech.hidden = false;
@@ -291,6 +327,7 @@
   }
 
   function onBossHit(cfg, key) {
+    if (globalThis.GameSfx) globalThis.GameSfx.playHit(key);
     boss.classList.add("is-thrown-hit", cfg.bossHit);
     showBossPain();
     showHitSpark();
@@ -331,6 +368,7 @@
   function showYell() {
     runAction(() => {
       window.setTimeout(() => {
+        if (globalThis.GameSfx) globalThis.GameSfx.playYell();
         shakeScreen(true);
         const wrap = document.createElement("div");
         wrap.className = "fx-yell-wrap";
@@ -439,9 +477,35 @@
     }
   }
 
+  function scrollThrowsBy(dir) {
+    if (!throwsScroll) return;
+    const first = throwsScroll.querySelector(".sketch-btn");
+    const gap = parseFloat(getComputedStyle(throwsScroll).gap) || 0;
+    const step = first ? first.offsetWidth + gap : throwsScroll.clientWidth * 0.75;
+    throwsScroll.scrollBy({ left: dir * step, behavior: "smooth" });
+  }
+
+  controlPad.addEventListener("click", (e) => {
+    const nav = e.target.closest("[data-throws-nav]");
+    if (nav) {
+      e.preventDefault();
+      scrollThrowsBy(nav.dataset.throwsNav === "next" ? 1 : -1);
+      return;
+    }
+  });
+
+  controlPad.addEventListener(
+    "click",
+    () => {
+      if (globalThis.GameSfx) globalThis.GameSfx.unlock();
+    },
+    { capture: true, once: true }
+  );
+
   controlPad.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
     if (!btn || busy) return;
+    if (globalThis.GameSfx) globalThis.GameSfx.unlock();
     onAction(btn.dataset.action);
   });
 })();
