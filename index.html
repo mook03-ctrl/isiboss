@@ -2,7 +2,10 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>다 때려쳐 @office</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=18" />
+    <link rel="stylesheet" href="styles.css?v=25" />
   </head>
   <body>
     <div id="app" class="app">
@@ -18,6 +21,7 @@
         <h1 class="game-title">다 때려쳐 @office</h1>
       </header>
 
+      <div class="game-stage">
       <main id="game-screen" class="game-screen sketch-border" aria-label="게임 화면">
         <div id="office-scene" class="office-scene">
           <!-- 모니터 뒤: 평소엔 가려짐 -->
@@ -30,7 +34,87 @@
               <p class="boss-label-top">직장 상사</p>
               <div id="boss-speech" class="boss-speech" hidden>으악~~</div>
               <div class="boss-head">
-                <div class="boss-hair-back" aria-hidden="true"></div>
+                <div class="boss-hair-back" aria-hidden="true">
+                  <svg
+                    class="boss-hair-lines"
+                    viewBox="0 0 100 92"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      class="boss-hair-outline"
+                      d="M12 78 Q14 28 50 14 Q86 28 88 78 Q82 84 50 86 Q18 84 12 78"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M24 76 Q26 32 50 22 Q74 32 76 76"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M20 18 Q16 42 22 72"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M34 16 Q30 48 36 74"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M50 14 L48 78"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M66 16 Q70 46 64 74"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M80 18 Q84 44 78 70"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M14 52 Q50 48 86 52"
+                      fill="none"
+                      stroke="#141414"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                      opacity="0.35"
+                    />
+                  </svg>
+                </div>
+                <div class="boss-scalp" aria-hidden="true"></div>
+                <div class="boss-scalp-shine" aria-hidden="true"></div>
+                <div class="boss-scratches" aria-hidden="true">
+                  <span class="boss-scratch boss-scratch--1"></span>
+                  <span class="boss-scratch boss-scratch--2"></span>
+                  <span class="boss-scratch boss-scratch--3"></span>
+                  <span class="boss-scratch boss-scratch--4"></span>
+                  <span class="boss-blood boss-blood--1"></span>
+                  <span class="boss-blood boss-blood--2"></span>
+                  <span class="boss-blood boss-blood--3"></span>
+                </div>
+                <div class="boss-head-lump" aria-hidden="true">
+                  <span class="boss-lump-patch"></span>
+                </div>
                 <span class="boss-head-back" aria-hidden="true">뒤통수</span>
                 <div class="boss-hair-pull" aria-hidden="true">
                   <span class="pulled-strand pulled-strand--1"></span>
@@ -131,14 +215,65 @@
         <div id="fx-layer" class="fx-layer" aria-live="polite"></div>
       </main>
 
+      <aside class="site-links sketch-border" aria-label="다른 서비스">
+        <a
+          class="site-link-box"
+          href="https://saju-match.com"
+          target="_blank"
+          rel="noopener noreferrer">
+          사주로 애인이나 찾자
+        </a>
+        <a
+          class="site-link-box"
+          href="https://todac.me"
+          target="_blank"
+          rel="noopener noreferrer">
+          상사 욕 몰래 남기기
+        </a>
+        <a
+          class="site-link-box"
+          href="https://easycopy.cloud"
+          target="_blank"
+          rel="noopener noreferrer">
+          AI 질문 결과 표 추출하기
+        </a>
+        <span class="site-link-box site-link-box--soon">준비중</span>
+        <span class="site-link-box site-link-box--soon">준비중</span>
+      </aside>
+      </div>
+
       <footer id="control-pad" class="control-pad sketch-border" aria-label="행동 버튼">
-        <p class="control-pad__label">던지기</p>
-        <div class="control-pad__throws" aria-label="투척">
-          <button type="button" class="action-btn sketch-btn" data-action="notebook">수첩</button>
-          <button type="button" class="action-btn sketch-btn" data-action="cup">물컵</button>
-          <button type="button" class="action-btn sketch-btn" data-action="monitor">모니터</button>
-          <button type="button" class="action-btn sketch-btn" data-action="phone">휴대폰</button>
-          <button type="button" class="action-btn sketch-btn" data-action="chair">의자</button>
+        <p class="control-pad__label">던지기 <span class="control-pad__hint">좌우로 넘기기</span></p>
+        <div class="control-pad__throws-row">
+          <button
+            type="button"
+            class="throws-nav sketch-btn"
+            data-throws-nav="prev"
+            aria-label="이전 물건"
+            aria-controls="throws-scroll">
+            ◀
+          </button>
+          <div
+            id="throws-scroll"
+            class="control-pad__throws"
+            tabindex="0"
+            aria-label="투척 물건 (좌우로 넘기기)">
+            <button type="button" class="action-btn sketch-btn" data-action="notebook">수첩</button>
+            <button type="button" class="action-btn sketch-btn" data-action="cup">물컵</button>
+            <button type="button" class="action-btn sketch-btn" data-action="monitor">모니터</button>
+            <button type="button" class="action-btn sketch-btn" data-action="phone">휴대폰</button>
+            <button type="button" class="action-btn sketch-btn" data-action="chair">의자</button>
+            <button type="button" class="action-btn sketch-btn" data-action="keyboard">키보드</button>
+            <button type="button" class="action-btn sketch-btn" data-action="mouse">마우스</button>
+          </div>
+          <button
+            type="button"
+            class="throws-nav sketch-btn"
+            data-throws-nav="next"
+            aria-label="다음 물건"
+            aria-controls="throws-scroll">
+            ▶
+          </button>
         </div>
         <div class="control-pad__extra" aria-label="기타 행동">
           <button type="button" class="action-btn sketch-btn" data-action="yell">소리지르기</button>
@@ -155,19 +290,11 @@
       </footer>
 
       <footer class="app-footer">
-        <p class="app-copyright">Copyright 2026 isiboss (v0.1 by mook)</p>
-        <p class="app-partner">
-          <span class="app-partner__label">파트너 서비스</span>
-          <a
-            class="app-partner__link"
-            href="https://saju-match.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            >saju-match.com</a>
-        </p>
+        <p class="app-copyright">Copyright 2026 isiboss (v0.2 by mook)</p>
       </footer>
     </div>
 
-    <script src="game.js?v=18"></script>
+    <script src="sfx.js?v=6"></script>
+    <script src="game.js?v=25"></script>
   </body>
 </html>
