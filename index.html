@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=26" />
+    <link rel="stylesheet" href="styles.css?v=28" />
   </head>
   <body>
     <div id="app" class="app">
@@ -183,9 +183,29 @@
               <span class="my-mouse-label">마우스</span>
             </div>
 
-            <div id="my-notebook" class="my-item my-item--notebook">수첩</div>
+            <div id="my-notebook" class="my-item my-item--notebook" aria-label="수첩">
+              <span class="my-notebook-spine" aria-hidden="true"></span>
+              <span class="my-notebook-cover" aria-hidden="true">
+                <span class="my-notebook-title">메모</span>
+                <span class="my-notebook-lines" aria-hidden="true"></span>
+                <span class="my-notebook-elastic" aria-hidden="true"></span>
+              </span>
+              <span class="my-notebook-label">수첩</span>
+            </div>
             <div id="my-cup" class="my-item my-item--cup">물컵</div>
-            <div id="my-phone" class="my-item my-item--phone">휴대폰</div>
+            <div id="my-phone" class="my-item my-item--phone" aria-label="휴대폰">
+              <span class="my-phone-body" aria-hidden="true">
+                <span class="my-phone-notch" aria-hidden="true"></span>
+                <span class="my-phone-screen" aria-hidden="true">
+                  <span class="my-phone-icon my-phone-icon--1" aria-hidden="true"></span>
+                  <span class="my-phone-icon my-phone-icon--2" aria-hidden="true"></span>
+                  <span class="my-phone-icon my-phone-icon--3" aria-hidden="true"></span>
+                  <span class="my-phone-msg" aria-hidden="true">ㅅㅂ</span>
+                </span>
+                <span class="my-phone-home" aria-hidden="true"></span>
+              </span>
+              <span class="my-phone-label">휴대폰</span>
+            </div>
 
             <div id="my-monitor" class="my-monitor">
               <div class="my-monitor-bezel">
@@ -290,7 +310,7 @@
       </footer>
 
       <footer class="app-footer">
-        <p class="app-copyright">Copyright 2026 isiboss (v0.2 by mook)</p>
+        <p class="app-copyright">Copyright 2026 angrywork.com (v0.3 by mook)</p>
       </footer>
     </div>
 
