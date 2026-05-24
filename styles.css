@@ -113,6 +113,9 @@ body {
 }
 
 .site-link-box:nth-child(3) {
+  font-size: clamp(0.62rem, 1.7vw, 0.8rem);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
   transform: rotate(-0.4deg);
 }
 
