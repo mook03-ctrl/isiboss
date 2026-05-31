@@ -70,28 +70,75 @@ body {
   flex: 1;
   min-height: 0;
   gap: 0.4rem;
-  align-items: stretch;
+  align-items: flex-start;
+}
+
+.panel-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  flex-direction: column;
+}
+
+.app.is-stock-mode #game-screen,
+.app.is-stock-mode #control-pad {
+  display: none;
+}
+
+.app.is-stock-mode .panel-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app.is-stock-mode #stock-panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
 .site-links {
   flex: 0 0 clamp(5.2rem, 21vw, 7.4rem);
+  width: clamp(5.2rem, 21vw, 7.4rem);
   display: flex;
   flex-direction: column;
   gap: 0.32rem;
   padding: 0.38rem 0.32rem;
-  min-height: 0;
+  align-self: flex-start;
+  position: sticky;
+  top: 0.45rem;
+  max-height: calc(100dvh - 5.5rem);
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink) transparent;
   transform: rotate(0.35deg);
+}
+
+.site-links::-webkit-scrollbar {
+  width: 4px;
+}
+
+.site-links::-webkit-scrollbar-thumb {
+  background: var(--ink);
+  border-radius: 4px;
+  opacity: 0.35;
 }
 
 .site-link-box {
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   min-height: 2.5rem;
   padding: 0.35rem 0.2rem;
   text-align: center;
+  font-family: var(--font-hand);
   font-size: clamp(0.68rem, 1.9vw, 0.88rem);
   line-height: 1.2;
   color: var(--ink);
@@ -103,8 +150,15 @@ body {
   transition: transform 0.08s, box-shadow 0.08s;
 }
 
+button.site-link-box {
+  cursor: pointer;
+  width: 100%;
+}
+
 .site-link-box:nth-child(1) {
   transform: rotate(-0.6deg);
+  font-size: clamp(0.62rem, 1.75vw, 0.82rem);
+  line-height: 1.15;
 }
 
 .site-link-box:nth-child(2) {
@@ -113,28 +167,39 @@ body {
 }
 
 .site-link-box:nth-child(3) {
-  font-size: clamp(0.62rem, 1.7vw, 0.8rem);
-  white-space: nowrap;
-  letter-spacing: -0.02em;
   transform: rotate(-0.4deg);
 }
 
 .site-link-box:nth-child(4) {
-  border-style: dashed;
+  font-size: clamp(0.62rem, 1.7vw, 0.8rem);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
   transform: rotate(0.3deg);
 }
 
 .site-link-box:nth-child(5) {
   border-style: dashed;
+  transform: rotate(-0.3deg);
+}
+
+.site-link-box:nth-child(6) {
+  border-style: dashed;
   transform: rotate(-0.5deg);
 }
 
-a.site-link-box:hover {
+a.site-link-box:hover,
+button.site-link-box:hover {
   box-shadow: 3px 4px 0 var(--ink);
   transform: scale(1.02) rotate(0deg);
 }
 
-a.site-link-box:focus-visible {
+.site-link-box.is-active {
+  background: rgba(20, 20, 20, 0.06);
+  box-shadow: inset 2px 2px 0 rgba(20, 20, 20, 0.12), 2px 2px 0 var(--ink);
+}
+
+a.site-link-box:focus-visible,
+button.site-link-box:focus-visible {
   outline: 3px dashed var(--ink);
   outline-offset: 2px;
 }
@@ -144,6 +209,480 @@ a.site-link-box:focus-visible {
   cursor: default;
   pointer-events: none;
   border-style: dashed;
+}
+
+/* ========== 주식 예측 패널 ========== */
+.stock-panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.45rem 0.55rem 0.5rem;
+  overflow: visible;
+  transform: rotate(-0.2deg);
+}
+
+.stock-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow: visible;
+}
+
+.stock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-bottom: 0.35rem;
+}
+
+.stock-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 3.2vw, 1.35rem);
+  font-weight: 400;
+  transform: rotate(-0.5deg);
+  line-height: 1.25;
+}
+
+.stock-title-note {
+  display: inline;
+  margin-left: 0.2rem;
+  font-size: clamp(0.58rem, 1.65vw, 0.72rem);
+  font-weight: 400;
+  opacity: 0.48;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .stock-title-note {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.08rem;
+    white-space: normal;
+  }
+}
+
+.stock-back {
+  flex-shrink: 0;
+  font-size: clamp(0.72rem, 2vw, 0.88rem);
+  padding: 0.25rem 0.45rem;
+  border-radius: 12px 18px 10px 16px;
+}
+
+.stock-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+  margin-bottom: 0.3rem;
+}
+
+.stock-search-wrap {
+  flex: 1;
+  min-width: 8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.stock-search-label {
+  font-size: 0.72rem;
+  opacity: 0.55;
+}
+
+.stock-search {
+  font-family: var(--font-hand);
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  padding: 0.35rem 0.5rem;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 10px 14px 8px 12px;
+  background: var(--paper);
+  color: var(--ink);
+  width: 100%;
+}
+
+.stock-search:focus {
+  outline: 3px dashed var(--ink);
+  outline-offset: 2px;
+}
+
+.stock-toolbar .sketch-btn {
+  flex-shrink: 0;
+  padding: 0.4rem 0.65rem;
+  font-size: clamp(0.85rem, 2.4vw, 1.05rem);
+}
+
+.stock-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  flex-shrink: 0;
+  margin-bottom: 0.35rem;
+}
+
+.stock-status {
+  margin: 0;
+  font-size: clamp(0.75rem, 2.1vw, 0.88rem);
+  opacity: 0.65;
+}
+
+.stock-status.is-error {
+  opacity: 0.9;
+  color: var(--ink);
+  text-decoration: underline wavy;
+  text-underline-offset: 3px;
+}
+
+.stock-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.app.is-stock-mode .stock-columns {
+  min-height: 7.5rem;
+  max-height: none;
+}
+
+.stock-rank {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 9rem;
+  border: 2px solid var(--ink);
+  border-radius: 12px 16px 10px 14px;
+  padding: 0.3rem 0.35rem;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 rgba(20, 20, 20, 0.1);
+}
+
+.stock-rank-title {
+  margin: 0 0 0.25rem;
+  font-size: clamp(0.78rem, 2.2vw, 0.92rem);
+  font-weight: 400;
+  text-align: center;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+.stock-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.stock-item-btn {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr auto;
+  gap: 0.2rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.28rem 0.2rem;
+  margin-bottom: 0.15rem;
+  font-family: var(--font-hand);
+  font-size: clamp(0.72rem, 2vw, 0.86rem);
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 8px 10px 6px 12px;
+  cursor: pointer;
+  transition: background 0.08s, border-color 0.08s;
+}
+
+.stock-item-btn:hover {
+  background: rgba(20, 20, 20, 0.05);
+  border-color: var(--ink);
+}
+
+.stock-item-btn.is-selected {
+  background: rgba(20, 20, 20, 0.08);
+  border-color: var(--ink);
+  box-shadow: 1px 2px 0 var(--ink);
+}
+
+.stock-item-rank {
+  opacity: 0.45;
+  text-align: center;
+}
+
+.stock-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stock-item-cap {
+  font-size: 0.85em;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.app.is-stock-mode .stock-rank {
+  max-height: 9rem;
+}
+
+.stock-result {
+  flex-shrink: 0;
+  margin-top: 0.35rem;
+  max-height: min(28vh, 220px);
+  overflow-y: auto;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 14px 18px 12px 16px;
+  padding: 0.4rem 0.5rem;
+  background: var(--paper);
+  box-shadow: 2px 3px 0 var(--ink);
+}
+
+.stock-result-title {
+  margin: 0 0 0.3rem;
+  font-size: clamp(0.85rem, 2.4vw, 1rem);
+  font-weight: 400;
+}
+
+.stock-result-body {
+  font-size: clamp(0.78rem, 2.1vw, 0.9rem);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.stock-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(5rem, auto) 1fr;
+  gap: 0.2rem 0.5rem;
+}
+
+.stock-dl dt {
+  margin: 0;
+  font-weight: 400;
+  opacity: 0.65;
+}
+
+.stock-dl dd {
+  margin: 0;
+}
+
+.stock-error {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.stock-notice {
+  margin: 0;
+  font-size: clamp(0.68rem, 1.9vw, 0.8rem);
+  opacity: 0.48;
+  white-space: nowrap;
+}
+
+/* ========== TQQQ 3배 ETF ========== */
+.tqqq-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: var(--sketch-width) solid var(--ink);
+  border-radius: 14px 18px 12px 16px;
+  padding: 0.4rem 0.45rem 0.45rem;
+  background: var(--paper);
+  box-shadow: 2px 3px 0 var(--ink);
+  transform: rotate(0.25deg);
+}
+
+.tqqq-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.tqqq-title {
+  margin: 0;
+  font-size: clamp(0.88rem, 2.5vw, 1.05rem);
+  font-weight: 400;
+}
+
+.tqqq-source {
+  font-size: clamp(0.62rem, 1.7vw, 0.72rem);
+  opacity: 0.45;
+}
+
+.tqqq-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.tqqq-stat {
+  margin: 0;
+  font-size: clamp(0.78rem, 2.1vw, 0.92rem);
+  opacity: 0.75;
+}
+
+.tqqq-stat--highlight {
+  font-size: clamp(0.85rem, 2.4vw, 1rem);
+  opacity: 0.95;
+  font-family: var(--font-accent);
+}
+
+.tqqq-stat--prev-ath {
+  font-size: clamp(0.8rem, 2.2vw, 0.94rem);
+  opacity: 0.72;
+  color: rgba(20, 20, 20, 0.75);
+}
+
+.tqqq-badge {
+  margin: 0;
+  padding: 0.15rem 0.45rem;
+  font-size: clamp(0.72rem, 2vw, 0.86rem);
+  border: 2px solid var(--ink);
+  border-radius: 10px 14px 8px 12px;
+  box-shadow: 1px 2px 0 var(--ink);
+}
+
+.tqqq-badge--sell {
+  background: rgba(180, 40, 40, 0.14);
+}
+
+.tqqq-badge--wait {
+  background: rgba(200, 160, 40, 0.14);
+}
+
+.tqqq-badge--buy {
+  background: rgba(40, 120, 60, 0.16);
+}
+
+.tqqq-trade-desc {
+  margin: 0 0 0.3rem;
+  font-size: clamp(0.72rem, 2vw, 0.84rem);
+  opacity: 0.62;
+  line-height: 1.35;
+}
+
+.tqqq-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(220px, 38vh, 460px);
+  min-height: 220px;
+  flex-shrink: 0;
+  border: 2px solid var(--ink);
+  border-radius: 10px 12px 8px 14px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.tqqq-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tqqq-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.55rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: clamp(0.62rem, 1.75vw, 0.72rem);
+  opacity: 0.65;
+}
+
+.tqqq-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.tqqq-legend-swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+}
+
+.tqqq-legend-swatch--sell {
+  background: rgba(200, 60, 60, 0.35);
+}
+
+.tqqq-legend-swatch--wait {
+  background: rgba(220, 180, 50, 0.35);
+}
+
+.tqqq-legend-swatch--buy {
+  background: rgba(50, 140, 70, 0.35);
+}
+
+.tqqq-legend-swatch--ath {
+  background: rgba(20, 20, 20, 0.12);
+}
+
+.tqqq-legend-swatch--prev-ath {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+.tqqq-status {
+  margin: 0.25rem 0 0;
+  font-size: clamp(0.65rem, 1.8vw, 0.75rem);
+  opacity: 0.45;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* 주식 모드: 모니터 영역 전체 사용 */
+body.is-stock-page {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body.is-stock-page .app {
+  height: auto;
+  min-height: 100dvh;
+}
+
+.app.is-stock-mode .game-stage,
+body.is-stock-page .game-stage {
+  flex: 1 1 auto;
+  min-height: calc(100dvh - 8.5rem);
+  height: auto;
+  max-height: none;
+}
+
+@media (max-width: 520px) {
+  .stock-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-rank {
+    max-height: 7.5rem;
+  }
+
+  .app.is-stock-mode .tqqq-chart-wrap {
+    height: clamp(200px, 34vh, 400px);
+    min-height: 200px;
+  }
+
+  .stock-result {
+    max-height: 24vh;
+  }
 }
 
 /* --- Game Screen --- */
@@ -2934,6 +3473,13 @@ a.site-link-box:focus-visible {
     max-height: none;
   }
 
+  body.is-stock-page .game-stage,
+  .app.is-stock-mode .game-stage {
+    flex: 1 1 auto;
+    min-height: calc(100dvh - 8rem);
+    height: auto;
+  }
+
   .game-screen {
     flex: 1;
     min-height: 0;
@@ -2942,7 +3488,9 @@ a.site-link-box:focus-visible {
   }
 
   .site-links {
-    flex-basis: clamp(4.6rem, 19vw, 6.2rem);
+    flex: 0 0 clamp(4.6rem, 19vw, 6.2rem);
+    width: clamp(4.6rem, 19vw, 6.2rem);
+    max-height: calc(100dvh - 5rem);
   }
 
   .control-pad {
@@ -2959,6 +3507,12 @@ a.site-link-box:focus-visible {
   .game-stage {
     min-height: 46vh;
     height: 46vh;
+  }
+
+  body.is-stock-page .game-stage,
+  .app.is-stock-mode .game-stage {
+    min-height: calc(100dvh - 7.5rem);
+    height: auto;
   }
 
   .heroine-scene {
