@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=28" />
+    <link rel="stylesheet" href="styles.css?v=37" />
   </head>
   <body>
     <div id="app" class="app">
@@ -22,6 +22,7 @@
       </header>
 
       <div class="game-stage">
+      <div class="panel-main">
       <main id="game-screen" class="game-screen sketch-border" aria-label="게임 화면">
         <div id="office-scene" class="office-scene">
           <!-- 모니터 뒤: 평소엔 가려짐 -->
@@ -235,7 +236,80 @@
         <div id="fx-layer" class="fx-layer" aria-live="polite"></div>
       </main>
 
+      <main id="stock-panel" class="stock-panel sketch-border" hidden aria-label="주식 예측">
+        <header class="stock-header">
+          <h2 class="stock-title">
+            주식으로 돈벌자
+            <span class="stock-title-note">(믿거나 말거나 거래 결과는 본인 책임..)</span>
+          </h2>
+          <button type="button" id="stock-back" class="sketch-btn stock-back">← 게임으로</button>
+        </header>
+        <div class="stock-toolbar">
+          <label class="stock-search-wrap">
+            <span class="stock-search-label">종목명</span>
+            <input
+              type="search"
+              id="stock-search"
+              class="stock-search"
+              placeholder="예: 삼성전자"
+              autocomplete="off"
+            />
+          </label>
+          <button type="button" id="stock-predict-btn" class="sketch-btn">AI 예측</button>
+        </div>
+        <div class="stock-status-row">
+          <p id="stock-status" class="stock-status" role="status" aria-live="polite"></p>
+          <span class="stock-notice">거래시간에만 예측 가능합니다.</span>
+        </div>
+        <div class="stock-panel-scroll">
+        <div class="stock-columns">
+          <section class="stock-rank" aria-labelledby="stock-kospi-title">
+            <h3 id="stock-kospi-title" class="stock-rank-title">KOSPI 시가총액 TOP</h3>
+            <ul id="stock-kospi" class="stock-list"></ul>
+          </section>
+          <section class="stock-rank" aria-labelledby="stock-kosdaq-title">
+            <h3 id="stock-kosdaq-title" class="stock-rank-title">KOSDAQ 시가총액 TOP</h3>
+            <ul id="stock-kosdaq" class="stock-list"></ul>
+          </section>
+        </div>
+
+        <section class="tqqq-section" aria-labelledby="tqqq-title">
+          <header class="tqqq-header">
+            <h3 id="tqqq-title" class="tqqq-title">미국 주식 3배 먹기 · TQQQ</h3>
+            <span class="tqqq-source">Yahoo Finance (yfinance)</span>
+          </header>
+          <div class="tqqq-stats">
+            <p id="tqqq-price" class="tqqq-stat">—</p>
+            <p id="tqqq-ath-pct" class="tqqq-stat tqqq-stat--highlight">전고점 대비 —</p>
+            <p id="tqqq-prev-ath-pct" class="tqqq-stat tqqq-stat--prev-ath">이전 전고점 대비 —</p>
+            <p id="tqqq-trade-badge" class="tqqq-badge tqqq-badge--wait">거래 대기</p>
+          </div>
+          <p id="tqqq-trade-desc" class="tqqq-trade-desc"></p>
+          <div class="tqqq-chart-wrap">
+            <canvas id="tqqq-chart" class="tqqq-chart" aria-label="TQQQ 가격 차트"></canvas>
+          </div>
+          <ul class="tqqq-legend" aria-hidden="true">
+            <li><span class="tqqq-legend-swatch tqqq-legend-swatch--sell"></span>매도 구간 (+45%↑)</li>
+            <li><span class="tqqq-legend-swatch tqqq-legend-swatch--wait"></span>거래 대기</li>
+            <li><span class="tqqq-legend-swatch tqqq-legend-swatch--buy"></span>매수 구간 (−15%↓)</li>
+            <li><span class="tqqq-legend-swatch tqqq-legend-swatch--ath"></span>전고점</li>
+            <li><span class="tqqq-legend-swatch tqqq-legend-swatch--prev-ath"></span>이전 전고점</li>
+          </ul>
+          <p id="tqqq-status" class="tqqq-status"></p>
+        </section>
+
+        <section id="stock-result" class="stock-result" hidden aria-labelledby="stock-result-title">
+          <h3 id="stock-result-title" class="stock-result-title">AI 주식 예측</h3>
+          <div id="stock-result-body" class="stock-result-body"></div>
+        </section>
+        </div>
+      </main>
+      </div>
+
       <aside class="site-links sketch-border" aria-label="다른 서비스">
+        <button type="button" class="site-link-box" data-site-panel="stock">
+          주식으로 돈벌자
+        </button>
         <a
           class="site-link-box"
           href="https://saju-match.com"
@@ -310,11 +384,12 @@
       </footer>
 
       <footer class="app-footer">
-        <p class="app-copyright">Copyright 2026 angrywork.com (v0.3 by mook)</p>
+        <p class="app-copyright">Copyright 2026 angrywork.com (v0.5 by mook)</p>
       </footer>
     </div>
 
     <script src="sfx.js?v=6"></script>
     <script src="game.js?v=25"></script>
+    <script src="stock.js?v=6"></script>
   </body>
 </html>

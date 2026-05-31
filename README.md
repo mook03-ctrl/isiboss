@@ -25,4 +25,4 @@ npx --yes serve .
 
 ---
 
-Copyright 2026 angrywork.com (v0.3 by mook)
+Copyright 2026 angrywork.com (v0.5 by mook)
