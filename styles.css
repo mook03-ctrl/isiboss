@@ -741,13 +741,14 @@ body.is-stock-page .game-stage {
 
 .boss-desk {
   position: absolute;
-  top: 38%;
+  top: 58%;
   left: 50%;
-  width: 55%;
-  max-width: 320px;
+  width: 62%;
+  max-width: 340px;
   height: 18px;
-  margin-left: -27.5%;
+  margin-left: -31%;
   transform: rotate(-1deg);
+  z-index: 6;
 }
 
 .boss-desk-top {
@@ -778,18 +779,20 @@ body.is-stock-page .game-stage {
   }
 }
 
-/* 상사 뒷모습 — 모니터 너머 중앙 */
+/* 상사 뒷모습 — 만화 PNG (투명·상단 크롭) */
 .boss {
   position: absolute;
-  top: 11%;
+  top: 4%;
   left: 50%;
-  width: clamp(160px, 42vw, 220px);
-  height: clamp(170px, 38vh, 230px);
+  width: clamp(260px, 62vw, 400px);
   z-index: 2;
   opacity: 0;
   transform: translateX(-50%) translateY(-16px) rotate(0.5deg);
   transition: opacity 0.35s ease, transform 0.4s ease;
   overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .game-screen.is-revealed .boss {
@@ -797,51 +800,103 @@ body.is-stock-page .game-stage {
   transform: translateX(-50%) translateY(0) rotate(0.5deg);
 }
 
-.boss-head {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 96px;
-  height: 108px;
-  margin-left: -48px;
-  border: var(--sketch-width) solid var(--ink);
-  border-radius: 48% 52% 44% 50% / 54% 46% 58% 48%;
-  background: var(--paper);
-  transform-origin: 50% 90%;
-  box-shadow: inset -6px -8px 0 rgba(20, 20, 20, 0.06);
-  overflow: visible;
+.boss-art {
+  position: relative;
+  width: 100%;
+  line-height: 0;
+  overflow: hidden;
 }
 
-/* 상사 뒤통수 머리카락 — 펜 선만 (채색 없음) */
-.boss-hair-back {
-  position: absolute;
-  inset: -12px -12px 14% -12px;
-  background: none;
-  border: none;
-  overflow: visible;
-  z-index: 1;
-  transition: opacity 0.35s ease, transform 0.4s ease;
+.boss-figure {
+  position: relative;
+  width: 100%;
+  transform: scale(1.12);
+  transform-origin: top center;
 }
 
-.boss-hair-lines {
+.boss-cutout {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.boss-head-layer {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  width: 54%;
+  height: 38%;
+  transform: translateX(-50%);
+  transform-origin: 50% 92%;
+  pointer-events: none;
   overflow: visible;
 }
 
-.boss-hair-lines path {
-  vector-effect: non-scaling-stroke;
+.boss .boss-head {
+  transform-origin: 50% 92%;
 }
 
-/* 맞으면 땜방 혹 */
+.boss-neck {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  width: 18%;
+  height: 10%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.boss-shoulders {
+  transform-origin: 50% 28%;
+}
+
+.boss-scalp-img {
+  display: none;
+}
+
+.boss-scalp-shine {
+  display: none;
+}
+
+.boss-hair-back {
+  display: none;
+}
+
+.boss.is-hair-pulled .boss-scratches {
+  opacity: 1;
+}
+
+.boss.is-hair-pulled .boss-head-lump {
+  opacity: 0;
+}
+
+.boss-hit-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.boss-head-overlay {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  width: 54%;
+  height: 38%;
+  transform: translateX(-50%);
+}
+
+/* 맞으면 땜방 혹 (HTML 오버레이) */
 .boss-head-lump {
   position: absolute;
   top: 30%;
   left: 50%;
-  width: 30px;
-  height: 26px;
-  margin-left: -15px;
+  width: 30%;
+  height: 28%;
+  margin-left: -15%;
   z-index: 4;
   opacity: 0;
   pointer-events: none;
@@ -899,39 +954,9 @@ body.is-stock-page .game-stage {
   }
 }
 
-/* 머리 뜯긴 후: 대머리 + 광택 */
-.boss-scalp {
-  position: absolute;
-  inset: 2px 6px 18% 6px;
-  border-radius: 46% 46% 40% 40%;
-  background: linear-gradient(155deg, #fde8dc 0%, #ecc8b0 35%, #ddb898 70%, #d0a890 100%);
-  opacity: 0;
-  z-index: 2;
-  transition: opacity 0.4s ease;
-}
-
-.boss-scalp-shine {
-  position: absolute;
-  top: 20%;
-  left: 36%;
-  width: 26px;
-  height: 16px;
-  border-radius: 50%;
-  background: linear-gradient(
-    125deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.35) 45%,
-    transparent 70%
-  );
-  opacity: 0;
-  z-index: 5;
-  pointer-events: none;
-  transform: rotate(-18deg);
-}
-
 .boss-scratches {
   position: absolute;
-  inset: 6px 4px 20% 4px;
+  inset: 6% 4% 20% 4%;
   opacity: 0;
   z-index: 6;
   pointer-events: none;
@@ -1007,52 +1032,9 @@ body.is-stock-page .game-stage {
   transform: rotate(-35deg);
 }
 
-.boss.is-hair-pulled .boss-hair-back {
-  opacity: 0;
-  transform: scale(0.55) translateY(8px);
-  pointer-events: none;
-}
-
-.boss.is-hair-pulled .boss-hair-pull {
-  opacity: 0;
-}
-
-.boss.is-hair-pulled .boss-head-back {
-  opacity: 0.15;
-}
-
-.boss.is-hair-pulled .boss-scalp {
-  opacity: 1;
-}
-
-.boss.is-hair-pulled .boss-scalp-shine {
-  opacity: 1;
-  animation: scalp-shine 1.4s ease-in-out infinite;
-}
-
-.boss.is-hair-pulled .boss-scratches {
-  opacity: 1;
-}
-
-.boss.is-hair-pulled .boss-head-lump {
-  opacity: 0;
-}
-
-@keyframes scalp-shine {
-  0%,
-  100% {
-    opacity: 0.75;
-    transform: rotate(-18deg) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: rotate(-14deg) scale(1.08);
-  }
-}
-
 .boss-hair-pull {
   position: absolute;
-  inset: -4px -20px 10% -24px;
+  inset: -4% -20% 10% -24%;
   opacity: 0;
   pointer-events: none;
 }
@@ -1258,34 +1240,34 @@ body.is-stock-page .game-stage {
 }
 
 .boss-label-top {
-  position: absolute;
-  top: -34px;
-  left: 50%;
-  margin: 0;
-  transform: translateX(-50%) rotate(-2deg);
-  font-size: clamp(1rem, 3.2vw, 1.35rem);
+  position: relative;
+  top: auto;
+  left: auto;
+  margin: 0 0 0.35rem;
+  transform: rotate(-2deg);
+  font-size: clamp(1.55rem, 5.2vw, 2.15rem);
   white-space: nowrap;
-  z-index: 4;
+  z-index: 10;
   text-decoration: underline;
   text-decoration-style: wavy;
-  text-underline-offset: 4px;
+  text-underline-offset: 5px;
+  flex-shrink: 0;
+}
+
+.game-screen.is-revealed,
+.game-screen.is-action {
+  overflow: visible;
 }
 
 .boss-head-back {
-  position: absolute;
-  inset: 18% 20% 28%;
-  font-size: 0.85rem;
-  opacity: 0.2;
-  transform: rotate(-8deg);
-  text-align: center;
-  z-index: 0;
+  display: none;
 }
 
 /* 등·어깨에 붙은 옷 태그 */
 .boss-tag {
   position: absolute;
-  top: 6px;
-  right: -8px;
+  top: 58%;
+  right: 4%;
   padding: 0.15rem 0.4rem 0.2rem;
   font-size: clamp(0.7rem, 2.2vw, 0.85rem);
   letter-spacing: -0.03em;
@@ -1319,48 +1301,6 @@ body.is-stock-page .game-stage {
   border: 2px solid var(--ink);
   border-radius: 50%;
   background: var(--paper);
-}
-
-.boss-neck {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  width: 40px;
-  height: 26px;
-  margin-left: -20px;
-  border-left: var(--sketch-width) solid var(--ink);
-  border-right: var(--sketch-width) solid var(--ink);
-}
-
-.boss-shoulders {
-  position: absolute;
-  top: 120px;
-  left: 50%;
-  width: 170px;
-  height: 40px;
-  margin-left: -85px;
-  border: var(--sketch-width) solid var(--ink);
-  border-radius: 42% 40% 14% 16% / 32% 30% 72% 70%;
-  background: var(--paper);
-  overflow: visible;
-}
-
-.boss-chair-back {
-  position: absolute;
-  top: 155px;
-  left: 50%;
-  width: 100px;
-  height: 55px;
-  margin-left: -50px;
-  border: var(--sketch-width) solid var(--ink);
-  border-radius: 18px 22px 8px 12px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--paper) 0,
-    var(--paper) 6px,
-    rgba(20, 20, 20, 0.04) 6px,
-    rgba(20, 20, 20, 0.04) 8px
-  );
 }
 
 .boss-speech {

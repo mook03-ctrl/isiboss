@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=37" />
+    <link rel="stylesheet" href="styles.css?v=42" />
   </head>
   <body>
     <div id="app" class="app">
@@ -28,111 +28,54 @@
           <!-- 모니터 뒤: 평소엔 가려짐 -->
           <div id="behind-zone" class="behind-zone" aria-hidden="true">
             <div class="office-wall">사무실</div>
-            <div id="boss-desk" class="boss-desk">
-              <div class="boss-desk-top"></div>
-            </div>
             <figure id="boss" class="boss" aria-label="상사">
               <p class="boss-label-top">직장 상사</p>
               <div id="boss-speech" class="boss-speech" hidden>으악~~</div>
-              <div class="boss-head">
-                <div class="boss-hair-back" aria-hidden="true">
-                  <svg
-                    class="boss-hair-lines"
-                    viewBox="0 0 100 92"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      class="boss-hair-outline"
-                      d="M12 78 Q14 28 50 14 Q86 28 88 78 Q82 84 50 86 Q18 84 12 78"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M24 76 Q26 32 50 22 Q74 32 76 76"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M20 18 Q16 42 22 72"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M34 16 Q30 48 36 74"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M50 14 L48 78"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M66 16 Q70 46 64 74"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M80 18 Q84 44 78 70"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M14 52 Q50 48 86 52"
-                      fill="none"
-                      stroke="#141414"
-                      stroke-width="1.2"
-                      stroke-linecap="round"
-                      opacity="0.35"
-                    />
-                  </svg>
+              <div id="boss-art" class="boss-art">
+                <div class="boss-hit-layer" aria-hidden="true">
+                  <div class="boss-head-overlay">
+                    <div class="boss-scratches" aria-hidden="true">
+                      <span class="boss-scratch boss-scratch--1"></span>
+                      <span class="boss-scratch boss-scratch--2"></span>
+                      <span class="boss-scratch boss-scratch--3"></span>
+                      <span class="boss-scratch boss-scratch--4"></span>
+                      <span class="boss-blood boss-blood--1"></span>
+                      <span class="boss-blood boss-blood--2"></span>
+                      <span class="boss-blood boss-blood--3"></span>
+                    </div>
+                    <div class="boss-head-lump" aria-hidden="true">
+                      <span class="boss-lump-patch"></span>
+                    </div>
+                    <div class="boss-hair-pull" aria-hidden="true">
+                      <span class="pulled-strand pulled-strand--1"></span>
+                      <span class="pulled-strand pulled-strand--2"></span>
+                      <span class="pulled-strand pulled-strand--3"></span>
+                      <span class="pulled-strand pulled-strand--4"></span>
+                      <span class="pulled-strand pulled-strand--5"></span>
+                      <span class="pulled-strand pulled-strand--6"></span>
+                      <span class="pulled-strand pulled-strand--7"></span>
+                    </div>
+                  </div>
                 </div>
-                <div class="boss-scalp" aria-hidden="true"></div>
-                <div class="boss-scalp-shine" aria-hidden="true"></div>
-                <div class="boss-scratches" aria-hidden="true">
-                  <span class="boss-scratch boss-scratch--1"></span>
-                  <span class="boss-scratch boss-scratch--2"></span>
-                  <span class="boss-scratch boss-scratch--3"></span>
-                  <span class="boss-scratch boss-scratch--4"></span>
-                  <span class="boss-blood boss-blood--1"></span>
-                  <span class="boss-blood boss-blood--2"></span>
-                  <span class="boss-blood boss-blood--3"></span>
-                </div>
-                <div class="boss-head-lump" aria-hidden="true">
-                  <span class="boss-lump-patch"></span>
-                </div>
-                <span class="boss-head-back" aria-hidden="true">뒤통수</span>
-                <div class="boss-hair-pull" aria-hidden="true">
-                  <span class="pulled-strand pulled-strand--1"></span>
-                  <span class="pulled-strand pulled-strand--2"></span>
-                  <span class="pulled-strand pulled-strand--3"></span>
-                  <span class="pulled-strand pulled-strand--4"></span>
-                  <span class="pulled-strand pulled-strand--5"></span>
-                  <span class="pulled-strand pulled-strand--6"></span>
-                  <span class="pulled-strand pulled-strand--7"></span>
+                <div class="boss-figure boss-shoulders">
+                  <img
+                    class="boss-cutout boss-body"
+                    src="assets/boss-back.png?v=6"
+                    alt="직장 상사 뒷모습"
+                    width="1024"
+                    height="357"
+                  />
+                  <span class="boss-neck" aria-hidden="true"></span>
+                  <div class="boss-head-layer boss-head">
+                    <span class="boss-hair-back" aria-hidden="true"></span>
+                  </div>
                 </div>
               </div>
-              <div class="boss-neck"></div>
-              <div class="boss-shoulders">
-                <span class="boss-tag" aria-label="옷 태그">개ㅅㄲ</span>
-              </div>
-              <div class="boss-chair-back"></div>
+              <span class="boss-tag" aria-label="옷 태그">개ㅅㄲ</span>
             </figure>
+            <div id="boss-desk" class="boss-desk">
+              <div class="boss-desk-top"></div>
+            </div>
             <div id="hit-spark" class="hit-spark" aria-hidden="true"></div>
 
             <div id="hair-pull-fx" class="hair-pull-fx" hidden aria-hidden="true">
@@ -389,7 +332,7 @@
     </div>
 
     <script src="sfx.js?v=6"></script>
-    <script src="game.js?v=25"></script>
+    <script src="game.js?v=26"></script>
     <script src="stock.js?v=7"></script>
   </body>
 </html>
