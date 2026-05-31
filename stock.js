@@ -21,7 +21,6 @@
   let tqqqLoaded = false;
   let tqqqTimer = null;
   let tqqqCache = null;
-  let tqqqDrawTimer = null;
 
   const YAHOO_CHART =
     "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=max";
@@ -62,9 +61,10 @@
     if (on && !marketLoaded) loadMarketCap();
     if (on) {
       window.requestAnimationFrame(function () {
-        window.requestAnimationFrame(function () {
-          loadTqqq();
-        });
+        loadTqqq();
+        window.setTimeout(function () {
+          if (tqqqCache) renderTqqqFromCache();
+        }, 300);
       });
       if (!tqqqTimer) {
         tqqqTimer = window.setInterval(loadTqqq, 60000);
@@ -80,40 +80,57 @@
   }
 
   async function fetchYahooChart() {
-    const sources = [
-      function () {
-        return fetch(YAHOO_CHART, { mode: "cors" });
+    const urls = [
+      YAHOO_CHART,
+      "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
+      "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=5y",
+    ];
+    const proxies = [
+      function (url, signal) {
+        return fetch(url, { mode: "cors", signal: signal });
       },
-      function () {
+      function (url, signal) {
         return fetch(
-          "https://api.allorigins.win/raw?url=" + encodeURIComponent(YAHOO_CHART)
+          "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+          { signal: signal }
         );
       },
-      function () {
-        return fetch(
-          "https://corsproxy.io/?" + encodeURIComponent(YAHOO_CHART)
-        );
+      function (url, signal) {
+        return fetch("https://corsproxy.io/?" + encodeURIComponent(url), {
+          signal: signal,
+        });
       },
     ];
 
     let lastErr = null;
-    for (let i = 0; i < sources.length; i++) {
-      try {
-        const res = await sources[i]();
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        if (
-          data &&
-          data.chart &&
-          data.chart.result &&
-          data.chart.result[0] &&
-          data.chart.result[0].indicators
-        ) {
-          return data;
+    for (let u = 0; u < urls.length; u++) {
+      for (let p = 0; p < proxies.length; p++) {
+        const ctrl = new AbortController();
+        const timer = window.setTimeout(function () {
+          ctrl.abort();
+        }, 20000);
+        try {
+          const res = await proxies[p](urls[u], ctrl.signal);
+          window.clearTimeout(timer);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const data = await res.json();
+          if (data && data.chart && data.chart.error) {
+            throw new Error(data.chart.error.description || "Yahoo 오류");
+          }
+          if (
+            data &&
+            data.chart &&
+            data.chart.result &&
+            data.chart.result[0] &&
+            data.chart.result[0].indicators
+          ) {
+            return data;
+          }
+          throw new Error("차트 데이터 형식 오류");
+        } catch (e) {
+          window.clearTimeout(timer);
+          lastErr = e;
         }
-        throw new Error("차트 데이터 형식 오류");
-      } catch (e) {
-        lastErr = e;
       }
     }
     throw lastErr || new Error("TQQQ 데이터를 불러오지 못했습니다.");
@@ -157,6 +174,9 @@
       }
     });
     const current = closes[closes.length - 1];
+    if (current == null || ath <= 0) {
+      throw new Error("TQQQ 현재가 데이터가 없습니다.");
+    }
     const prevAth = findPrevAthFromHighs(highs);
     const buyLine = ath * 0.85;
     const sellLine = ath * 1.45;
@@ -212,16 +232,41 @@
   }
 
   function getChartSize(wrap) {
+    const style = window.getComputedStyle(wrap);
     let w = wrap.clientWidth;
     let h = wrap.clientHeight;
     if (h < 20) {
-      const style = window.getComputedStyle(wrap);
-      h = parseFloat(style.height) || parseFloat(style.minHeight) || 280;
+      h =
+        parseFloat(style.height) ||
+        parseFloat(style.minHeight) ||
+        280;
     }
     if (w < 20) {
-      w = wrap.parentElement ? wrap.parentElement.clientWidth - 16 : 320;
+      w =
+        (wrap.parentElement && wrap.parentElement.clientWidth - 16) ||
+        parseFloat(style.width) ||
+        320;
     }
-    return { w: Math.max(w, 200), h: Math.max(h, 200) };
+    return { w: Math.max(w, 200), h: Math.max(h, 220) };
+  }
+
+  function drawTqqqMessage(w, h, msg) {
+    if (!tqqqChart) return;
+    const dpr = window.devicePixelRatio || 1;
+    tqqqChart.width = Math.floor(w * dpr);
+    tqqqChart.height = Math.floor(h * dpr);
+    tqqqChart.style.width = w + "px";
+    tqqqChart.style.height = h + "px";
+    const ctx = tqqqChart.getContext("2d");
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = "#fefefe";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(20,20,20,0.55)";
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg, w / 2, h / 2);
   }
 
   function drawTqqqChart(closes, highs, timestamps, meta) {
@@ -234,11 +279,8 @@
     const h = size.h;
 
     if (wrap.clientHeight < 20) {
-      if (tqqqDrawTimer) window.clearTimeout(tqqqDrawTimer);
-      tqqqDrawTimer = window.setTimeout(function () {
-        drawTqqqChart(closes, highs, timestamps, meta);
-      }, 120);
-      return null;
+      wrap.style.minHeight = h + "px";
+      wrap.style.height = h + "px";
     }
 
     const dpr = window.devicePixelRatio || 1;
@@ -429,14 +471,27 @@
   }
 
   function renderTqqqFromCache() {
-    if (!tqqqCache) return;
-    const analysis = drawTqqqChart(
-      tqqqCache.closes,
-      tqqqCache.highs,
-      tqqqCache.timestamps,
-      tqqqCache.meta
-    );
-    if (analysis) updateTqqqUI(analysis, tqqqCache.meta);
+    if (!tqqqCache || !tqqqChart) return false;
+    const wrap = tqqqChart.parentElement;
+    const size = wrap ? getChartSize(wrap) : { w: 320, h: 280 };
+    try {
+      const analysis = drawTqqqChart(
+        tqqqCache.closes,
+        tqqqCache.highs,
+        tqqqCache.timestamps,
+        tqqqCache.meta
+      );
+      if (analysis) {
+        updateTqqqUI(analysis, tqqqCache.meta);
+        return true;
+      }
+    } catch (e) {
+      drawTqqqMessage(size.w, size.h, e.message || "차트를 그리지 못했습니다.");
+      if (tqqqStatus) {
+        tqqqStatus.textContent = e.message || "차트를 그리지 못했습니다.";
+      }
+    }
+    return false;
   }
 
   async function loadTqqq() {
@@ -456,12 +511,29 @@
         timestamps: timestamps,
         meta: meta,
       };
-      renderTqqqFromCache();
-      tqqqLoaded = true;
+      if (renderTqqqFromCache()) {
+        tqqqLoaded = true;
+      } else {
+        window.setTimeout(renderTqqqFromCache, 200);
+      }
     } catch (e) {
+      tqqqLoaded = false;
+      const wrap = tqqqChart && tqqqChart.parentElement;
+      if (wrap) {
+        const size = getChartSize(wrap);
+        drawTqqqMessage(
+          size.w,
+          size.h,
+          e.name === "AbortError"
+            ? "TQQQ 데이터 요청 시간 초과"
+            : e.message || "TQQQ 데이터를 불러오지 못했습니다."
+        );
+      }
       if (tqqqStatus) {
         tqqqStatus.textContent =
-          e.message || "TQQQ 데이터를 불러오지 못했습니다.";
+          e.name === "AbortError"
+            ? "TQQQ 데이터 요청 시간 초과입니다."
+            : e.message || "TQQQ 데이터를 불러오지 못했습니다.";
       }
     }
   }
