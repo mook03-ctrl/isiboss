@@ -552,6 +552,39 @@
     }
   });
 
+  function parseResponseBody(text) {
+    const trimmed = String(text || "")
+      .trim()
+      .replace(/^\uFEFF/, "");
+    if (!trimmed) {
+      throw new Error("서버에서 빈 응답을 받았습니다.");
+    }
+
+    if (/^https?:\/\/\S+$/i.test(trimmed)) {
+      return { chartUrl: trimmed, _responseType: "chartUrl" };
+    }
+
+    try {
+      return JSON.parse(trimmed);
+    } catch (e) {
+      const jsonSlice = trimmed.match(/\{[\s\S]*\}/);
+      if (jsonSlice) {
+        try {
+          return JSON.parse(jsonSlice[0]);
+        } catch (e2) {
+          /* fall through */
+        }
+      }
+      const urlMatch = trimmed.match(/https?:\/\/[^\s"'<>]+/i);
+      if (urlMatch) {
+        return { chartUrl: urlMatch[0], _responseType: "chartUrl" };
+      }
+      throw new Error(
+        trimmed.length > 160 ? trimmed.slice(0, 160) + "…" : trimmed
+      );
+    }
+  }
+
   async function fetchJson(url, timeoutMs) {
     const ctrl = new AbortController();
     const timer = window.setTimeout(function () {
@@ -563,19 +596,42 @@
       const text = await res.text();
       let data;
       try {
-        data = JSON.parse(text);
+        data = parseResponseBody(text);
       } catch (e) {
-        if (!res.ok) throw new Error(text.slice(0, 120) || "응답 오류");
-        throw new Error("JSON 형식이 아닙니다.");
+        if (!res.ok) {
+          throw new Error(
+            (e && e.message) || text.slice(0, 120) || "응답 오류 (" + res.status + ")"
+          );
+        }
+        throw new Error(
+          "예측 결과를 해석하지 못했습니다. " +
+            ((e && e.message) || "응답 형식 오류")
+        );
       }
-      if (!res.ok || (data.status && data.status >= 400)) {
-        const errMsg = data.error || data.message || "요청 실패 (" + res.status + ")";
+      if (!res.ok || (data.status && Number(data.status) >= 400)) {
+        const errMsg =
+          data.error ||
+          data.message ||
+          "요청 실패 (" + res.status + ")";
         throw new Error(errMsg);
       }
       return data;
     } finally {
       window.clearTimeout(timer);
     }
+  }
+
+  function findStockCode(name) {
+    const target = (name || "").trim();
+    if (!target) return "";
+    const lists = document.querySelectorAll(".stock-item-btn");
+    for (let i = 0; i < lists.length; i++) {
+      const btn = lists[i];
+      if (btn.dataset.name === target && btn.dataset.code) {
+        return btn.dataset.code;
+      }
+    }
+    return "";
   }
 
   function renderStockList(listEl, items) {
@@ -587,6 +643,7 @@
       btn.type = "button";
       btn.className = "stock-item-btn";
       btn.dataset.name = item.name;
+      if (item.code) btn.dataset.code = item.code;
       btn.innerHTML =
         '<span class="stock-item-rank">' +
         (i + 1) +
@@ -599,7 +656,7 @@
         "</span>";
       btn.addEventListener("click", function () {
         selectStock(item.name);
-        runPrediction(item.name);
+        runPrediction(item.name, item.code);
       });
       li.appendChild(btn);
       listEl.appendChild(li);
@@ -636,6 +693,42 @@
     stockResult.hidden = false;
     stockResultTitle.textContent = name + " — AI 주식 예측";
     stockResultBody.innerHTML = "";
+
+    const chartUrl =
+      (data && data.chartUrl) ||
+      (data && data.url) ||
+      (data && data.image) ||
+      (typeof data === "string" && /^https?:\/\//i.test(data) ? data : "");
+
+    if (chartUrl) {
+      const wrap = document.createElement("div");
+      wrap.className = "stock-chart-result";
+      const link = document.createElement("a");
+      link.className = "stock-chart-link";
+      link.href = chartUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "예측 차트 원본 보기";
+      const img = document.createElement("img");
+      img.className = "stock-chart-img";
+      img.src = chartUrl;
+      img.alt = name + " AI 예측 차트";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.addEventListener("error", function () {
+        img.hidden = true;
+        const note = document.createElement("p");
+        note.className = "stock-chart-fallback";
+        note.textContent =
+          "차트 이미지를 불러오지 못했습니다. 위 링크로 원본을 열어 주세요.";
+        wrap.appendChild(note);
+      });
+      wrap.appendChild(link);
+      wrap.appendChild(img);
+      stockResultBody.appendChild(wrap);
+      stockResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
 
     if (typeof data === "string") {
       stockResultBody.textContent = data;
@@ -674,7 +767,12 @@
     stockResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  async function runPrediction(name) {
+  async function requestPortfolioAI(name) {
+    const url = API + "portfolioAI&name=" + encodeURIComponent(name);
+    return fetchJson(url, 90000);
+  }
+
+  async function runPrediction(name, stockCode) {
     const trimmed = (name || "").trim();
     if (!trimmed) {
       setStatus("종목명을 입력해 주세요.", true);
@@ -687,10 +785,29 @@
     setStatus(trimmed + " AI 예측 분석 중… (최대 90초)");
     stockResult.hidden = true;
 
+    const code = (stockCode || findStockCode(trimmed) || "").trim();
+    const tried = [];
+
     try {
-      const url =
-        API + "portfolioAI&name=" + encodeURIComponent(trimmed);
-      const data = await fetchJson(url, 90000);
+      let data;
+      try {
+        tried.push(trimmed);
+        data = await requestPortfolioAI(trimmed);
+      } catch (firstErr) {
+        const canRetryWithCode =
+          code &&
+          code !== trimmed &&
+          tried.indexOf(code) < 0 &&
+          (/데이터가 충분하지|405|not enough/i.test(firstErr.message || "") ||
+            firstErr.message.indexOf("요청 실패") >= 0);
+        if (canRetryWithCode) {
+          setStatus(trimmed + " → 종목코드(" + code + ")로 재시도 중…");
+          tried.push(code);
+          data = await requestPortfolioAI(code);
+        } else {
+          throw firstErr;
+        }
+      }
       renderPrediction(trimmed, data);
       setStatus(trimmed + " 예측 완료.");
     } catch (e) {
