@@ -483,6 +483,40 @@ button.site-link-box:focus-visible {
   opacity: 0.85;
 }
 
+.stock-chart-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+
+.stock-chart-link {
+  color: var(--ink);
+  font-size: clamp(0.78rem, 2.1vw, 0.9rem);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.stock-chart-img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border: 2px solid var(--ink);
+  border-radius: 8px 12px 10px 14px;
+  background: #fff;
+}
+
+.stock-chart-fallback {
+  margin: 0;
+  opacity: 0.7;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+}
+
+.app.is-stock-mode .stock-result:has(.stock-chart-img) {
+  max-height: min(52vh, 480px);
+}
+
 .stock-notice {
   margin: 0;
   font-size: clamp(0.68rem, 1.9vw, 0.8rem);
