@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=43" />
+    <link rel="stylesheet" href="styles.css?v=46" />
   </head>
   <body>
     <div id="app" class="app">
@@ -216,6 +216,11 @@
           </section>
         </div>
 
+        <section id="stock-result" class="stock-result" hidden aria-labelledby="stock-result-title">
+          <h3 id="stock-result-title" class="stock-result-title">AI 주식 예측</h3>
+          <div id="stock-result-body" class="stock-result-body"></div>
+        </section>
+
         <section class="tqqq-section" aria-labelledby="tqqq-title">
           <header class="tqqq-header">
             <h3 id="tqqq-title" class="tqqq-title">미국 주식 3배 먹기 · TQQQ</h3>
@@ -239,11 +244,6 @@
             <li><span class="tqqq-legend-swatch tqqq-legend-swatch--prev-ath"></span>이전 전고점</li>
           </ul>
           <p id="tqqq-status" class="tqqq-status"></p>
-        </section>
-
-        <section id="stock-result" class="stock-result" hidden aria-labelledby="stock-result-title">
-          <h3 id="stock-result-title" class="stock-result-title">AI 주식 예측</h3>
-          <div id="stock-result-body" class="stock-result-body"></div>
         </section>
         </div>
       </main>
