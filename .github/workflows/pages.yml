@@ -15,11 +15,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: semiconductor-stock/package-lock.json
+
+      - name: Build semiconductor static (Dual Mode)
+        working-directory: semiconductor-stock
+        run: |
+          npm ci
+          npm run build
+
+      - name: Stage semiconductor for Pages
+        run: |
+          cd semiconductor-stock
+          shopt -s dotglob
+          cp -r out/* .
+          rm -rf out .next node_modules app components lib public
+          rm -f package.json package-lock.json tsconfig.json next.config.mjs postcss.config.mjs tailwind.config.ts next-env.d.ts .gitignore README.md
+          rm -rf scripts
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: .
-          exclude_assets: ".github"
+          exclude_assets: ".github, semiconductor-stock/node_modules, semiconductor-stock/.next"
           cname: angrywork.com
