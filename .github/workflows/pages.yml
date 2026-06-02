@@ -26,6 +26,7 @@ jobs:
         working-directory: semiconductor-stock
         run: |
           npm ci
+          node scripts/generate-stock-json.mjs
           npm run build
 
       - name: Stage semiconductor for Pages

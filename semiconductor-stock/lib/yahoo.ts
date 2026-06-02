@@ -72,9 +72,36 @@ async function fetchChartJson(symbol: StockSymbol): Promise<{
   throw lastErr ?? new Error("Yahoo Finance 데이터를 가져오지 못했습니다.");
 }
 
+function dataJsonUrl(symbol: StockSymbol): string {
+  const base =
+    typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_BASE_PATH != null
+      ? process.env.NEXT_PUBLIC_BASE_PATH
+      : "";
+  return `${base}/data/${symbol}.json`;
+}
+
+async function fetchFromBundledJson(
+  symbol: StockSymbol
+): Promise<OhlcvBar[] | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch(dataJsonUrl(symbol), { cache: "default" });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { bars?: OhlcvBar[] };
+    if (json.bars && json.bars.length >= 30) return json.bars;
+  } catch {
+    /* live fetch fallback */
+  }
+  return null;
+}
+
 export async function fetchSixMonthDaily(
   symbol: StockSymbol
 ): Promise<OhlcvBar[]> {
+  const bundled = await fetchFromBundledJson(symbol);
+  if (bundled) return bundled;
+
   const json = await fetchChartJson(symbol);
   const result = json.chart?.result?.[0];
   const timestamps = result?.timestamp ?? [];
