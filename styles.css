@@ -186,6 +186,10 @@ button.site-link-box {
 }
 
 .site-link-box:nth-child(6) {
+  transform: rotate(0.4deg);
+}
+
+.site-link-box:nth-child(7) {
   border-style: dashed;
   transform: rotate(-0.5deg);
 }
