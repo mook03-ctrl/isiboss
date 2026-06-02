@@ -438,7 +438,7 @@ button.site-link-box:focus-visible {
 
 .stock-result {
   flex-shrink: 0;
-  margin-top: 0.35rem;
+  margin: 0;
   max-height: min(28vh, 220px);
   overflow-y: auto;
   border: var(--sketch-width) solid var(--ink);
@@ -841,13 +841,14 @@ body.is-stock-page .game-stage {
   position: relative;
   width: 100%;
   line-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .boss-figure {
   position: relative;
   width: 100%;
-  transform: scale(1.12);
+  --boss-scale: 2.24;
+  transform: scale(var(--boss-scale));
   transform-origin: top center;
 }
 
@@ -2577,10 +2578,10 @@ body.is-stock-page .game-stage {
 @keyframes shoulder-jolt {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translateX(0) scale(var(--boss-scale));
   }
   40% {
-    transform: translateX(12px);
+    transform: translateX(12px) scale(var(--boss-scale));
   }
 }
 
