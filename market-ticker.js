@@ -78,6 +78,29 @@
     return sign + pct.toFixed(2) + "%";
   }
 
+  function formatTickerTime(ts) {
+    const d = new Date(ts);
+    return (
+      d.getFullYear() +
+      ". " +
+      (d.getMonth() + 1) +
+      ". " +
+      d.getDate() +
+      ". " +
+      String(d.getHours()).padStart(2, "0") +
+      ":" +
+      String(d.getMinutes()).padStart(2, "0") +
+      " 기준"
+    );
+  }
+
+  function renderTime(ts) {
+    if (!timeEl) return;
+    const when = ts || Date.now();
+    timeEl.dateTime = new Date(when).toISOString();
+    timeEl.textContent = formatTickerTime(when);
+  }
+
   function renderQuote(symbol, q) {
     const row = items[symbol];
     if (!row || !row.priceEl) return;
@@ -248,6 +271,7 @@
     }
   }
 
+  renderTime(Date.now());
   refresh(false);
   window.setInterval(function () {
     refresh(true);
