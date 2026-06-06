@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=52" />
+    <link rel="stylesheet" href="styles.css?v=58" />
   </head>
   <body>
     <div id="app" class="app">
@@ -29,7 +29,7 @@
           class="market-ticker"
           aria-label="실시간 시세"
           aria-live="polite">
-          <div class="market-ticker__postit">
+          <div class="market-ticker__postit hud-postit">
             <span class="market-ticker__tape" aria-hidden="true"></span>
             <div class="market-ticker__head">
               <p class="market-ticker__title">시세 포스트잇</p>
@@ -64,6 +64,40 @@
                 <span class="market-ticker__chg"></span>
               </li>
             </ul>
+            <span class="market-ticker__fold" aria-hidden="true"></span>
+          </div>
+        </aside>
+        <aside
+          id="leave-countdown"
+          class="leave-countdown"
+          aria-label="오늘 퇴근 목표 시간">
+          <div class="leave-countdown__postit hud-postit">
+            <span class="market-ticker__tape" aria-hidden="true"></span>
+            <p class="leave-countdown__title">오늘 퇴근 목표 시간</p>
+            <div class="leave-countdown__picker">
+              <span id="leave-target-display" class="leave-countdown__target"
+                >오후 6:00</span
+              >
+              <div class="leave-countdown__arrows">
+                <button
+                  type="button"
+                  class="leave-countdown__arrow"
+                  id="leave-time-up"
+                  aria-label="목표 시간 30분 늦추기">
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="leave-countdown__arrow"
+                  id="leave-time-down"
+                  aria-label="목표 시간 30분 앞당기기">
+                  ▼
+                </button>
+              </div>
+            </div>
+            <p id="leave-remaining" class="leave-countdown__remaining">
+              퇴근까지 —
+            </p>
             <span class="market-ticker__fold" aria-hidden="true"></span>
           </div>
         </aside>
@@ -321,6 +355,7 @@
           AI질문 결과 표 추출하기
         </a>
         <span class="site-link-box site-link-box--soon">준비중</span>
+        <span class="site-link-box site-link-box--soon">준비중</span>
       </aside>
       </div>
 
@@ -372,13 +407,14 @@
       </footer>
 
       <footer class="app-footer">
-        <p class="app-copyright">Copyright 2026 angrywork.com (v0.5 by mook)</p>
+        <p class="app-copyright">Copyright 2026 angrywork.com (v0.6 by mook)</p>
       </footer>
     </div>
 
     <script src="sfx.js?v=6"></script>
     <script src="game.js?v=26"></script>
-    <script src="market-ticker.js?v=3"></script>
+    <script src="market-ticker.js?v=4"></script>
+    <script src="leave-countdown.js?v=1"></script>
     <script src="stock.js?v=9"></script>
   </body>
 </html>
