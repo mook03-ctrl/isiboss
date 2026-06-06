@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=51" />
+    <link rel="stylesheet" href="styles.css?v=52" />
   </head>
   <body>
     <div id="app" class="app">
@@ -31,7 +31,12 @@
           aria-live="polite">
           <div class="market-ticker__postit">
             <span class="market-ticker__tape" aria-hidden="true"></span>
-            <p class="market-ticker__title">시세 포스트잇</p>
+            <div class="market-ticker__head">
+              <p class="market-ticker__title">시세 포스트잇</p>
+              <time id="market-ticker-time" class="market-ticker__time" datetime=""
+                >—</time
+              >
+            </div>
             <ul class="market-ticker__list">
               <li class="market-ticker__item" data-symbol="^KQ11">
                 <span class="market-ticker__label">코스닥</span>
@@ -373,7 +378,7 @@
 
     <script src="sfx.js?v=6"></script>
     <script src="game.js?v=26"></script>
-    <script src="market-ticker.js?v=2"></script>
+    <script src="market-ticker.js?v=3"></script>
     <script src="stock.js?v=9"></script>
   </body>
 </html>
