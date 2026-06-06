@@ -180,60 +180,51 @@ body {
   flex-direction: column;
 }
 
+.app.is-stock-mode {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.45rem;
+}
+
 .app.is-stock-mode #game-screen,
 .app.is-stock-mode #control-pad {
   display: none;
 }
 
 .app.is-stock-mode .game-stage,
-body.is-stock-page .game-stage {
-  flex: 0 0 auto;
-  flex-direction: column;
-  align-items: stretch;
-  align-self: stretch;
-  width: 100%;
-  min-height: 0;
-  height: auto;
-  max-height: none;
-}
-
-.app.is-stock-mode .title-bar {
-  width: 100%;
-  align-self: stretch;
-  transform: none;
-}
-
 .app.is-stock-mode .panel-main {
   display: contents;
 }
 
-.app.is-stock-mode #stock-panel {
-  display: flex;
-  flex: 0 0 auto;
+.app.is-stock-mode .title-bar,
+.app.is-stock-mode #stock-panel,
+.app.is-stock-mode .site-links {
+  grid-column: 1;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
-  min-height: auto;
-  max-height: none;
-  align-self: stretch;
   transform: none;
 }
 
+.app.is-stock-mode #stock-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
+  max-height: none;
+}
+
 .app.is-stock-mode .site-links {
-  flex: 0 0 auto;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
   align-content: flex-start;
-  align-self: stretch;
-  width: 100%;
-  max-width: none;
   position: static;
   top: auto;
   max-height: none;
   overflow: visible;
   gap: 0.28rem;
   padding: 0.32rem 0.28rem;
-  transform: none;
 }
 
 .app.is-stock-mode .site-link-box {
