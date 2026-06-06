@@ -186,16 +186,16 @@ body {
 }
 
 .app.is-stock-mode .panel-main {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
   display: flex;
   flex-direction: column;
 }
 
 .app.is-stock-mode #stock-panel {
   display: flex;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .site-links {
@@ -326,8 +326,8 @@ button.site-link-box:focus-visible {
 }
 
 .stock-panel-scroll {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -783,23 +783,55 @@ button.site-link-box:focus-visible {
   flex-shrink: 0;
 }
 
-/* 주식 모드: 모니터 영역 전체 사용 */
+/* 주식 모드: 게임용 뷰포트 고정 해제 → 페이지 전체 스크롤 */
+html.is-stock-page,
 body.is-stock-page {
-  overflow-y: auto;
+  height: auto;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.is-stock-page .app {
   height: auto;
   min-height: 100dvh;
+  max-height: none;
+  overflow: visible;
 }
 
 .app.is-stock-mode .game-stage,
 body.is-stock-page .game-stage {
-  flex: 1 1 auto;
-  min-height: calc(100dvh - 8.5rem);
+  flex: 0 0 auto;
+  min-height: 0;
   height: auto;
   max-height: none;
+}
+
+.app.is-stock-mode .panel-main {
+  flex: 0 0 auto;
+  min-height: auto;
+}
+
+.app.is-stock-mode #stock-panel {
+  flex: 0 0 auto;
+  min-height: auto;
+  max-height: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+  html.is-stock-page,
+  body.is-stock-page {
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body.is-stock-page .app {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 @media (max-width: 520px) {
@@ -3866,8 +3898,8 @@ body.is-stock-page .game-stage {
 
   body.is-stock-page .game-stage,
   .app.is-stock-mode .game-stage {
-    flex: 1 1 auto;
-    min-height: calc(100dvh - 8rem);
+    flex: 0 0 auto;
+    min-height: 0;
     height: auto;
   }
 
@@ -3983,7 +4015,7 @@ body.is-stock-page .game-stage {
 
   body.is-stock-page .game-stage,
   .app.is-stock-mode .game-stage {
-    min-height: calc(100dvh - 7.5rem);
+    min-height: 0;
     height: auto;
   }
 

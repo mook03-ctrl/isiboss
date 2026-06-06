@@ -69,6 +69,7 @@
   function showStockMode(on) {
     if (!app || !stockPanel) return;
     app.classList.toggle("is-stock-mode", on);
+    document.documentElement.classList.toggle("is-stock-page", on);
     document.body.classList.toggle("is-stock-page", on);
     stockPanel.hidden = !on;
     if (stockBtn) stockBtn.classList.toggle("is-active", on);
