@@ -174,22 +174,17 @@ button.site-link-box {
 }
 
 .site-link-box:nth-child(4) {
-  font-size: clamp(0.62rem, 1.7vw, 0.8rem);
-  white-space: nowrap;
-  letter-spacing: -0.02em;
   transform: rotate(0.3deg);
 }
 
 .site-link-box:nth-child(5) {
-  border-style: dashed;
+  font-size: clamp(0.62rem, 1.7vw, 0.8rem);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
   transform: rotate(-0.3deg);
 }
 
 .site-link-box:nth-child(6) {
-  transform: rotate(0.4deg);
-}
-
-.site-link-box:nth-child(7) {
   border-style: dashed;
   transform: rotate(-0.5deg);
 }
