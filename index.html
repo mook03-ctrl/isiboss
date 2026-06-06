@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=46" />
+    <link rel="stylesheet" href="styles.css?v=47" />
   </head>
   <body>
     <div id="app" class="app">
@@ -24,6 +24,39 @@
       <div class="game-stage">
       <div class="panel-main">
       <main id="game-screen" class="game-screen sketch-border" aria-label="게임 화면">
+        <aside
+          id="market-ticker"
+          class="market-ticker"
+          aria-label="실시간 시세"
+          aria-live="polite">
+          <ul class="market-ticker__list">
+            <li class="market-ticker__item" data-symbol="^KQ11">
+              <span class="market-ticker__label">코스닥</span>
+              <span class="market-ticker__price">—</span>
+              <span class="market-ticker__chg"></span>
+            </li>
+            <li class="market-ticker__item" data-symbol="^IXIC">
+              <span class="market-ticker__label">나스닥</span>
+              <span class="market-ticker__price">—</span>
+              <span class="market-ticker__chg"></span>
+            </li>
+            <li class="market-ticker__item" data-symbol="005930.KS">
+              <span class="market-ticker__label">삼성전자</span>
+              <span class="market-ticker__price">—</span>
+              <span class="market-ticker__chg"></span>
+            </li>
+            <li class="market-ticker__item" data-symbol="000660.KS">
+              <span class="market-ticker__label">하이닉스</span>
+              <span class="market-ticker__price">—</span>
+              <span class="market-ticker__chg"></span>
+            </li>
+            <li class="market-ticker__item" data-symbol="KRW=X">
+              <span class="market-ticker__label">원/달러</span>
+              <span class="market-ticker__price">—</span>
+              <span class="market-ticker__chg"></span>
+            </li>
+          </ul>
+        </aside>
         <div id="office-scene" class="office-scene">
           <!-- 모니터 뒤: 평소엔 가려짐 -->
           <div id="behind-zone" class="behind-zone" aria-hidden="true">
@@ -335,6 +368,7 @@
 
     <script src="sfx.js?v=6"></script>
     <script src="game.js?v=26"></script>
+    <script src="market-ticker.js?v=1"></script>
     <script src="stock.js?v=9"></script>
   </body>
 </html>
