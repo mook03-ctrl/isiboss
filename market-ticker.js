@@ -1,15 +1,17 @@
 /**
- * 게임 화면 좌측 상단 — 실시간 시세 티커 (Yahoo v8 chart + allorigins)
+ * 게임 화면 좌측 상단 — 시세 티커 (baked JSON + Yahoo v8 보조 갱신)
  */
 (function () {
   const root = document.getElementById("market-ticker");
   const timeEl = document.getElementById("market-ticker-time");
   if (!root) return;
 
-  const CACHE_KEY = "market_ticker_v4";
+  const BAKED_URL = "data/market-ticker.json";
+  const CACHE_KEY = "market_ticker_v5";
   const CACHE_TTL_MS = 90 * 1000;
-  const REFRESH_MS = 60 * 1000;
-  const FETCH_TIMEOUT_MS = 18000;
+  const REFRESH_MS = 5 * 60 * 1000;
+  const SYMBOL_DELAY_MS = 700;
+  const FETCH_TIMEOUT_MS = 20000;
 
   const SYMBOLS = ["^KQ11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
 
@@ -223,53 +225,68 @@
     });
   }
 
-  async function fetchAllQuotes() {
-    const rows = await Promise.allSettled(
-      SYMBOLS.map(function (sym) {
-        return fetchSymbolQuote(sym);
-      })
-    );
-
-    const map = {};
-    rows.forEach(function (row) {
-      if (row.status === "fulfilled") {
-        map[row.value.symbol] = row.value;
-      }
-    });
-
-    if (Object.keys(map).length === 0) {
-      throw new Error("시세 요청 실패");
-    }
-    return map;
-  }
-
-  function mergeQuotes(cachedQuotes, freshQuotes) {
-    const merged = {};
-    if (cachedQuotes) {
-      Object.keys(cachedQuotes).forEach(function (sym) {
-        merged[sym] = cachedQuotes[sym];
-      });
-    }
-    Object.keys(freshQuotes).forEach(function (sym) {
-      merged[sym] = freshQuotes[sym];
-    });
-    return merged;
-  }
-
   function delay(ms) {
     return new Promise(function (resolve) {
       window.setTimeout(resolve, ms);
     });
   }
 
+  async function fetchBaked() {
+    const res = await fetch(BAKED_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error("baked HTTP " + res.status);
+    const data = await res.json();
+    if (!data || !data.quotes || Object.keys(data.quotes).length === 0) {
+      throw new Error("baked empty");
+    }
+    return {
+      quotes: data.quotes,
+      savedAt: data.savedAt || Date.now(),
+    };
+  }
+
+  async function fetchLiveQuotesSequential() {
+    const map = {};
+
+    for (let i = 0; i < SYMBOLS.length; i += 1) {
+      const sym = SYMBOLS[i];
+      try {
+        const q = await fetchSymbolQuote(sym);
+        map[q.symbol] = q;
+      } catch (e) {
+        /* 개별 실패 허용 */
+      }
+      if (i < SYMBOLS.length - 1) {
+        await delay(SYMBOL_DELAY_MS);
+      }
+    }
+
+    return map;
+  }
+
+  function mergeQuotes(base, extra) {
+    const merged = {};
+    if (base) {
+      Object.keys(base).forEach(function (sym) {
+        merged[sym] = base[sym];
+      });
+    }
+    Object.keys(extra).forEach(function (sym) {
+      merged[sym] = extra[sym];
+    });
+    return merged;
+  }
+
   async function refresh(force) {
     const cached = readCache();
-    if (cached && cached.quotes) {
-      renderAll(cached.quotes, cached.savedAt || Date.now());
+    let current = cached && cached.quotes ? cached.quotes : null;
+    let currentAt = cached ? cached.savedAt : null;
+
+    if (current) {
+      renderAll(current, currentAt || Date.now());
       if (
         !force &&
-        cached.savedAt &&
-        Date.now() - cached.savedAt < CACHE_TTL_MS
+        currentAt &&
+        Date.now() - currentAt < CACHE_TTL_MS
       ) {
         return;
       }
@@ -277,25 +294,29 @@
       root.classList.add("is-loading");
     }
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      try {
-        const fresh = await fetchAllQuotes();
-        const merged = mergeQuotes(
-          cached && cached.quotes ? cached.quotes : null,
-          fresh
-        );
-        const savedAt = Date.now();
-        writeCache(merged, savedAt);
-        renderAll(merged, savedAt);
-        return;
-      } catch (e) {
-        if (attempt === 0) {
-          await delay(1500);
-        }
-      }
+    try {
+      const baked = await fetchBaked();
+      current = mergeQuotes(current, baked.quotes);
+      currentAt = baked.savedAt;
+      renderAll(current, currentAt);
+      writeCache(current, currentAt);
+    } catch (e) {
+      /* baked 없으면 live 시도 */
     }
 
-    if (!cached || !cached.quotes) {
+    try {
+      const live = await fetchLiveQuotesSequential();
+      if (Object.keys(live).length > 0) {
+        current = mergeQuotes(current, live);
+        currentAt = Date.now();
+        writeCache(current, currentAt);
+        renderAll(current, currentAt);
+      }
+    } catch (e) {
+      /* live 전부 실패 — baked/캐시 유지 */
+    }
+
+    if (!current) {
       root.classList.remove("is-loading");
     }
   }
