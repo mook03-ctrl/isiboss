@@ -1,20 +1,24 @@
 /**
- * 게임 화면 좌측 상단 — 실시간 시세 티커 (Yahoo v8 chart)
+ * 게임 화면 좌측 상단 — 실시간 시세 티커 (Yahoo v7 batch + v8 chart + Stooq)
  */
 (function () {
   const root = document.getElementById("market-ticker");
   const timeEl = document.getElementById("market-ticker-time");
   if (!root) return;
 
-  const CACHE_KEY = "market_ticker_v2";
+  const CACHE_KEY = "market_ticker_v3";
   const CACHE_TTL_MS = 90 * 1000;
   const REFRESH_MS = 60 * 1000;
-  const IS_MOBILE = window.matchMedia(
-    "(max-width: 520px), (hover: none) and (pointer: coarse)"
-  ).matches;
-  const FETCH_TIMEOUT_MS = IS_MOBILE ? 20000 : 12000;
 
   const SYMBOLS = ["^KQ11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
+
+  const STOOQ_SYMBOL = {
+    "^KQ11": "^kq11",
+    "^IXIC": "^ixic",
+    "005930.KS": "005930.kr",
+    "000660.KS": "000660.kr",
+    "KRW=X": "usdkrw",
+  };
 
   const items = {};
   root.querySelectorAll(".market-ticker__item").forEach(function (el) {
@@ -27,11 +31,36 @@
     };
   });
 
+  function isMobile() {
+    return window.matchMedia(
+      "(max-width: 768px), (hover: none) and (pointer: coarse)"
+    ).matches;
+  }
+
+  function fetchTimeoutMs() {
+    return isMobile() ? 28000 : 14000;
+  }
+
   function chartUrl(symbol) {
     return (
       "https://query1.finance.yahoo.com/v8/finance/chart/" +
       encodeURIComponent(symbol) +
       "?interval=1d&range=5d"
+    );
+  }
+
+  function quoteBatchUrl() {
+    return (
+      "https://query1.finance.yahoo.com/v7/finance/quote?symbols=" +
+      encodeURIComponent(SYMBOLS.join(","))
+    );
+  }
+
+  function stooqDailyUrl(symbol) {
+    return (
+      "https://stooq.com/q/d/l/?s=" +
+      encodeURIComponent(STOOQ_SYMBOL[symbol]) +
+      "&i=d"
     );
   }
 
@@ -131,6 +160,14 @@
     });
   }
 
+  function buildQuote(symbol, price, pct) {
+    return {
+      symbol: symbol,
+      regularMarketPrice: price,
+      regularMarketChangePercent: pct,
+    };
+  }
+
   function parseChartQuote(data, symbol) {
     if (data && data.chart && data.chart.error) {
       throw new Error(data.chart.error.description || "Yahoo 오류");
@@ -151,39 +188,130 @@
       pct = ((meta.regularMarketPrice - prev) / prev) * 100;
     }
 
-    return {
-      symbol: symbol,
-      regularMarketPrice: meta.regularMarketPrice,
-      regularMarketChangePercent: pct,
-    };
+    return buildQuote(symbol, meta.regularMarketPrice, pct);
+  }
+
+  function parseV7Quote(row) {
+    if (!row || row.regularMarketPrice == null) return null;
+    let pct = row.regularMarketChangePercent;
+    const prev =
+      row.regularMarketPreviousClose != null
+        ? row.regularMarketPreviousClose
+        : row.previousClose;
+    if ((pct == null || Number.isNaN(pct)) && prev > 0) {
+      pct = ((row.regularMarketPrice - prev) / prev) * 100;
+    }
+    return buildQuote(row.symbol, row.regularMarketPrice, pct);
+  }
+
+  function parseV7Batch(data) {
+    const rows =
+      data && data.quoteResponse && data.quoteResponse.result
+        ? data.quoteResponse.result
+        : null;
+    if (!rows || !rows.length) {
+      throw new Error("v7 시세 없음");
+    }
+    const map = {};
+    rows.forEach(function (row) {
+      const q = parseV7Quote(row);
+      if (q) map[q.symbol] = q;
+    });
+    if (Object.keys(map).length === 0) {
+      throw new Error("v7 가격 없음");
+    }
+    return map;
+  }
+
+  function parseStooqCsv(text, symbol) {
+    const lines = text
+      .trim()
+      .split(/\r?\n/)
+      .filter(function (line) {
+        return line && !/^symbol/i.test(line);
+      });
+    if (lines.length < 1) {
+      throw new Error("Stooq 데이터 없음");
+    }
+
+    const last = lines[lines.length - 1].split(",");
+    const close = parseFloat(last[5]);
+    if (!close || Number.isNaN(close)) {
+      throw new Error("Stooq 종가 없음");
+    }
+
+    let pct = null;
+    if (lines.length >= 2) {
+      const prevLine = lines[lines.length - 2].split(",");
+      const prevClose = parseFloat(prevLine[5]);
+      if (prevClose > 0) {
+        pct = ((close - prevClose) / prevClose) * 100;
+      }
+    }
+
+    return buildQuote(symbol, close, pct);
   }
 
   function getProxyFns() {
     const direct = function (u, s) {
-      return fetch(u, { mode: "cors", signal: s });
+      return fetch(u, { mode: "cors", signal: s, cache: "no-store" });
     };
-    const allorigins = function (u, s) {
+    const alloriginsRaw = function (u, s) {
       return fetch(
         "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-        { signal: s }
+        { signal: s, cache: "no-store" }
       );
+    };
+    const alloriginsGet = function (u, s) {
+      return fetch(
+        "https://api.allorigins.win/get?url=" + encodeURIComponent(u),
+        { signal: s, cache: "no-store" }
+      ).then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json().then(function (wrap) {
+          if (!wrap || wrap.contents == null) {
+            throw new Error("allorigins empty");
+          }
+          return { ok: true, json: function () { return JSON.parse(wrap.contents); }, text: function () { return Promise.resolve(wrap.contents); } };
+        });
+      });
     };
     const corsproxy = function (u, s) {
       return fetch("https://corsproxy.io/?" + encodeURIComponent(u), {
         signal: s,
+        cache: "no-store",
       });
     };
     const codetabs = function (u, s) {
       return fetch(
         "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
-        { signal: s }
+        { signal: s, cache: "no-store" }
       );
     };
 
-    if (IS_MOBILE) {
-      return [allorigins, corsproxy, codetabs, direct];
+    if (isMobile()) {
+      return [corsproxy, alloriginsRaw, alloriginsGet, codetabs, direct];
     }
-    return [direct, allorigins, corsproxy, codetabs];
+    return [direct, corsproxy, alloriginsRaw, alloriginsGet, codetabs];
+  }
+
+  function fetchWithTimeout(run) {
+    return new Promise(function (resolve, reject) {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(function () {
+        ctrl.abort();
+      }, fetchTimeoutMs());
+
+      run(ctrl.signal)
+        .then(function (value) {
+          window.clearTimeout(timer);
+          resolve(value);
+        })
+        .catch(function (err) {
+          window.clearTimeout(timer);
+          reject(err);
+        });
+    });
   }
 
   function fetchJson(url, signal) {
@@ -192,8 +320,38 @@
       url.replace("query1.finance.yahoo.com", "query2.finance.yahoo.com"),
     ];
     const proxies = getProxyFns();
-    const attempts = [];
 
+    if (isMobile()) {
+      return new Promise(function (resolve, reject) {
+        let hostIdx = 0;
+
+        function tryNextProxy(proxyIdx) {
+          if (hostIdx >= hosts.length) {
+            reject(new Error("시세 요청 실패"));
+            return;
+          }
+          if (proxyIdx >= proxies.length) {
+            hostIdx += 1;
+            tryNextProxy(0);
+            return;
+          }
+
+          proxies[proxyIdx](hosts[hostIdx], signal)
+            .then(function (res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(resolve)
+            .catch(function () {
+              tryNextProxy(proxyIdx + 1);
+            });
+        }
+
+        tryNextProxy(0);
+      });
+    }
+
+    const attempts = [];
     hosts.forEach(function (host) {
       proxies.forEach(function (proxy) {
         attempts.push(function () {
@@ -228,19 +386,92 @@
     });
   }
 
-  function fetchSymbolQuote(symbol) {
-    const ctrl = new AbortController();
-    const timer = window.setTimeout(function () {
-      ctrl.abort();
-    }, FETCH_TIMEOUT_MS);
+  function fetchText(url, signal) {
+    const proxies = [
+      function (u, s) {
+        return fetch(u, { mode: "cors", signal: s, cache: "no-store" }).then(
+          function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.text();
+          }
+        );
+      },
+      function (u, s) {
+        return fetch(
+          "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+          { signal: s, cache: "no-store" }
+        ).then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.text();
+        });
+      },
+      function (u, s) {
+        return fetch("https://corsproxy.io/?" + encodeURIComponent(u), {
+          signal: s,
+          cache: "no-store",
+        }).then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.text();
+        });
+      },
+    ];
 
-    return fetchJson(chartUrl(symbol), ctrl.signal)
-      .then(function (data) {
-        return parseChartQuote(data, symbol);
-      })
-      .finally(function () {
-        window.clearTimeout(timer);
+    if (isMobile()) {
+      return new Promise(function (resolve, reject) {
+        let idx = 0;
+        function next() {
+          if (idx >= proxies.length) {
+            reject(new Error("Stooq 요청 실패"));
+            return;
+          }
+          const run = proxies[idx];
+          idx += 1;
+          run(url, signal).then(resolve).catch(next);
+        }
+        next();
       });
+    }
+
+    return new Promise(function (resolve, reject) {
+      let pending = proxies.length;
+      let lastErr = null;
+      proxies.forEach(function (run) {
+        run(url, signal)
+          .then(resolve)
+          .catch(function (e) {
+            lastErr = e;
+            pending -= 1;
+            if (pending === 0) {
+              reject(lastErr || new Error("Stooq 요청 실패"));
+            }
+          });
+      });
+    });
+  }
+
+  function fetchSymbolQuote(symbol) {
+    return fetchWithTimeout(function (signal) {
+      return fetchJson(chartUrl(symbol), signal).then(function (data) {
+        return parseChartQuote(data, symbol);
+      });
+    });
+  }
+
+  function fetchQuoteBatch() {
+    return fetchWithTimeout(function (signal) {
+      return fetchJson(quoteBatchUrl(), signal).then(parseV7Batch);
+    });
+  }
+
+  function fetchStooqQuote(symbol) {
+    if (!STOOQ_SYMBOL[symbol]) {
+      throw new Error("Stooq 심볼 없음");
+    }
+    return fetchWithTimeout(function (signal) {
+      return fetchText(stooqDailyUrl(symbol), signal).then(function (text) {
+        return parseStooqCsv(text, symbol);
+      });
+    });
   }
 
   function delay(ms) {
@@ -249,33 +480,57 @@
     });
   }
 
+  async function fetchMissingSymbols(map) {
+    const missing = SYMBOLS.filter(function (sym) {
+      return !map[sym];
+    });
+
+    for (let i = 0; i < missing.length; i += 1) {
+      const sym = missing[i];
+      try {
+        const q = await fetchSymbolQuote(sym);
+        map[q.symbol] = q;
+      } catch (e) {
+        /* v8 실패 */
+      }
+      if (isMobile() && i < missing.length - 1) {
+        await delay(100);
+      }
+    }
+
+    const stillMissing = SYMBOLS.filter(function (sym) {
+      return !map[sym];
+    });
+
+    for (let j = 0; j < stillMissing.length; j += 1) {
+      const sym = stillMissing[j];
+      try {
+        const q = await fetchStooqQuote(sym);
+        map[q.symbol] = q;
+      } catch (e) {
+        /* Stooq 실패 */
+      }
+      if (isMobile() && j < stillMissing.length - 1) {
+        await delay(100);
+      }
+    }
+
+    return map;
+  }
+
   async function fetchAllQuotes() {
     const map = {};
 
-    if (IS_MOBILE) {
-      for (let i = 0; i < SYMBOLS.length; i += 1) {
-        try {
-          const q = await fetchSymbolQuote(SYMBOLS[i]);
-          map[q.symbol] = q;
-        } catch (e) {
-          /* 개별 심볼 실패는 건너뜀 */
-        }
-        if (i < SYMBOLS.length - 1) {
-          await delay(120);
-        }
-      }
-    } else {
-      const rows = await Promise.allSettled(
-        SYMBOLS.map(function (sym) {
-          return fetchSymbolQuote(sym);
-        })
-      );
-      rows.forEach(function (row) {
-        if (row.status === "fulfilled") {
-          map[row.value.symbol] = row.value;
-        }
+    try {
+      const batch = await fetchQuoteBatch();
+      Object.keys(batch).forEach(function (sym) {
+        map[sym] = batch[sym];
       });
+    } catch (e) {
+      /* v7 배치 실패 → 개별 조회 */
     }
+
+    await fetchMissingSymbols(map);
 
     if (Object.keys(map).length === 0) {
       throw new Error("시세 요청 실패");
@@ -311,19 +566,30 @@
       root.classList.add("is-loading");
     }
 
-    try {
-      const fresh = await fetchAllQuotes();
-      const merged = mergeQuotes(
-        cached && cached.quotes ? cached.quotes : null,
-        fresh
-      );
-      const savedAt = Date.now();
-      writeCache(merged, savedAt);
-      renderAll(merged, savedAt);
-    } catch (e) {
-      if (!cached || !cached.quotes) {
-        root.classList.remove("is-loading");
+    const attempts = isMobile() ? 3 : 2;
+    let lastErr = null;
+
+    for (let i = 0; i < attempts; i += 1) {
+      try {
+        const fresh = await fetchAllQuotes();
+        const merged = mergeQuotes(
+          cached && cached.quotes ? cached.quotes : null,
+          fresh
+        );
+        const savedAt = Date.now();
+        writeCache(merged, savedAt);
+        renderAll(merged, savedAt);
+        return;
+      } catch (e) {
+        lastErr = e;
+        if (i < attempts - 1) {
+          await delay(isMobile() ? 2500 : 1200);
+        }
       }
+    }
+
+    if (!cached || !cached.quotes) {
+      root.classList.remove("is-loading");
     }
   }
 
@@ -335,5 +601,9 @@
 
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) refresh(true);
+  });
+
+  window.addEventListener("online", function () {
+    refresh(true);
   });
 })();
