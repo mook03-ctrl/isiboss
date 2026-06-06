@@ -21,9 +21,23 @@
   let tqqqLoaded = false;
   let tqqqTimer = null;
   let tqqqCache = null;
+  let tqqqFetchGen = 0;
 
-  const YAHOO_CHART =
-    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=max";
+  const TQQQ_CACHE_KEY = "tqqq_chart_v2";
+  const TQQQ_CACHE_TTL_MS = 15 * 60 * 1000;
+  const TQQQ_FETCH_TIMEOUT_MS = 10000;
+
+  const YAHOO_TQQQ_URLS = [
+    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
+    "https://query2.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
+    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=5y",
+    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=max",
+  ];
+
+  const STOOQ_TQQQ_URLS = [
+    "https://stooq.com/q/d/l/?s=tqqq.us&i=d",
+    "https://stooq.pl/q/d/l/?s=tqqq.us&i=d",
+  ];
   const tqqqPrice = document.getElementById("tqqq-price");
   const tqqqAthPct = document.getElementById("tqqq-ath-pct");
   const tqqqPrevAthPct = document.getElementById("tqqq-prev-ath-pct");
@@ -79,61 +93,214 @@
     }
   }
 
-  async function fetchYahooChart() {
-    const urls = [
-      YAHOO_CHART,
-      "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
-      "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=5y",
-    ];
-    const proxies = [
-      function (url, signal) {
-        return fetch(url, { mode: "cors", signal: signal });
+  function readStoredTqqqCache() {
+    try {
+      const raw = localStorage.getItem(TQQQ_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.closes || parsed.closes.length < 30) return null;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeStoredTqqqCache(cache) {
+    try {
+      localStorage.setItem(
+        TQQQ_CACHE_KEY,
+        JSON.stringify({
+          closes: cache.closes,
+          highs: cache.highs,
+          timestamps: cache.timestamps,
+          meta: cache.meta,
+          source: cache.source,
+          savedAt: cache.savedAt || Date.now(),
+        })
+      );
+    } catch (e) {
+      /* quota */
+    }
+  }
+
+  function parseYahooChartPayload(data) {
+    if (data && data.chart && data.chart.error) {
+      throw new Error(data.chart.error.description || "Yahoo 오류");
+    }
+    if (
+      !data ||
+      !data.chart ||
+      !data.chart.result ||
+      !data.chart.result[0] ||
+      !data.chart.result[0].indicators
+    ) {
+      throw new Error("Yahoo 차트 형식 오류");
+    }
+    const result = data.chart.result[0];
+    const quote = result.indicators.quote[0];
+    const series = buildTqqqSeries(quote, result.meta);
+    return {
+      closes: series.closes,
+      highs: series.highs,
+      timestamps: result.timestamp,
+      meta: result.meta,
+      source: "yahoo",
+    };
+  }
+
+  function parseStooqCsv(text) {
+    const lines = String(text || "")
+      .trim()
+      .split(/\r?\n/);
+    if (lines.length < 3) throw new Error("Stooq CSV 비어 있음");
+
+    const closes = [];
+    const highs = [];
+    const timestamps = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",");
+      if (parts.length < 5) continue;
+      const high = parseFloat(parts[2]);
+      const close = parseFloat(parts[4]);
+      if (Number.isNaN(close) || Number.isNaN(high)) continue;
+      const ts = Date.parse(parts[0]);
+      closes.push(close);
+      highs.push(high);
+      timestamps.push(Number.isNaN(ts) ? 0 : Math.floor(ts / 1000));
+    }
+
+    if (closes.length < 30) throw new Error("Stooq 데이터 부족");
+
+    const last = closes.length - 1;
+    return {
+      closes: closes,
+      highs: highs,
+      timestamps: timestamps,
+      meta: {
+        regularMarketPrice: closes[last],
+        regularMarketDayHigh: highs[last],
       },
-      function (url, signal) {
+      source: "stooq",
+    };
+  }
+
+  function fetchWithTimeout(run, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(function () {
+        ctrl.abort();
+      }, timeoutMs);
+      run(ctrl.signal)
+        .then(function (value) {
+          window.clearTimeout(timer);
+          resolve(value);
+        })
+        .catch(function (err) {
+          window.clearTimeout(timer);
+          reject(err);
+        });
+    });
+  }
+
+  function fetchYahooChartUrl(url, signal) {
+    const proxies = [
+      function (u, s) {
+        return fetch(u, { mode: "cors", signal: s });
+      },
+      function (u, s) {
         return fetch(
-          "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
-          { signal: signal }
+          "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+          { signal: s }
         );
       },
-      function (url, signal) {
-        return fetch("https://corsproxy.io/?" + encodeURIComponent(url), {
-          signal: signal,
+      function (u, s) {
+        return fetch("https://corsproxy.io/?" + encodeURIComponent(u), {
+          signal: s,
         });
       },
     ];
 
-    let lastErr = null;
-    for (let u = 0; u < urls.length; u++) {
-      for (let p = 0; p < proxies.length; p++) {
-        const ctrl = new AbortController();
-        const timer = window.setTimeout(function () {
-          ctrl.abort();
-        }, 20000);
-        try {
-          const res = await proxies[p](urls[u], ctrl.signal);
-          window.clearTimeout(timer);
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const data = await res.json();
-          if (data && data.chart && data.chart.error) {
-            throw new Error(data.chart.error.description || "Yahoo 오류");
-          }
-          if (
-            data &&
-            data.chart &&
-            data.chart.result &&
-            data.chart.result[0] &&
-            data.chart.result[0].indicators
-          ) {
-            return data;
-          }
-          throw new Error("차트 데이터 형식 오류");
-        } catch (e) {
-          window.clearTimeout(timer);
-          lastErr = e;
-        }
-      }
-    }
-    throw lastErr || new Error("TQQQ 데이터를 불러오지 못했습니다.");
+    return new Promise(function (resolve, reject) {
+      let pending = proxies.length;
+      let lastErr = null;
+      proxies.forEach(function (proxy) {
+        proxy(url, signal)
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            resolve(parseYahooChartPayload(data));
+          })
+          .catch(function (e) {
+            lastErr = e;
+            pending -= 1;
+            if (pending === 0) {
+              reject(lastErr || new Error("Yahoo 요청 실패"));
+            }
+          });
+      });
+    });
+  }
+
+  function fetchStooqText(url, signal) {
+    return fetch(url, { mode: "cors", signal: signal })
+      .then(function (res) {
+        if (res.ok) return res.text();
+        throw new Error("HTTP " + res.status);
+      })
+      .catch(function () {
+        return fetch(
+          "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+          { signal: signal }
+        ).then(function (res) {
+          if (!res.ok) throw new Error("Stooq HTTP " + res.status);
+          return res.text();
+        });
+      });
+  }
+
+  function fetchStooqChart(signal) {
+    const jobs = STOOQ_TQQQ_URLS.map(function (url) {
+      return fetchStooqText(url, signal).then(parseStooqCsv);
+    });
+    return Promise.any(jobs);
+  }
+
+  function fetchTqqqChartData() {
+    const jobs = [];
+
+    YAHOO_TQQQ_URLS.forEach(function (url) {
+      jobs.push(function (signal) {
+        return fetchYahooChartUrl(url, signal);
+      });
+    });
+    jobs.push(function (signal) {
+      return fetchStooqChart(signal);
+    });
+
+    return new Promise(function (resolve, reject) {
+      let pending = jobs.length;
+      let lastErr = null;
+      let settled = false;
+
+      jobs.forEach(function (job) {
+        fetchWithTimeout(job, TQQQ_FETCH_TIMEOUT_MS)
+          .then(function (data) {
+            if (settled) return;
+            settled = true;
+            resolve(data);
+          })
+          .catch(function (e) {
+            lastErr = e;
+            pending -= 1;
+            if (!settled && pending === 0) {
+              reject(lastErr || new Error("TQQQ 데이터를 불러오지 못했습니다."));
+            }
+          });
+      });
+    });
   }
 
   function findPrevAthFromHighs(highs) {
@@ -494,29 +661,50 @@
     return false;
   }
 
-  async function loadTqqq() {
-    if (tqqqStatus && !tqqqLoaded) {
+  async function loadTqqq(opts) {
+    const silent = opts && opts.silent;
+    const gen = ++tqqqFetchGen;
+
+    const stored = readStoredTqqqCache();
+    if (stored) {
+      tqqqCache = stored;
+      renderTqqqFromCache();
+      tqqqLoaded = true;
+      if (
+        stored.savedAt &&
+        Date.now() - stored.savedAt < TQQQ_CACHE_TTL_MS
+      ) {
+        return;
+      }
+    }
+
+    if (!silent && tqqqStatus && !tqqqLoaded) {
       tqqqStatus.textContent = "TQQQ 차트 불러오는 중…";
     }
+
     try {
-      const data = await fetchYahooChart();
-      const result = data.chart.result[0];
-      const quote = result.indicators.quote[0];
-      const timestamps = result.timestamp;
-      const meta = result.meta;
-      const series = buildTqqqSeries(quote, meta);
+      const data = await fetchTqqqChartData();
+      if (gen !== tqqqFetchGen) return;
+
       tqqqCache = {
-        closes: series.closes,
-        highs: series.highs,
-        timestamps: timestamps,
-        meta: meta,
+        closes: data.closes,
+        highs: data.highs,
+        timestamps: data.timestamps,
+        meta: data.meta,
+        source: data.source,
+        savedAt: Date.now(),
       };
+      writeStoredTqqqCache(tqqqCache);
+
       if (renderTqqqFromCache()) {
         tqqqLoaded = true;
       } else {
         window.setTimeout(renderTqqqFromCache, 200);
       }
     } catch (e) {
+      if (gen !== tqqqFetchGen) return;
+      if (tqqqCache) return;
+
       tqqqLoaded = false;
       const wrap = tqqqChart && tqqqChart.parentElement;
       if (wrap) {
@@ -852,5 +1040,9 @@
         runPrediction(stockSearch.value);
       }
     });
+  }
+
+  if (tqqqChart) {
+    loadTqqq({ silent: true });
   }
 })();
