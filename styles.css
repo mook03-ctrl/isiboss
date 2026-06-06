@@ -185,8 +185,22 @@ body {
   display: none;
 }
 
+.app.is-stock-mode .game-stage,
+body.is-stock-page .game-stage {
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+}
+
 .app.is-stock-mode .panel-main {
   flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
   min-height: auto;
   display: flex;
   flex-direction: column;
@@ -195,7 +209,34 @@ body {
 .app.is-stock-mode #stock-panel {
   display: flex;
   flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
   min-height: auto;
+  max-height: none;
+  transform: none;
+}
+
+.app.is-stock-mode .site-links {
+  flex: 0 0 auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  position: static;
+  top: auto;
+  max-height: none;
+  overflow: visible;
+  gap: 0.28rem;
+  padding: 0.32rem 0.28rem;
+}
+
+.app.is-stock-mode .site-link-box {
+  flex: 1 1 calc(50% - 0.35rem);
+  min-width: 6.8rem;
+  max-width: 100%;
 }
 
 .site-links {
@@ -797,25 +838,6 @@ body.is-stock-page .app {
   min-height: 100dvh;
   max-height: none;
   overflow: visible;
-}
-
-.app.is-stock-mode .game-stage,
-body.is-stock-page .game-stage {
-  flex: 0 0 auto;
-  min-height: 0;
-  height: auto;
-  max-height: none;
-}
-
-.app.is-stock-mode .panel-main {
-  flex: 0 0 auto;
-  min-height: auto;
-}
-
-.app.is-stock-mode #stock-panel {
-  flex: 0 0 auto;
-  min-height: auto;
-  max-height: none;
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 769px) {
