@@ -24,6 +24,7 @@ export interface ChartCandle {
 export interface ConditionStatus {
   id: string;
   label: string;
+  meaning: string;
   met: boolean;
   detail: string;
   points: number;

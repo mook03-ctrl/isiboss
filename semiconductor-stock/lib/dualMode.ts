@@ -150,6 +150,7 @@ export function computeModeA(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "a-rsi",
       label: "RSI ≤ 30 (과매도)",
+      meaning: "14일 기준 매도 과열 → 단기 반등 가능성",
       met: rsiMet,
       detail: `RSI(14) = ${snapshot.rsi.toFixed(1)}`,
       points: 30,
@@ -157,6 +158,7 @@ export function computeModeA(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "a-bb",
       label: "볼린저 하단 이탈·근접",
+      meaning: "가격이 통계적 저점 부근 → 저평가·되돌림 구간",
       met: bbMet,
       detail: `종가 ${fmtPrice(snapshot.close)} / 하단 ${fmtPrice(snapshot.lowerBand)}`,
       points: 30,
@@ -164,6 +166,7 @@ export function computeModeA(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "a-macd",
       label: "MACD 시그널 상향 돌파",
+      meaning: "하락 모멘텀 약화, 상승 전환 신호(골든크로스)",
       met: macdMet,
       detail: `MACD ${(snapshot.macd.MACD ?? 0).toFixed(2)} / Signal ${(snapshot.macd.signal ?? 0).toFixed(2)}`,
       points: 20,
@@ -171,6 +174,7 @@ export function computeModeA(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "a-sma",
       label: "SMA 5·20 골든크로스",
+      meaning: "단기 이평이 장기 이평을 상향 돌파 → 단기 반등",
       met: smaMet,
       detail: `SMA5 ${snapshot.sma5.toFixed(0)} / SMA20 ${snapshot.sma20.toFixed(0)}`,
       points: 20,
@@ -210,6 +214,7 @@ export function computeModeB(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "b-rsi",
       label: "RSI ≥ 65 (과매수 상승 유지)",
+      meaning: "강한 매수세가 이어지는 추세 → 상승 지속 가능",
       met: rsiMet,
       detail: `RSI(14) = ${snapshot.rsi.toFixed(1)}${snapshot.prevRsi != null ? ` · 전일 ${snapshot.prevRsi.toFixed(1)}` : ""}`,
       points: 30,
@@ -217,6 +222,7 @@ export function computeModeB(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "b-bb",
       label: "볼린저 상단 돌파·Band Walk",
+      meaning: "상단선 돌파·밴드 따라 상승 → 변동성 확대 추세",
       met: bbMet,
       detail: `종가 ${fmtPrice(snapshot.close)} / 상단 ${fmtPrice(snapshot.upperBand)}`,
       points: 30,
@@ -224,6 +230,7 @@ export function computeModeB(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "b-ma",
       label: "이동평균 정배열 (5 > 20 > 60)",
+      meaning: "단·중·장기 이평 우상향 정렬 → 추세 상승 구조",
       met: maMet,
       detail: `SMA5 ${snapshot.sma5.toFixed(0)} > SMA20 ${snapshot.sma20.toFixed(0)} > SMA60 ${snapshot.sma60.toFixed(0)}`,
       points: 20,
@@ -231,6 +238,7 @@ export function computeModeB(snapshot: IndicatorSnapshot): ModeScoreResult {
     {
       id: "b-vol",
       label: "거래량 20일 평균 대비 150%+",
+      meaning: "평소보다 거래 급증 → 추세에 자금 유입 확인",
       met: volMet,
       detail: `당일 ${fmtVol(snapshot.volume)} / 20일평균 ${fmtVol(snapshot.avgVolume20)} (${snapshot.avgVolume20 > 0 ? ((snapshot.volume / snapshot.avgVolume20) * 100).toFixed(0) : 0}%)`,
       points: 20,

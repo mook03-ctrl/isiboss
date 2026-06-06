@@ -70,8 +70,11 @@ function ModeCard({
                 : "border-ink/15 bg-paper"
             }`}
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-medium">{c.label}</span>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <span className="font-medium">{c.label}</span>
+                <span className="ml-1.5 text-xs text-ink/55">— {c.meaning}</span>
+              </div>
               <span
                 className={`shrink-0 text-xs font-bold ${
                   c.met ? "text-buy" : "text-ink/45"
@@ -80,7 +83,7 @@ function ModeCard({
                 {c.met ? `+${c.points}` : "0"}점
               </span>
             </div>
-            <p className="mt-0.5 text-xs text-ink/60">{c.detail}</p>
+            <p className="mt-1 text-xs text-ink/60">{c.detail}</p>
           </li>
         ))}
       </ul>
