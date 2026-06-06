@@ -22,30 +22,51 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  margin: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
-  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-hand);
 }
 
-body {
-  overflow: hidden;
-}
-
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100dvh;
+  height: auto;
   max-width: 920px;
   margin: 0 auto;
   padding: 0.45rem;
   padding-left: max(0.45rem, env(safe-area-inset-left, 0px));
   padding-right: max(0.45rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(0.45rem, env(safe-area-inset-bottom, 0px));
   gap: 0.45rem;
+}
+
+/* 데스크톱: 뷰포트 고정 (페이지 스크롤 없음) */
+@media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .app {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
 }
 
 .sketch-border {
@@ -3819,32 +3840,8 @@ body.is-stock-page .game-stage {
   text-align: center;
 }
 
-/* 모바일·가로 화면: 스크롤 + 게임 화면 비율 */
+/* 모바일·터치: 세로 스크롤 + 게임 화면 비율 */
 @media (max-width: 768px), ((hover: none) and (pointer: coarse)) {
-  html {
-    -webkit-text-size-adjust: 100%;
-    height: auto;
-  }
-
-  body {
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: auto;
-    min-height: 100%;
-    min-height: 100dvh;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: auto;
-    touch-action: pan-y;
-  }
-
-  .app {
-    height: auto;
-    min-height: 100dvh;
-    max-height: none;
-    overflow: visible;
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
-  }
-
   .game-stage {
     flex: 0 0 auto;
     flex-direction: column;
@@ -3917,19 +3914,63 @@ body.is-stock-page .game-stage {
   }
 }
 
-@media ((hover: none) and (pointer: coarse) and (orientation: landscape)) {
+@media (orientation: landscape) and (max-height: 520px) {
+  .title-bar {
+    padding: 0.18rem 0.5rem 0;
+  }
+
+  .game-title {
+    font-size: clamp(1.15rem, 3.8vw, 1.55rem);
+  }
+
+  .game-stage {
+    flex-direction: column;
+    gap: 0.28rem;
+  }
+
   .game-screen {
-    min-height: min(52vh, 260px);
-    aspect-ratio: 16 / 11;
+    min-height: 0;
+    height: clamp(165px, 36vh, 220px);
+    max-height: 36vh;
+    aspect-ratio: unset;
+  }
+
+  .site-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    padding: 0.22rem 0.2rem;
+  }
+
+  .site-link-box {
+    flex: 1 1 calc(33.33% - 0.25rem);
+    min-height: 2rem;
+    min-width: 5.5rem;
+    font-size: clamp(0.58rem, 1.6vw, 0.72rem);
+    padding: 0.22rem 0.12rem;
+  }
+
+  .control-pad {
+    padding: 0.32rem 0.45rem 0.4rem;
+    gap: 0.28rem;
+  }
+
+  .control-pad__label {
+    font-size: 0.88rem;
   }
 
   .control-pad__throws {
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
   }
+
+  .sketch-btn--promo {
+    font-size: clamp(0.68rem, 1.8vw, 0.82rem);
+    padding: 0.32rem 0.18rem;
+  }
 }
 
-@media (max-height: 700px), (max-width: 520px) {
+@media (max-height: 700px) and (orientation: portrait), (max-width: 520px) {
   .game-screen {
     min-height: min(72vw, 300px);
     aspect-ratio: 10 / 12;
