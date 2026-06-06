@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=47" />
+    <link rel="stylesheet" href="styles.css?v=48" />
   </head>
   <body>
     <div id="app" class="app">
@@ -29,33 +29,38 @@
           class="market-ticker"
           aria-label="실시간 시세"
           aria-live="polite">
-          <ul class="market-ticker__list">
-            <li class="market-ticker__item" data-symbol="^KQ11">
-              <span class="market-ticker__label">코스닥</span>
-              <span class="market-ticker__price">—</span>
-              <span class="market-ticker__chg"></span>
-            </li>
-            <li class="market-ticker__item" data-symbol="^IXIC">
-              <span class="market-ticker__label">나스닥</span>
-              <span class="market-ticker__price">—</span>
-              <span class="market-ticker__chg"></span>
-            </li>
-            <li class="market-ticker__item" data-symbol="005930.KS">
-              <span class="market-ticker__label">삼성전자</span>
-              <span class="market-ticker__price">—</span>
-              <span class="market-ticker__chg"></span>
-            </li>
-            <li class="market-ticker__item" data-symbol="000660.KS">
-              <span class="market-ticker__label">하이닉스</span>
-              <span class="market-ticker__price">—</span>
-              <span class="market-ticker__chg"></span>
-            </li>
-            <li class="market-ticker__item" data-symbol="KRW=X">
-              <span class="market-ticker__label">원/달러</span>
-              <span class="market-ticker__price">—</span>
-              <span class="market-ticker__chg"></span>
-            </li>
-          </ul>
+          <div class="market-ticker__postit">
+            <span class="market-ticker__tape" aria-hidden="true"></span>
+            <p class="market-ticker__title">시세 포스트잇</p>
+            <ul class="market-ticker__list">
+              <li class="market-ticker__item" data-symbol="^KQ11">
+                <span class="market-ticker__label">코스닥</span>
+                <span class="market-ticker__price">—</span>
+                <span class="market-ticker__chg"></span>
+              </li>
+              <li class="market-ticker__item" data-symbol="^IXIC">
+                <span class="market-ticker__label">나스닥</span>
+                <span class="market-ticker__price">—</span>
+                <span class="market-ticker__chg"></span>
+              </li>
+              <li class="market-ticker__item" data-symbol="005930.KS">
+                <span class="market-ticker__label">삼성전자</span>
+                <span class="market-ticker__price">—</span>
+                <span class="market-ticker__chg"></span>
+              </li>
+              <li class="market-ticker__item" data-symbol="000660.KS">
+                <span class="market-ticker__label">하이닉스</span>
+                <span class="market-ticker__price">—</span>
+                <span class="market-ticker__chg"></span>
+              </li>
+              <li class="market-ticker__item" data-symbol="KRW=X">
+                <span class="market-ticker__label">원/달러</span>
+                <span class="market-ticker__price">—</span>
+                <span class="market-ticker__chg"></span>
+              </li>
+            </ul>
+            <span class="market-ticker__fold" aria-hidden="true"></span>
+          </div>
         </aside>
         <div id="office-scene" class="office-scene">
           <!-- 모니터 뒤: 평소엔 가려짐 -->
