@@ -22,6 +22,9 @@ jobs:
           cache: npm
           cache-dependency-path: semiconductor-stock/package-lock.json
 
+      - name: Bake market ticker JSON
+        run: node scripts/generate-market-ticker.mjs
+
       - name: Build semiconductor static (Dual Mode)
         working-directory: semiconductor-stock
         run: |
