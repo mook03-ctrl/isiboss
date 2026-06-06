@@ -3840,8 +3840,13 @@ body.is-stock-page .game-stage {
   text-align: center;
 }
 
-/* 모바일·터치: 세로 스크롤 + 게임 화면 비율 */
+/* 모바일·터치: 핀치 줌 + 세로 스크롤 */
 @media (max-width: 768px), ((hover: none) and (pointer: coarse)) {
+  html,
+  body {
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+
   .game-stage {
     flex: 0 0 auto;
     flex-direction: column;
@@ -3961,7 +3966,7 @@ body.is-stock-page .game-stage {
 
   .control-pad__throws {
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
+    touch-action: pan-x pinch-zoom;
   }
 
   .sketch-btn--promo {
