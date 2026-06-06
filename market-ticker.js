@@ -9,7 +9,10 @@
   const CACHE_KEY = "market_ticker_v2";
   const CACHE_TTL_MS = 90 * 1000;
   const REFRESH_MS = 60 * 1000;
-  const FETCH_TIMEOUT_MS = 12000;
+  const IS_MOBILE = window.matchMedia(
+    "(max-width: 520px), (hover: none) and (pointer: coarse)"
+  ).matches;
+  const FETCH_TIMEOUT_MS = IS_MOBILE ? 20000 : 12000;
 
   const SYMBOLS = ["^KQ11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
 
@@ -120,8 +123,9 @@
     }
   }
 
-  function renderAll(quotes) {
+  function renderAll(quotes, savedAt) {
     root.classList.remove("is-loading");
+    renderTime(savedAt);
     Object.keys(quotes).forEach(function (sym) {
       renderQuote(sym, quotes[sym]);
     });
@@ -154,29 +158,42 @@
     };
   }
 
+  function getProxyFns() {
+    const direct = function (u, s) {
+      return fetch(u, { mode: "cors", signal: s });
+    };
+    const allorigins = function (u, s) {
+      return fetch(
+        "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+        { signal: s }
+      );
+    };
+    const corsproxy = function (u, s) {
+      return fetch("https://corsproxy.io/?" + encodeURIComponent(u), {
+        signal: s,
+      });
+    };
+    const codetabs = function (u, s) {
+      return fetch(
+        "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
+        { signal: s }
+      );
+    };
+
+    if (IS_MOBILE) {
+      return [allorigins, corsproxy, codetabs, direct];
+    }
+    return [direct, allorigins, corsproxy, codetabs];
+  }
+
   function fetchJson(url, signal) {
     const hosts = [
       url,
       url.replace("query1.finance.yahoo.com", "query2.finance.yahoo.com"),
     ];
-    const proxies = [
-      function (u, s) {
-        return fetch(u, { mode: "cors", signal: s });
-      },
-      function (u, s) {
-        return fetch(
-          "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-          { signal: s }
-        );
-      },
-      function (u, s) {
-        return fetch("https://corsproxy.io/?" + encodeURIComponent(u), {
-          signal: s,
-        });
-      },
-    ];
-
+    const proxies = getProxyFns();
     const attempts = [];
+
     hosts.forEach(function (host) {
       proxies.forEach(function (proxy) {
         attempts.push(function () {
@@ -211,37 +228,72 @@
     });
   }
 
-  function fetchSymbolQuote(symbol, signal) {
-    return fetchJson(chartUrl(symbol), signal).then(function (data) {
-      return parseChartQuote(data, symbol);
+  function fetchSymbolQuote(symbol) {
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(function () {
+      ctrl.abort();
+    }, FETCH_TIMEOUT_MS);
+
+    return fetchJson(chartUrl(symbol), ctrl.signal)
+      .then(function (data) {
+        return parseChartQuote(data, symbol);
+      })
+      .finally(function () {
+        window.clearTimeout(timer);
+      });
+  }
+
+  function delay(ms) {
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, ms);
     });
   }
 
-  function fetchAllQuotes() {
-    return new Promise(function (resolve, reject) {
-      const ctrl = new AbortController();
-      const timer = window.setTimeout(function () {
-        ctrl.abort();
-      }, FETCH_TIMEOUT_MS);
+  async function fetchAllQuotes() {
+    const map = {};
 
-      Promise.all(
+    if (IS_MOBILE) {
+      for (let i = 0; i < SYMBOLS.length; i += 1) {
+        try {
+          const q = await fetchSymbolQuote(SYMBOLS[i]);
+          map[q.symbol] = q;
+        } catch (e) {
+          /* 개별 심볼 실패는 건너뜀 */
+        }
+        if (i < SYMBOLS.length - 1) {
+          await delay(120);
+        }
+      }
+    } else {
+      const rows = await Promise.allSettled(
         SYMBOLS.map(function (sym) {
-          return fetchSymbolQuote(sym, ctrl.signal);
+          return fetchSymbolQuote(sym);
         })
-      )
-        .then(function (rows) {
-          window.clearTimeout(timer);
-          const map = {};
-          rows.forEach(function (q) {
-            map[q.symbol] = q;
-          });
-          resolve(map);
-        })
-        .catch(function (e) {
-          window.clearTimeout(timer);
-          reject(e);
-        });
+      );
+      rows.forEach(function (row) {
+        if (row.status === "fulfilled") {
+          map[row.value.symbol] = row.value;
+        }
+      });
+    }
+
+    if (Object.keys(map).length === 0) {
+      throw new Error("시세 요청 실패");
+    }
+    return map;
+  }
+
+  function mergeQuotes(cachedQuotes, freshQuotes) {
+    const merged = {};
+    if (cachedQuotes) {
+      Object.keys(cachedQuotes).forEach(function (sym) {
+        merged[sym] = cachedQuotes[sym];
+      });
+    }
+    Object.keys(freshQuotes).forEach(function (sym) {
+      merged[sym] = freshQuotes[sym];
     });
+    return merged;
   }
 
   async function refresh(force) {
@@ -260,10 +312,14 @@
     }
 
     try {
-      const quotes = await fetchAllQuotes();
+      const fresh = await fetchAllQuotes();
+      const merged = mergeQuotes(
+        cached && cached.quotes ? cached.quotes : null,
+        fresh
+      );
       const savedAt = Date.now();
-      writeCache(quotes, savedAt);
-      renderAll(quotes, savedAt);
+      writeCache(merged, savedAt);
+      renderAll(merged, savedAt);
     } catch (e) {
       if (!cached || !cached.quotes) {
         root.classList.remove("is-loading");

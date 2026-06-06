@@ -6,19 +6,115 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>다 때려쳐 @office</title>
+    <title>다 때려쳐 @office — 직장 스트레스 해소 미니게임 | angrywork</title>
+    <meta
+      name="description"
+      content="직장 상사에게 수첩·물컵·모니터를 던지는 손그림 감성 스트레스 해소 웹게임. 실시간 시세 포스트잇, 퇴근 카운트다운, 주식·반도체 매수 신뢰도까지 angrywork.com에서 무료로 즐기세요."
+    />
+    <meta
+      name="keywords"
+      content="다 때려쳐, 직장 스트레스, 사무실 게임, 상사, 퇴근, 스트레스 해소, angrywork, 웹게임, 미니게임"
+    />
+    <meta name="author" content="mook" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://angrywork.com/" />
+    <meta name="theme-color" content="#fefefe" />
+    <link rel="icon" href="assets/boss-back.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="angrywork.com" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta
+      property="og:title"
+      content="다 때려쳐 @office — 직장 스트레스 해소 미니게임"
+    />
+    <meta
+      property="og:description"
+      content="직장 상사에게 물건을 던지고 소리 지르는 손그림 감성 스트레스 해소 웹게임. 무료로 바로 플레이하세요."
+    />
+    <meta property="og:url" content="https://angrywork.com/" />
+    <meta
+      property="og:image"
+      content="https://angrywork.com/assets/boss-back.png?v=6"
+    />
+    <meta property="og:image:alt" content="다 때려쳐 @office 직장 상사 캐릭터" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="다 때려쳐 @office — 직장 스트레스 해소 미니게임"
+    />
+    <meta
+      name="twitter:description"
+      content="직장 상사에게 물건을 던지는 손그림 감성 스트레스 해소 웹게임. angrywork.com"
+    />
+    <meta
+      name="twitter:image"
+      content="https://angrywork.com/assets/boss-back.png?v=6"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://angrywork.com/#website",
+            "url": "https://angrywork.com/",
+            "name": "angrywork.com",
+            "alternateName": ["다 때려쳐 @office", "angrywork"],
+            "description": "직장 스트레스 해소 미니게임과 주식·반도체 투자 참고 도구를 제공하는 웹 서비스",
+            "inLanguage": "ko-KR",
+            "publisher": { "@id": "https://angrywork.com/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://angrywork.com/#organization",
+            "name": "angrywork.com",
+            "url": "https://angrywork.com/",
+            "logo": "https://angrywork.com/assets/boss-back.png?v=6"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://angrywork.com/#app",
+            "name": "다 때려쳐 @office",
+            "url": "https://angrywork.com/",
+            "description": "직장 상사에게 수첩·물컵·모니터·의자를 던지며 스트레스를 푸는 손그림 감성 브라우저 게임",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Web browser",
+            "browserRequirements": "Requires JavaScript",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "KRW"
+            },
+            "inLanguage": "ko-KR",
+            "author": { "@type": "Person", "name": "mook" },
+            "isPartOf": { "@id": "https://angrywork.com/#website" }
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=58" />
+    <link rel="stylesheet" href="styles.css?v=63" />
   </head>
   <body>
     <div id="app" class="app">
       <header class="title-bar sketch-border">
         <h1 class="game-title">다 때려쳐 @office</h1>
+        <button
+          type="button"
+          class="bookmark-btn"
+          id="add-bookmark"
+          aria-label="즐겨찾기에 추가">
+          ☆ 즐겨찾기
+        </button>
       </header>
 
       <div class="game-stage">
@@ -411,9 +507,10 @@
       </footer>
     </div>
 
+    <script src="bookmark.js?v=1"></script>
     <script src="sfx.js?v=6"></script>
     <script src="game.js?v=26"></script>
-    <script src="market-ticker.js?v=4"></script>
+    <script src="market-ticker.js?v=5"></script>
     <script src="leave-countdown.js?v=1"></script>
     <script src="stock.js?v=9"></script>
   </body>
