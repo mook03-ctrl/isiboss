@@ -344,14 +344,14 @@ export function buildSnapshotFromBars(
   const macd = macdSeries[macdSeries.length - 1];
   const prevMacd =
     macdSeries.length > 1 ? macdSeries[macdSeries.length - 2] : null;
-  const bb = bbSeries[lastIdx];
+  const bb = bbSeries[bbSeries.length - 1];
   const sma5 = sma5Series[sma5Series.length - 1];
   const sma20 = sma20Series[sma20Series.length - 1];
   const sma60 = sma60Series[sma60Series.length - 1];
   const prevSma5 =
-    sma5Series.length > 1 ? sma5Series[sma5Series.length - 1] : null;
+    sma5Series.length > 1 ? sma5Series[sma5Series.length - 2] : null;
   const prevSma20 =
-    sma20Series.length > 1 ? sma20Series[sma20Series.length - 1] : null;
+    sma20Series.length > 1 ? sma20Series[sma20Series.length - 2] : null;
 
   const sma60Now = sma60Series[sma60Series.length - 1];
   const sma60PastIdx = Math.max(0, sma60Series.length - 11);
