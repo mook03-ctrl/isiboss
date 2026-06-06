@@ -3,6 +3,7 @@
  */
 (function () {
   const root = document.getElementById("market-ticker");
+  const timeEl = document.getElementById("market-ticker-time");
   if (!root) return;
 
   const CACHE_KEY = "market_ticker_v2";
@@ -43,11 +44,11 @@
     }
   }
 
-  function writeCache(quotes) {
+  function writeCache(quotes, savedAt) {
     try {
       localStorage.setItem(
         CACHE_KEY,
-        JSON.stringify({ quotes: quotes, savedAt: Date.now() })
+        JSON.stringify({ quotes: quotes, savedAt: savedAt || Date.now() })
       );
     } catch (e) {
       /* quota */
@@ -223,7 +224,7 @@
   async function refresh(force) {
     const cached = readCache();
     if (cached && cached.quotes) {
-      renderAll(cached.quotes);
+      renderAll(cached.quotes, cached.savedAt || Date.now());
       if (
         !force &&
         cached.savedAt &&
@@ -237,8 +238,9 @@
 
     try {
       const quotes = await fetchAllQuotes();
-      writeCache(quotes);
-      renderAll(quotes);
+      const savedAt = Date.now();
+      writeCache(quotes, savedAt);
+      renderAll(quotes, savedAt);
     } catch (e) {
       if (!cached || !cached.quotes) {
         root.classList.remove("is-loading");
