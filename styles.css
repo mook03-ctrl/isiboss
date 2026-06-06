@@ -197,13 +197,14 @@ body.is-stock-page .game-stage {
   max-height: none;
 }
 
-.app.is-stock-mode .panel-main {
-  flex: 0 0 auto;
+.app.is-stock-mode .title-bar {
   width: 100%;
-  min-width: 0;
-  min-height: auto;
-  display: flex;
-  flex-direction: column;
+  align-self: stretch;
+  transform: none;
+}
+
+.app.is-stock-mode .panel-main {
+  display: contents;
 }
 
 .app.is-stock-mode #stock-panel {
@@ -213,6 +214,7 @@ body.is-stock-page .game-stage {
   min-width: 0;
   min-height: auto;
   max-height: none;
+  align-self: stretch;
   transform: none;
 }
 
@@ -231,6 +233,7 @@ body.is-stock-page .game-stage {
   overflow: visible;
   gap: 0.28rem;
   padding: 0.32rem 0.28rem;
+  transform: none;
 }
 
 .app.is-stock-mode .site-link-box {
