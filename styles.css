@@ -901,8 +901,8 @@ body.is-stock-page .app {
 
 .market-ticker__postit {
   position: relative;
-  max-width: min(92vw, 14.5rem);
-  padding: 0.88rem 0.5rem 0.46rem 0.52rem;
+  max-width: min(92vw, 13.2rem);
+  padding: 0.78rem 0.44rem 0.38rem 0.46rem;
   background: rgba(255, 251, 214, 0.94);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -1018,10 +1018,10 @@ body.is-stock-page .app {
 
 .market-ticker__tape {
   position: absolute;
-  top: -0.28rem;
+  top: -0.24rem;
   left: 50%;
-  width: 2.4rem;
-  height: 0.72rem;
+  width: 2.15rem;
+  height: 0.64rem;
   transform: translateX(-50%) rotate(-4deg);
   background: linear-gradient(
     180deg,
@@ -1038,9 +1038,9 @@ body.is-stock-page .app {
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.06rem 0.25rem;
-  margin: 0 0 0.28rem;
-  padding-bottom: 0.14rem;
+  gap: 0.04rem 0.25rem;
+  margin: 0 0 0.16rem;
+  padding-bottom: 0.1rem;
   border-bottom: 1px dashed rgba(20, 20, 20, 0.18);
   transform: rotate(0.6deg);
 }
@@ -1049,7 +1049,7 @@ body.is-stock-page .app {
   margin: 0;
   font-size: clamp(0.78rem, 2.2vw, 0.96rem);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.08;
   color: var(--ink);
   white-space: nowrap;
 }
@@ -1057,7 +1057,7 @@ body.is-stock-page .app {
 .market-ticker__time {
   margin: 0 0 0 auto;
   font-size: clamp(0.62rem, 1.7vw, 0.74rem);
-  line-height: 1.15;
+  line-height: 1.08;
   color: rgba(20, 20, 20, 0.82);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -1070,8 +1070,8 @@ body.is-stock-page .app {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.92rem;
+  height: 0.92rem;
   background: linear-gradient(
     225deg,
     #f0f0f0 0%,
@@ -1088,16 +1088,16 @@ body.is-stock-page .app {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.02rem;
 }
 
 .market-ticker__item {
   display: grid;
   grid-template-columns: minmax(2.9rem, auto) 1fr auto;
   align-items: baseline;
-  gap: 0.1rem 0.2rem;
+  gap: 0.06rem 0.2rem;
   font-size: clamp(0.74rem, 2.1vw, 0.9rem);
-  line-height: 1.2;
+  line-height: 1.08;
   color: var(--ink);
 }
 
@@ -1143,7 +1143,7 @@ body.is-stock-page .app {
 @media (max-width: 520px) {
   .market-ticker__postit {
     max-width: min(94vw, 13.5rem);
-    padding: 1rem 0.4rem 0.58rem 0.44rem;
+    padding: 0.82rem 0.4rem 0.42rem 0.44rem;
   }
 
   .market-ticker__head {
