@@ -1,5 +1,5 @@
 {
-  "savedAt": 1780930324547,
+  "savedAt": 1780930453609,
   "quotes": {
     "^KS11": {
       "symbol": "^KS11",
@@ -8,8 +8,8 @@
     },
     "^IXIC": {
       "symbol": "^IXIC",
-      "regularMarketPrice": 26117.602,
-      "regularMarketChangePercent": -3.578154828863208
+      "regularMarketPrice": 26119.975,
+      "regularMarketChangePercent": -3.5693941073164495
     },
     "005930.KS": {
       "symbol": "005930.KS",
@@ -23,8 +23,8 @@
     },
     "KRW=X": {
       "symbol": "KRW=X",
-      "regularMarketPrice": 1527.67,
-      "regularMarketChangePercent": 1.0851800141602819
+      "regularMarketPrice": 1527.27,
+      "regularMarketChangePercent": 1.0587122089368544
     }
   }
 }
