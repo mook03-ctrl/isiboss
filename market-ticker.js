@@ -7,13 +7,13 @@
   if (!root) return;
 
   const BAKED_URL = "data/market-ticker.json";
-  const CACHE_KEY = "market_ticker_v5";
+  const CACHE_KEY = "market_ticker_v6";
   const CACHE_TTL_MS = 90 * 1000;
   const REFRESH_MS = 5 * 60 * 1000;
   const SYMBOL_DELAY_MS = 700;
   const FETCH_TIMEOUT_MS = 20000;
 
-  const SYMBOLS = ["^KQ11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
+  const SYMBOLS = ["^KS11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
 
   const items = {};
   root.querySelectorAll(".market-ticker__item").forEach(function (el) {

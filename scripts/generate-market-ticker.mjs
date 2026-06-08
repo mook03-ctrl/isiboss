@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const SYMBOLS = ["^KQ11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
+const SYMBOLS = ["^KS11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
 const root = path.dirname(fileURLToPath(import.meta.url));
 const outFile = path.join(root, "..", "data", "market-ticker.json");
 
