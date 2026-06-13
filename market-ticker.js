@@ -1,5 +1,5 @@
 /**
- * 게임 화면 좌측 상단 — 시세 티커 (baked JSON + Yahoo v8 보조 갱신)
+ * 게임 화면 좌측 상단 — 시세 티커 (live 우선 + baked JSON 폴백)
  */
 (function () {
   const root = document.getElementById("market-ticker");
@@ -7,11 +7,12 @@
   if (!root) return;
 
   const BAKED_URL = "data/market-ticker.json";
-  const CACHE_KEY = "market_ticker_v6";
-  const CACHE_TTL_MS = 90 * 1000;
-  const REFRESH_MS = 5 * 60 * 1000;
-  const SYMBOL_DELAY_MS = 700;
-  const FETCH_TIMEOUT_MS = 20000;
+  const CACHE_KEY = "market_ticker_v7";
+  const CACHE_TTL_MS = 60 * 1000;
+  const REFRESH_MS = 3 * 60 * 1000;
+  const SYMBOL_DELAY_MS = 500;
+  const FETCH_TIMEOUT_MS = 18000;
+  const BAKED_STALE_MS = 6 * 60 * 60 * 1000;
 
   const SYMBOLS = ["^KS11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
 
@@ -25,6 +26,10 @@
       chgEl: el.querySelector(".market-ticker__chg"),
     };
   });
+
+  let quotes = {};
+  let savedAt = null;
+  let refreshing = false;
 
   function chartUrl(symbol) {
     return (
@@ -46,11 +51,11 @@
     }
   }
 
-  function writeCache(quotes, savedAt) {
+  function writeCache(nextQuotes, when) {
     try {
       localStorage.setItem(
         CACHE_KEY,
-        JSON.stringify({ quotes: quotes, savedAt: savedAt || Date.now() })
+        JSON.stringify({ quotes: nextQuotes, savedAt: when || Date.now() })
       );
     } catch (e) {
       /* quota */
@@ -122,12 +127,27 @@
     }
   }
 
-  function renderAll(quotes, savedAt) {
+  function renderAll(nextQuotes, when) {
     root.classList.remove("is-loading");
+    quotes = nextQuotes || quotes;
+    savedAt = when || savedAt || Date.now();
     renderTime(savedAt);
     SYMBOLS.forEach(function (sym) {
       if (quotes[sym]) renderQuote(sym, quotes[sym]);
     });
+  }
+
+  function mergeQuotes(base, extra) {
+    const merged = {};
+    if (base) {
+      Object.keys(base).forEach(function (sym) {
+        merged[sym] = base[sym];
+      });
+    }
+    Object.keys(extra || {}).forEach(function (sym) {
+      merged[sym] = extra[sym];
+    });
+    return merged;
   }
 
   function parseChartQuote(data, symbol) {
@@ -150,60 +170,58 @@
       pct = ((meta.regularMarketPrice - prev) / prev) * 100;
     }
 
+    const marketTime =
+      meta.regularMarketTime != null
+        ? meta.regularMarketTime * 1000
+        : null;
+
     return {
       symbol: symbol,
       regularMarketPrice: meta.regularMarketPrice,
       regularMarketChangePercent: pct,
+      marketTime: marketTime,
     };
   }
 
-  function fetchChartJson(url, signal) {
-    const hosts = [
-      url,
+  function proxyUrls(url) {
+    return [
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+      "https://corsproxy.io/?" + encodeURIComponent(url),
       url.replace("query1.finance.yahoo.com", "query2.finance.yahoo.com"),
+      url,
     ];
-    const attempts = [];
+  }
 
-    hosts.forEach(function (host) {
-      attempts.push(function () {
-        return fetch(
-          "https://api.allorigins.win/raw?url=" + encodeURIComponent(host),
-          { signal: signal, cache: "no-store" }
-        ).then(function (res) {
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          return res.json();
-        });
-      });
-      attempts.push(function () {
-        return fetch(host, { mode: "cors", signal: signal, cache: "no-store" }).then(
-          function (res) {
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            return res.json();
-          }
-        );
-      });
+  function fetchJson(url, signal) {
+    return fetch(url, { signal: signal, cache: "no-store" }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
     });
+  }
+
+  function fetchChartJson(url, signal) {
+    const urls = proxyUrls(url);
 
     return new Promise(function (resolve, reject) {
-      let pending = attempts.length;
+      let index = 0;
       let lastErr = null;
-      let settled = false;
 
-      attempts.forEach(function (run) {
-        run()
-          .then(function (data) {
-            if (settled) return;
-            settled = true;
-            resolve(data);
-          })
+      function tryNext() {
+        if (index >= urls.length) {
+          reject(lastErr || new Error("시세 요청 실패"));
+          return;
+        }
+        const nextUrl = urls[index];
+        index += 1;
+        fetchJson(nextUrl, signal)
+          .then(resolve)
           .catch(function (e) {
             lastErr = e;
-            pending -= 1;
-            if (!settled && pending === 0) {
-              reject(lastErr || new Error("시세 요청 실패"));
-            }
+            tryNext();
           });
-      });
+      }
+
+      tryNext();
     });
   }
 
@@ -232,7 +250,7 @@
   }
 
   async function fetchBaked() {
-    const res = await fetch(BAKED_URL, { cache: "no-store" });
+    const res = await fetch(BAKED_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (!res.ok) throw new Error("baked HTTP " + res.status);
     const data = await res.json();
     if (!data || !data.quotes || Object.keys(data.quotes).length === 0) {
@@ -246,12 +264,18 @@
 
   async function fetchLiveQuotesSequential() {
     const map = {};
+    let latestMarketTime = null;
 
     for (let i = 0; i < SYMBOLS.length; i += 1) {
       const sym = SYMBOLS[i];
       try {
         const q = await fetchSymbolQuote(sym);
         map[q.symbol] = q;
+        if (q.marketTime && (!latestMarketTime || q.marketTime > latestMarketTime)) {
+          latestMarketTime = q.marketTime;
+        }
+        quotes = mergeQuotes(quotes, { [q.symbol]: q });
+        renderQuote(q.symbol, q);
       } catch (e) {
         /* 개별 실패 허용 */
       }
@@ -260,72 +284,88 @@
       }
     }
 
-    return map;
+    return {
+      quotes: map,
+      savedAt: latestMarketTime || Date.now(),
+      count: Object.keys(map).length,
+    };
   }
 
-  function mergeQuotes(base, extra) {
-    const merged = {};
-    if (base) {
-      Object.keys(base).forEach(function (sym) {
-        merged[sym] = base[sym];
-      });
-    }
-    Object.keys(extra).forEach(function (sym) {
-      merged[sym] = extra[sym];
-    });
-    return merged;
-  }
-
-  async function refresh(force) {
+  async function loadFallback() {
     const cached = readCache();
-    let current = cached && cached.quotes ? cached.quotes : null;
-    let currentAt = cached ? cached.savedAt : null;
-
-    if (current) {
-      renderAll(current, currentAt || Date.now());
-      if (
-        !force &&
-        currentAt &&
-        Date.now() - currentAt < CACHE_TTL_MS
-      ) {
-        return;
-      }
-    } else {
-      root.classList.add("is-loading");
+    if (cached && cached.quotes && Object.keys(cached.quotes).length > 0) {
+      renderAll(cached.quotes, cached.savedAt);
+      return true;
     }
 
     try {
       const baked = await fetchBaked();
-      current = mergeQuotes(current, baked.quotes);
-      currentAt = baked.savedAt;
-      renderAll(current, currentAt);
-      writeCache(current, currentAt);
+      const isStale = Date.now() - baked.savedAt > BAKED_STALE_MS;
+      renderAll(baked.quotes, baked.savedAt);
+      if (!isStale) {
+        writeCache(baked.quotes, baked.savedAt);
+      }
+      return true;
     } catch (e) {
-      /* baked 없으면 live 시도 */
+      return false;
+    }
+  }
+
+  async function refresh(force) {
+    if (refreshing) return;
+    if (
+      !force &&
+      savedAt &&
+      Date.now() - savedAt < CACHE_TTL_MS &&
+      Object.keys(quotes).length > 0
+    ) {
+      return;
+    }
+
+    refreshing = true;
+    if (Object.keys(quotes).length === 0) {
+      root.classList.add("is-loading");
     }
 
     try {
       const live = await fetchLiveQuotesSequential();
-      if (Object.keys(live).length > 0) {
-        current = mergeQuotes(current, live);
-        currentAt = Date.now();
-        writeCache(current, currentAt);
-        renderAll(current, currentAt);
+      if (live.count > 0) {
+        quotes = mergeQuotes(quotes, live.quotes);
+        savedAt = live.savedAt;
+        renderAll(quotes, savedAt);
+        writeCache(quotes, savedAt);
+        return;
       }
-    } catch (e) {
-      /* live 전부 실패 — baked/캐시 유지 */
-    }
 
-    if (!current) {
+      if (Object.keys(quotes).length === 0) {
+        await loadFallback();
+        return;
+      }
+
+      try {
+        const baked = await fetchBaked();
+        if (Date.now() - baked.savedAt > (savedAt || 0)) {
+          quotes = mergeQuotes(quotes, baked.quotes);
+          savedAt = baked.savedAt;
+          renderAll(quotes, savedAt);
+        }
+      } catch (e) {
+        /* live·baked 모두 실패 시 기존 표시 유지 */
+      }
+    } finally {
       root.classList.remove("is-loading");
+      refreshing = false;
     }
   }
 
-  renderTime(Date.now());
-  refresh(false);
-  window.setInterval(function () {
-    refresh(true);
-  }, REFRESH_MS);
+  async function boot() {
+    renderTime(Date.now());
+    await loadFallback();
+    await refresh(true);
+    window.setInterval(function () {
+      refresh(true);
+    }, REFRESH_MS);
+  }
 
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) refresh(true);
@@ -334,4 +374,6 @@
   window.addEventListener("online", function () {
     refresh(true);
   });
+
+  boot();
 })();
