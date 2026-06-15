@@ -23,9 +23,10 @@
   let tqqqCache = null;
   let tqqqFetchGen = 0;
 
-  const TQQQ_CACHE_KEY = "tqqq_chart_v2";
-  const TQQQ_CACHE_TTL_MS = 15 * 60 * 1000;
-  const TQQQ_FETCH_TIMEOUT_MS = 10000;
+  const TQQQ_CACHE_KEY = "tqqq_chart_v3";
+  const TQQQ_CACHE_TTL_MS = 3 * 60 * 1000;
+  const TQQQ_REFRESH_MS = 3 * 60 * 1000;
+  const TQQQ_FETCH_TIMEOUT_MS = 18000;
 
   const YAHOO_TQQQ_URLS = [
     "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
@@ -82,7 +83,9 @@
         }, 300);
       });
       if (!tqqqTimer) {
-        tqqqTimer = window.setInterval(loadTqqq, 60000);
+        tqqqTimer = window.setInterval(function () {
+          loadTqqq({ silent: true });
+        }, TQQQ_REFRESH_MS);
       }
     } else {
       if (tqqqTimer) {
@@ -205,28 +208,24 @@
   }
 
   function fetchYahooChartUrl(url, signal) {
-    const proxies = [
-      function (u, s) {
-        return fetch(u, { mode: "cors", signal: s });
-      },
-      function (u, s) {
-        return fetch(
-          "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-          { signal: s }
-        );
-      },
-      function (u, s) {
-        return fetch("https://corsproxy.io/?" + encodeURIComponent(u), {
-          signal: s,
-        });
-      },
+    const urls = [
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+      "https://corsproxy.io/?" + encodeURIComponent(url),
+      url.replace("query1.finance.yahoo.com", "query2.finance.yahoo.com"),
     ];
 
     return new Promise(function (resolve, reject) {
-      let pending = proxies.length;
+      let index = 0;
       let lastErr = null;
-      proxies.forEach(function (proxy) {
-        proxy(url, signal)
+
+      function tryNext() {
+        if (index >= urls.length) {
+          reject(lastErr || new Error("Yahoo 요청 실패"));
+          return;
+        }
+        const nextUrl = urls[index];
+        index += 1;
+        fetch(nextUrl, { signal: signal, cache: "no-store" })
           .then(function (res) {
             if (!res.ok) throw new Error("HTTP " + res.status);
             return res.json();
@@ -236,12 +235,11 @@
           })
           .catch(function (e) {
             lastErr = e;
-            pending -= 1;
-            if (pending === 0) {
-              reject(lastErr || new Error("Yahoo 요청 실패"));
-            }
+            tryNext();
           });
-      });
+      }
+
+      tryNext();
     });
   }
 
@@ -269,39 +267,25 @@
     return Promise.any(jobs);
   }
 
-  function fetchTqqqChartData() {
-    const jobs = [];
+  async function fetchTqqqChartData() {
+    let lastErr = null;
 
-    YAHOO_TQQQ_URLS.forEach(function (url) {
-      jobs.push(function (signal) {
-        return fetchYahooChartUrl(url, signal);
-      });
-    });
-    jobs.push(function (signal) {
-      return fetchStooqChart(signal);
-    });
+    for (let i = 0; i < YAHOO_TQQQ_URLS.length; i += 1) {
+      const url = YAHOO_TQQQ_URLS[i];
+      try {
+        return await fetchWithTimeout(function (signal) {
+          return fetchYahooChartUrl(url, signal);
+        }, TQQQ_FETCH_TIMEOUT_MS);
+      } catch (e) {
+        lastErr = e;
+      }
+    }
 
-    return new Promise(function (resolve, reject) {
-      let pending = jobs.length;
-      let lastErr = null;
-      let settled = false;
-
-      jobs.forEach(function (job) {
-        fetchWithTimeout(job, TQQQ_FETCH_TIMEOUT_MS)
-          .then(function (data) {
-            if (settled) return;
-            settled = true;
-            resolve(data);
-          })
-          .catch(function (e) {
-            lastErr = e;
-            pending -= 1;
-            if (!settled && pending === 0) {
-              reject(lastErr || new Error("TQQQ 데이터를 불러오지 못했습니다."));
-            }
-          });
-      });
-    });
+    try {
+      return await fetchWithTimeout(fetchStooqChart, TQQQ_FETCH_TIMEOUT_MS);
+    } catch (e) {
+      throw lastErr || e;
+    }
   }
 
   function findPrevAthFromHighs(highs) {
@@ -667,16 +651,19 @@
     const gen = ++tqqqFetchGen;
 
     const stored = readStoredTqqqCache();
-    if (stored) {
+    if (stored && (!tqqqCache || !silent)) {
       tqqqCache = stored;
       renderTqqqFromCache();
       tqqqLoaded = true;
-      if (
-        stored.savedAt &&
-        Date.now() - stored.savedAt < TQQQ_CACHE_TTL_MS
-      ) {
-        return;
-      }
+    }
+
+    if (
+      silent &&
+      stored &&
+      stored.savedAt &&
+      Date.now() - stored.savedAt < TQQQ_CACHE_TTL_MS
+    ) {
+      return;
     }
 
     if (!silent && tqqqStatus && !tqqqLoaded) {
@@ -1046,4 +1033,16 @@
   if (tqqqChart) {
     loadTqqq({ silent: true });
   }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && app && app.classList.contains("is-stock-mode")) {
+      loadTqqq({ silent: true });
+    }
+  });
+
+  window.addEventListener("online", function () {
+    if (app && app.classList.contains("is-stock-mode")) {
+      loadTqqq({ silent: true });
+    }
+  });
 })();

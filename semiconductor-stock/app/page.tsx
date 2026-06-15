@@ -10,6 +10,7 @@ import type { StockApiResponse, StockSymbol } from "@/lib/types";
 import { STOCK_META } from "@/lib/types";
 
 const SYMBOLS: StockSymbol[] = ["005930.KS", "000660.KS"];
+const REFRESH_MS = 3 * 60 * 1000;
 
 async function loadStockData(sym: StockSymbol): Promise<StockApiResponse> {
   return fetchStockBundle(sym);
@@ -21,21 +22,42 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (sym: StockSymbol) => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (sym: StockSymbol, opts?: { silent?: boolean }) => {
+    const silent = opts?.silent;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       setData(await loadStockData(sym));
+      setError(null);
     } catch (e) {
-      setData(null);
-      setError(e instanceof Error ? e.message : "알 수 없는 오류");
+      if (!silent) {
+        setData(null);
+        setError(e instanceof Error ? e.message : "알 수 없는 오류");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     load(symbol);
+    const timer = window.setInterval(function () {
+      load(symbol, { silent: true });
+    }, REFRESH_MS);
+
+    function onVisible() {
+      if (!document.hidden) load(symbol, { silent: true });
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onVisible);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onVisible);
+    };
   }, [symbol, load]);
 
   return (
@@ -98,7 +120,7 @@ export default function HomePage() {
       )}
 
       <footer className="border-t border-ink/10 pt-4 text-center text-xs text-ink/45">
-        Dual Mode A/B · angrywork.com · lightweight-charts
+        Dual Mode A/B · angrywork.com · lightweight-charts · 3분마다 자동 갱신
       </footer>
     </div>
   );

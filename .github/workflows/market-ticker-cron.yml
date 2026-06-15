@@ -1,8 +1,8 @@
-name: Refresh market ticker
+name: Refresh market data
 
 on:
   schedule:
-    # 30분마다 (UTC) — 한·미 장중 근사치 갱신
+    # 30분마다 (UTC) — 시세·반도체 차트 JSON 갱신
     - cron: "3,33 * * * *"
   workflow_dispatch:
 
@@ -24,15 +24,21 @@ jobs:
       - name: Bake market ticker JSON
         run: node scripts/generate-market-ticker.mjs
 
+      - name: Bake semiconductor stock JSON
+        run: node semiconductor-stock/scripts/generate-stock-json.mjs
+
       - name: Update gh-pages branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin gh-pages
           git checkout gh-pages
-          mkdir -p data
+          mkdir -p data semiconductor-stock/data
           git checkout main -- data/market-ticker.json
-          git add data/market-ticker.json
-          git diff --staged --quiet && echo "No ticker changes" && exit 0
-          git commit -m "chore: refresh market-ticker.json [skip ci]"
+          git checkout main -- semiconductor-stock/public/data/005930.KS.json semiconductor-stock/public/data/000660.KS.json
+          cp semiconductor-stock/public/data/005930.KS.json semiconductor-stock/data/
+          cp semiconductor-stock/public/data/000660.KS.json semiconductor-stock/data/
+          git add data/market-ticker.json semiconductor-stock/data/005930.KS.json semiconductor-stock/data/000660.KS.json
+          git diff --staged --quiet && echo "No market data changes" && exit 0
+          git commit -m "chore: refresh market and semiconductor stock JSON [skip ci]"
           git push origin gh-pages
