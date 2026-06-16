@@ -1,11 +1,12 @@
 /**
- * Yahoo Finance v8 chart API — live 우선, baked JSON 폴백
+ * Yahoo Finance v8 chart API — 즉시 baked + live 갱신
  */
 import type { OhlcvBar, StockSymbol } from "./types";
 import { STOCK_META } from "./types";
 
 interface YahooChartMeta {
   regularMarketPrice?: number;
+  regularMarketTime?: number;
 }
 
 interface YahooChartResult {
@@ -22,6 +23,8 @@ interface YahooChartResult {
   };
 }
 
+const FETCH_TIMEOUT_MS = 8000;
+
 const CORS_PROXIES = [
   (url: string) =>
     `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -35,8 +38,43 @@ function chartUrl(symbol: StockSymbol): string {
   );
 }
 
-function toDateString(unixSec: number): string {
-  return new Date(unixSec * 1000).toISOString().slice(0, 10);
+function toKstDateString(unixSec: number): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(unixSec * 1000));
+}
+
+function finalizeBarsWithMeta(
+  bars: OhlcvBar[],
+  meta?: YahooChartMeta
+): OhlcvBar[] {
+  if (!bars.length || meta?.regularMarketPrice == null) return bars;
+
+  const livePrice = meta.regularMarketPrice;
+  const liveDate = meta.regularMarketTime
+    ? toKstDateString(meta.regularMarketTime)
+    : null;
+  const last = bars[bars.length - 1];
+
+  if (liveDate && last.date < liveDate) {
+    bars.push({
+      date: liveDate,
+      open: livePrice,
+      high: livePrice,
+      low: livePrice,
+      close: livePrice,
+      volume: 0,
+    });
+    return bars;
+  }
+
+  last.close = livePrice;
+  last.high = Math.max(last.high, livePrice);
+  last.low = Math.min(last.low, livePrice);
+  return bars;
 }
 
 function parseBarsFromChart(
@@ -46,7 +84,7 @@ function parseBarsFromChart(
   const result = json.chart?.result?.[0];
   const timestamps = result?.timestamp ?? [];
   const quote = result?.indicators?.quote?.[0];
-  const livePrice = result?.meta?.regularMarketPrice;
+  const meta = result?.meta;
 
   if (!quote || timestamps.length === 0) {
     throw new Error(
@@ -60,18 +98,14 @@ function parseBarsFromChart(
     const open = quote.open?.[i];
     const high = quote.high?.[i];
     const low = quote.low?.[i];
-    let close = quote.close?.[i];
+    const close = quote.close?.[i];
     if (open == null || high == null || low == null || close == null) continue;
 
-    if (i === timestamps.length - 1 && livePrice != null) {
-      close = livePrice;
-    }
-
     bars.push({
-      date: toDateString(timestamps[i]),
+      date: toKstDateString(timestamps[i]),
       open,
-      high: Math.max(high, close),
-      low: Math.min(low, close),
+      high,
+      low,
       close,
       volume: quote.volume?.[i] ?? 0,
     });
@@ -83,7 +117,17 @@ function parseBarsFromChart(
     );
   }
 
-  return bars;
+  return finalizeBarsWithMeta(bars, meta);
+}
+
+async function fetchJsonTimed(url: string): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = window.setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 async function fetchChartJson(symbol: StockSymbol): Promise<{
@@ -123,7 +167,7 @@ async function fetchChartJson(symbol: StockSymbol): Promise<{
   let lastErr: Error | null = null;
   for (const url of attempts) {
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetchJsonTimed(url);
       if (!res.ok) continue;
       return res.json();
     } catch (e) {
@@ -143,7 +187,7 @@ function dataJsonUrl(symbol: StockSymbol): string {
   return `${base}/data/${symbol}.json`;
 }
 
-async function fetchFromBundledJson(
+export async function fetchBundledBars(
   symbol: StockSymbol
 ): Promise<OhlcvBar[] | null> {
   if (typeof window === "undefined") return null;
@@ -160,14 +204,18 @@ async function fetchFromBundledJson(
   return null;
 }
 
+export async function fetchLiveBars(symbol: StockSymbol): Promise<OhlcvBar[]> {
+  const json = await fetchChartJson(symbol);
+  return parseBarsFromChart(json, symbol);
+}
+
 export async function fetchSixMonthDaily(
   symbol: StockSymbol
 ): Promise<OhlcvBar[]> {
   try {
-    const json = await fetchChartJson(symbol);
-    return parseBarsFromChart(json, symbol);
+    return await fetchLiveBars(symbol);
   } catch (liveErr) {
-    const bundled = await fetchFromBundledJson(symbol);
+    const bundled = await fetchBundledBars(symbol);
     if (bundled) return bundled;
     throw liveErr;
   }

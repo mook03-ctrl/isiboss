@@ -13,9 +13,16 @@ import type { ChartCandle } from "@/lib/types";
 interface StockChartProps {
   candles: ChartCandle[];
   title: string;
+  lastDate?: string;
+  refreshing?: boolean;
 }
 
-export default function StockChart({ candles, title }: StockChartProps) {
+export default function StockChart({
+  candles,
+  title,
+  lastDate,
+  refreshing,
+}: StockChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -81,7 +88,11 @@ export default function StockChart({ candles, title }: StockChartProps) {
 
   return (
     <section className="rounded-2xl border-2 border-ink bg-white p-4 shadow-[4px_4px_0_#141414] sm:p-5">
-      <h2 className="mb-3 text-lg font-semibold">{title} · 6개월 일봉</h2>
+      <h2 className="mb-1 text-lg font-semibold">{title} · 6개월 일봉</h2>
+      <p className="mb-3 text-xs text-ink/50">
+        {lastDate ? `최근 일봉 ${lastDate}` : "일봉 로딩 중"}
+        {refreshing ? " · 실시간 갱신 중…" : ""}
+      </p>
       <div ref={containerRef} className="w-full overflow-hidden rounded-lg" />
     </section>
   );

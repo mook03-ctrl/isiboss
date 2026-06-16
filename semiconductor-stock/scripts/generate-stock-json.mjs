@@ -25,6 +25,7 @@ async function fetchBars(symbol) {
   const result = json.chart?.result?.[0];
   const timestamps = result?.timestamp ?? [];
   const quote = result?.indicators?.quote?.[0];
+  const meta = result?.meta;
   const bars = [];
 
   for (let i = 0; i < timestamps.length; i++) {
@@ -33,8 +34,14 @@ async function fetchBars(symbol) {
     const low = quote?.low?.[i];
     const close = quote?.close?.[i];
     if (open == null || high == null || low == null || close == null) continue;
+    const ts = timestamps[i];
     bars.push({
-      date: new Date(timestamps[i] * 1000).toISOString().slice(0, 10),
+      date: new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(ts * 1000)),
       open,
       high,
       low,
@@ -43,6 +50,34 @@ async function fetchBars(symbol) {
     });
   }
   if (bars.length < 30) throw new Error(`${symbol} 데이터 부족`);
+
+  if (meta?.regularMarketPrice != null && bars.length) {
+    const livePrice = meta.regularMarketPrice;
+    const liveDate = meta.regularMarketTime
+      ? new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Seoul",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date(meta.regularMarketTime * 1000))
+      : null;
+    const last = bars[bars.length - 1];
+    if (liveDate && last.date < liveDate) {
+      bars.push({
+        date: liveDate,
+        open: livePrice,
+        high: livePrice,
+        low: livePrice,
+        close: livePrice,
+        volume: 0,
+      });
+    } else {
+      last.close = livePrice;
+      last.high = Math.max(last.high, livePrice);
+      last.low = Math.min(last.low, livePrice);
+    }
+  }
+
   return bars;
 }
 

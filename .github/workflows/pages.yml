@@ -25,6 +25,9 @@ jobs:
       - name: Bake market ticker JSON
         run: node scripts/generate-market-ticker.mjs
 
+      - name: Bake TQQQ chart JSON
+        run: node scripts/generate-tqqq-chart.mjs
+
       - name: Build semiconductor static (Dual Mode)
         working-directory: semiconductor-stock
         run: |

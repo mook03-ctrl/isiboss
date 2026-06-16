@@ -23,16 +23,15 @@
   let tqqqCache = null;
   let tqqqFetchGen = 0;
 
-  const TQQQ_CACHE_KEY = "tqqq_chart_v3";
+  const TQQQ_CACHE_KEY = "tqqq_chart_v4";
+  const TQQQ_BAKED_URL = "data/tqqq-chart.json";
   const TQQQ_CACHE_TTL_MS = 3 * 60 * 1000;
   const TQQQ_REFRESH_MS = 3 * 60 * 1000;
-  const TQQQ_FETCH_TIMEOUT_MS = 18000;
+  const TQQQ_FETCH_TIMEOUT_MS = 10000;
 
   const YAHOO_TQQQ_URLS = [
-    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
-    "https://query2.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=10y",
-    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=5y",
-    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=max",
+    "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=2y",
+    "https://query2.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=2y",
   ];
 
   const STOOQ_TQQQ_URLS = [
@@ -94,6 +93,33 @@
       }
       setStatus("");
       stockResult.hidden = true;
+    }
+  }
+
+  function pickNewestTqqqCache(a, b) {
+    if (!a) return b;
+    if (!b) return a;
+    return (a.savedAt || 0) >= (b.savedAt || 0) ? a : b;
+  }
+
+  async function fetchBakedTqqq() {
+    try {
+      const res = await fetch(TQQQ_BAKED_URL + "?t=" + Date.now(), {
+        cache: "no-store",
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data || !data.closes || data.closes.length < 30) return null;
+      return {
+        closes: data.closes,
+        highs: data.highs,
+        timestamps: data.timestamps,
+        meta: data.meta || {},
+        source: data.source || "baked",
+        savedAt: data.savedAt || Date.now(),
+      };
+    } catch (e) {
+      return null;
     }
   }
 
@@ -650,18 +676,22 @@
     const silent = opts && opts.silent;
     const gen = ++tqqqFetchGen;
 
-    const stored = readStoredTqqqCache();
-    if (stored && (!tqqqCache || !silent)) {
-      tqqqCache = stored;
-      renderTqqqFromCache();
-      tqqqLoaded = true;
+    if (!silent || !tqqqCache) {
+      const stored = readStoredTqqqCache();
+      const baked = await fetchBakedTqqq();
+      const seed = pickNewestTqqqCache(stored, baked);
+      if (seed) {
+        tqqqCache = seed;
+        renderTqqqFromCache();
+        tqqqLoaded = true;
+      }
     }
 
     if (
       silent &&
-      stored &&
-      stored.savedAt &&
-      Date.now() - stored.savedAt < TQQQ_CACHE_TTL_MS
+      tqqqCache &&
+      tqqqCache.savedAt &&
+      Date.now() - tqqqCache.savedAt < TQQQ_CACHE_TTL_MS
     ) {
       return;
     }
@@ -1031,6 +1061,12 @@
   }
 
   if (tqqqChart) {
+    fetchBakedTqqq().then(function (baked) {
+      if (baked) {
+        tqqqCache = pickNewestTqqqCache(readStoredTqqqCache(), baked);
+        if (tqqqCache) renderTqqqFromCache();
+      }
+    });
     loadTqqq({ silent: true });
   }
 

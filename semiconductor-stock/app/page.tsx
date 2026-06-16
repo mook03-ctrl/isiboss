@@ -5,43 +5,59 @@ import { useCallback, useEffect, useState } from "react";
 import BuyScoreDashboard from "@/components/BuyScoreDashboard";
 import MarketRegimeBanner from "@/components/MarketRegimeBanner";
 import StockChart from "@/components/StockChart";
-import { fetchStockBundle } from "@/lib/stockBundle";
+import {
+  fetchStockBundleFast,
+  fetchStockBundleLive,
+} from "@/lib/stockBundle";
 import type { StockApiResponse, StockSymbol } from "@/lib/types";
 import { STOCK_META } from "@/lib/types";
 
 const SYMBOLS: StockSymbol[] = ["005930.KS", "000660.KS"];
 const REFRESH_MS = 3 * 60 * 1000;
 
-async function loadStockData(sym: StockSymbol): Promise<StockApiResponse> {
-  return fetchStockBundle(sym);
-}
-
 export default function HomePage() {
   const [symbol, setSymbol] = useState<StockSymbol>("005930.KS");
   const [data, setData] = useState<StockApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (sym: StockSymbol, opts?: { silent?: boolean }) => {
     const silent = opts?.silent;
+
     if (!silent) {
       setLoading(true);
       setError(null);
+      const fast = await fetchStockBundleFast(sym);
+      if (fast) {
+        setData(fast);
+        setLoading(false);
+      }
+    } else {
+      setRefreshing(true);
     }
+
     try {
-      setData(await loadStockData(sym));
+      const fresh = await fetchStockBundleLive(sym);
+      setData(fresh);
       setError(null);
     } catch (e) {
       if (!silent) {
-        setData(null);
-        setError(e instanceof Error ? e.message : "알 수 없는 오류");
+        setData((prev) => {
+          if (!prev) {
+            setError(e instanceof Error ? e.message : "알 수 없는 오류");
+          }
+          return prev;
+        });
       }
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
+    setData(null);
     load(symbol);
     const timer = window.setInterval(function () {
       load(symbol, { silent: true });
@@ -59,6 +75,8 @@ export default function HomePage() {
       window.removeEventListener("online", onVisible);
     };
   }, [symbol, load]);
+
+  const lastDate = data?.candles[data.candles.length - 1]?.time;
 
   return (
     <div className="space-y-6">
@@ -83,10 +101,10 @@ export default function HomePage() {
         <button
           type="button"
           onClick={() => load(symbol)}
-          disabled={loading}
+          disabled={loading || refreshing}
           className="ml-auto rounded-lg border-2 border-accent px-3 py-2 text-sm font-medium text-accent disabled:opacity-50"
         >
-          {loading ? "불러오는 중…" : "새로고침"}
+          {loading || refreshing ? "불러오는 중…" : "새로고침"}
         </button>
       </div>
 
@@ -98,7 +116,7 @@ export default function HomePage() {
 
       {loading && !data && (
         <p className="text-center text-sm text-ink/50">
-          Yahoo Finance에서 일봉·듀얼 모드 점수를 계산하는 중…
+          차트 불러오는 중…
         </p>
       )}
 
@@ -111,6 +129,8 @@ export default function HomePage() {
           <StockChart
             candles={data.candles}
             title={`${data.name} (${STOCK_META[data.symbol].short})`}
+            lastDate={lastDate}
+            refreshing={refreshing}
           />
           <BuyScoreDashboard
             analysis={data.analysis}
