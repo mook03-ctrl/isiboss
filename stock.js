@@ -19,15 +19,17 @@
   let marketLoaded = false;
   let predictBusy = false;
   let tqqqLoaded = false;
+  let tqqqBusy = false;
   let tqqqTimer = null;
   let tqqqCache = null;
   let tqqqFetchGen = 0;
 
-  const TQQQ_CACHE_KEY = "tqqq_chart_v4";
+  const TQQQ_CACHE_KEY = "tqqq_chart_v5";
   const TQQQ_BAKED_URL = "data/tqqq-chart.json";
   const TQQQ_CACHE_TTL_MS = 3 * 60 * 1000;
   const TQQQ_REFRESH_MS = 3 * 60 * 1000;
-  const TQQQ_FETCH_TIMEOUT_MS = 10000;
+  const TQQQ_FETCH_TIMEOUT_MS = 12000;
+  const TQQQ_LIVE_RETRIES = 3;
 
   const YAHOO_TQQQ_URLS = [
     "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=2y",
@@ -45,6 +47,8 @@
   const tqqqTradeDesc = document.getElementById("tqqq-trade-desc");
   const tqqqChart = document.getElementById("tqqq-chart");
   const tqqqStatus = document.getElementById("tqqq-status");
+  const tqqqDate = document.getElementById("tqqq-date");
+  const tqqqRefreshBtn = document.getElementById("tqqq-refresh-btn");
 
   function escapeHtml(s) {
     return String(s)
@@ -77,9 +81,6 @@
     if (on) {
       window.requestAnimationFrame(function () {
         loadTqqq();
-        window.setTimeout(function () {
-          if (tqqqCache) renderTqqqFromCache();
-        }, 300);
       });
       if (!tqqqTimer) {
         tqqqTimer = window.setInterval(function () {
@@ -93,6 +94,46 @@
       }
       setStatus("");
       stockResult.hidden = true;
+    }
+  }
+
+  function toEtDateString(unixSec) {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(unixSec * 1000));
+  }
+
+  function getTqqqLastBarDate(timestamps, meta) {
+    if (timestamps && timestamps.length) {
+      const lastTs = timestamps[timestamps.length - 1];
+      if (lastTs) return toEtDateString(lastTs);
+    }
+    if (meta && meta.regularMarketTime) {
+      return toEtDateString(meta.regularMarketTime);
+    }
+    return null;
+  }
+
+  function updateTqqqDateDisplay(cache, refreshing) {
+    if (!tqqqDate || !cache) return;
+    const date = getTqqqLastBarDate(cache.timestamps, cache.meta);
+    let text = date ? "기준 일봉: " + date + " (미국 동부)" : "기준 일봉: —";
+    if (refreshing) {
+      text += " · 갱신 중…";
+    } else if (cache.source && cache.source !== "yahoo") {
+      text += " · 저장된 데이터";
+    }
+    tqqqDate.textContent = text;
+  }
+
+  function setTqqqRefreshBusy(busy) {
+    tqqqBusy = busy;
+    if (tqqqRefreshBtn) {
+      tqqqRefreshBtn.disabled = busy;
+      tqqqRefreshBtn.textContent = busy ? "불러오는 중…" : "새로고침";
     }
   }
 
@@ -168,11 +209,12 @@
     }
     const result = data.chart.result[0];
     const quote = result.indicators.quote[0];
-    const series = buildTqqqSeries(quote, result.meta);
+    const timestamps = (result.timestamp || []).slice();
+    const series = buildTqqqSeries(quote, result.meta, timestamps);
     return {
       closes: series.closes,
       highs: series.highs,
-      timestamps: result.timestamp,
+      timestamps: series.timestamps,
       meta: result.meta,
       source: "yahoo",
     };
@@ -261,7 +303,7 @@
           })
           .catch(function (e) {
             lastErr = e;
-            tryNext();
+            window.setTimeout(tryNext, 120);
           });
       }
 
@@ -293,7 +335,7 @@
     return Promise.any(jobs);
   }
 
-  async function fetchTqqqChartData() {
+  async function fetchTqqqChartDataOnce() {
     let lastErr = null;
 
     for (let i = 0; i < YAHOO_TQQQ_URLS.length; i += 1) {
@@ -314,6 +356,24 @@
     }
   }
 
+  async function fetchTqqqChartData(retries) {
+    const maxAttempts = (retries || 0) + 1;
+    let lastErr = null;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        return await fetchTqqqChartDataOnce();
+      } catch (e) {
+        lastErr = e;
+        if (attempt < maxAttempts - 1) {
+          await new Promise(function (resolve) {
+            window.setTimeout(resolve, 400 * (attempt + 1));
+          });
+        }
+      }
+    }
+    throw lastErr || new Error("TQQQ 데이터를 불러오지 못했습니다.");
+  }
+
   function findPrevAthFromHighs(highs) {
     let runningAth = 0;
     let prevAth = null;
@@ -327,19 +387,37 @@
     return prevAth;
   }
 
-  function buildTqqqSeries(quote, meta) {
+  function buildTqqqSeries(quote, meta, timestamps) {
     const closes = quote.close.slice();
     const highs = quote.high.slice();
+    const ts = (timestamps || []).slice();
     const len = closes.length;
 
-    if (len > 0 && meta.regularMarketPrice != null) {
-      closes[len - 1] = meta.regularMarketPrice;
-    }
-    if (len > 0 && meta.regularMarketDayHigh != null) {
-      highs[len - 1] = Math.max(highs[len - 1] || 0, meta.regularMarketDayHigh);
+    if (len > 0 && meta && meta.regularMarketPrice != null) {
+      const livePrice = meta.regularMarketPrice;
+      const liveDate = meta.regularMarketTime
+        ? toEtDateString(meta.regularMarketTime)
+        : null;
+      const lastTs = ts[len - 1];
+      const lastDate = lastTs ? toEtDateString(lastTs) : null;
+
+      if (liveDate && lastDate && liveDate > lastDate) {
+        closes.push(livePrice);
+        highs.push(
+          meta.regularMarketDayHigh != null
+            ? Math.max(livePrice, meta.regularMarketDayHigh)
+            : livePrice
+        );
+        ts.push(meta.regularMarketTime);
+      } else {
+        closes[len - 1] = livePrice;
+        if (meta.regularMarketDayHigh != null) {
+          highs[len - 1] = Math.max(highs[len - 1] || 0, meta.regularMarketDayHigh);
+        }
+      }
     }
 
-    return { closes: closes, highs: highs };
+    return { closes: closes, highs: highs, timestamps: ts };
   }
 
   function analyzeTqqq(closes, highs) {
@@ -661,6 +739,7 @@
       );
       if (analysis) {
         updateTqqqUI(analysis, tqqqCache.meta);
+        updateTqqqDateDisplay(tqqqCache, false);
         return true;
       }
     } catch (e) {
@@ -674,21 +753,12 @@
 
   async function loadTqqq(opts) {
     const silent = opts && opts.silent;
+    const force = opts && opts.force;
     const gen = ++tqqqFetchGen;
-
-    if (!silent || !tqqqCache) {
-      const stored = readStoredTqqqCache();
-      const baked = await fetchBakedTqqq();
-      const seed = pickNewestTqqqCache(stored, baked);
-      if (seed) {
-        tqqqCache = seed;
-        renderTqqqFromCache();
-        tqqqLoaded = true;
-      }
-    }
 
     if (
       silent &&
+      !force &&
       tqqqCache &&
       tqqqCache.savedAt &&
       Date.now() - tqqqCache.savedAt < TQQQ_CACHE_TTL_MS
@@ -696,12 +766,23 @@
       return;
     }
 
-    if (!silent && tqqqStatus && !tqqqLoaded) {
-      tqqqStatus.textContent = "TQQQ 차트 불러오는 중…";
+    if (!silent) {
+      setTqqqRefreshBusy(true);
+      if (tqqqDate && !tqqqCache) {
+        tqqqDate.textContent = "오늘 시세 반영 중…";
+      }
+      if (!tqqqCache && tqqqStatus) {
+        tqqqStatus.textContent = "TQQQ 실시간 불러오는 중…";
+      }
+    } else {
+      setTqqqRefreshBusy(true);
+      if (tqqqCache) {
+        updateTqqqDateDisplay(tqqqCache, true);
+      }
     }
 
     try {
-      const data = await fetchTqqqChartData();
+      const data = await fetchTqqqChartData(silent ? 1 : TQQQ_LIVE_RETRIES);
       if (gen !== tqqqFetchGen) return;
 
       tqqqCache = {
@@ -721,7 +802,29 @@
       }
     } catch (e) {
       if (gen !== tqqqFetchGen) return;
-      if (tqqqCache) return;
+
+      if (tqqqCache) {
+        renderTqqqFromCache();
+        if (!silent && tqqqStatus) {
+          tqqqStatus.textContent =
+            "실시간 연결 실패 — 마지막으로 불러온 데이터를 표시합니다.";
+        }
+        return;
+      }
+
+      const baked = await fetchBakedTqqq();
+      const stored = readStoredTqqqCache();
+      const seed = pickNewestTqqqCache(stored, baked);
+      if (seed) {
+        tqqqCache = seed;
+        renderTqqqFromCache();
+        tqqqLoaded = true;
+        if (tqqqStatus) {
+          tqqqStatus.textContent =
+            "실시간 연결 실패 — 저장된 일봉을 표시합니다. 새로고침을 눌러 주세요.";
+        }
+        return;
+      }
 
       tqqqLoaded = false;
       const wrap = tqqqChart && tqqqChart.parentElement;
@@ -735,11 +838,18 @@
             : e.message || "TQQQ 데이터를 불러오지 못했습니다."
         );
       }
+      if (tqqqDate) {
+        tqqqDate.textContent = "기준 일봉: —";
+      }
       if (tqqqStatus) {
         tqqqStatus.textContent =
           e.name === "AbortError"
             ? "TQQQ 데이터 요청 시간 초과입니다."
             : e.message || "TQQQ 데이터를 불러오지 못했습니다.";
+      }
+    } finally {
+      if (gen === tqqqFetchGen) {
+        setTqqqRefreshBusy(false);
       }
     }
   }
@@ -1060,25 +1170,28 @@
     });
   }
 
-  if (tqqqChart) {
-    fetchBakedTqqq().then(function (baked) {
-      if (baked) {
-        tqqqCache = pickNewestTqqqCache(readStoredTqqqCache(), baked);
-        if (tqqqCache) renderTqqqFromCache();
-      }
+  if (tqqqRefreshBtn) {
+    tqqqRefreshBtn.addEventListener("click", function () {
+      if (tqqqBusy) return;
+      loadTqqq({ force: true });
     });
-    loadTqqq({ silent: true });
   }
 
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden && app && app.classList.contains("is-stock-mode")) {
-      loadTqqq({ silent: true });
+      loadTqqq({ silent: true, force: true });
     }
   });
 
   window.addEventListener("online", function () {
     if (app && app.classList.contains("is-stock-mode")) {
-      loadTqqq({ silent: true });
+      loadTqqq({ force: true });
+    }
+  });
+
+  window.addEventListener("pageshow", function (ev) {
+    if (ev.persisted && app && app.classList.contains("is-stock-mode")) {
+      loadTqqq({ force: true });
     }
   });
 })();

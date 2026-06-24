@@ -41,16 +41,42 @@ if (!quote?.close?.length) {
 
 const closes = quote.close.slice();
 const highs = quote.high.slice();
-const timestamps = result.timestamp || [];
+const timestamps = (result.timestamp || []).slice();
+
+function toEtDateString(unixSec) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(unixSec * 1000));
+}
 
 if (closes.length > 0 && meta?.regularMarketPrice != null) {
-  closes[closes.length - 1] = meta.regularMarketPrice;
-}
-if (highs.length > 0 && meta?.regularMarketDayHigh != null) {
-  highs[highs.length - 1] = Math.max(
-    highs[highs.length - 1] || 0,
-    meta.regularMarketDayHigh
-  );
+  const livePrice = meta.regularMarketPrice;
+  const liveDate = meta.regularMarketTime
+    ? toEtDateString(meta.regularMarketTime)
+    : null;
+  const lastTs = timestamps[timestamps.length - 1];
+  const lastDate = lastTs ? toEtDateString(lastTs) : null;
+
+  if (liveDate && lastDate && liveDate > lastDate) {
+    closes.push(livePrice);
+    highs.push(
+      meta.regularMarketDayHigh != null
+        ? Math.max(livePrice, meta.regularMarketDayHigh)
+        : livePrice
+    );
+    timestamps.push(meta.regularMarketTime);
+  } else {
+    closes[closes.length - 1] = livePrice;
+    if (meta.regularMarketDayHigh != null) {
+      highs[highs.length - 1] = Math.max(
+        highs[highs.length - 1] || 0,
+        meta.regularMarketDayHigh
+      );
+    }
+  }
 }
 
 const payload = {

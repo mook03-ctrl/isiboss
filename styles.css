@@ -675,10 +675,53 @@ button.site-link-box:focus-visible {
 .tqqq-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.25rem 0.5rem;
+  gap: 0.35rem 0.6rem;
   margin-bottom: 0.3rem;
+}
+
+.tqqq-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.tqqq-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.5rem;
+  margin-left: auto;
+}
+
+.tqqq-date {
+  margin: 0;
+  font-size: clamp(0.68rem, 1.85vw, 0.78rem);
+  opacity: 0.62;
+}
+
+.tqqq-refresh-btn {
+  padding: 0.2rem 0.55rem;
+  font-size: clamp(0.68rem, 1.85vw, 0.78rem);
+  font-family: inherit;
+  border: 2px solid var(--accent, #c45c26);
+  border-radius: 8px 10px 7px 11px;
+  background: var(--paper);
+  color: var(--accent, #c45c26);
+  cursor: pointer;
+  box-shadow: 1px 2px 0 var(--ink);
+}
+
+.tqqq-refresh-btn:hover:not(:disabled) {
+  background: rgba(196, 92, 38, 0.08);
+}
+
+.tqqq-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .tqqq-title {
