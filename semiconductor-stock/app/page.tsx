@@ -14,7 +14,6 @@ import { STOCK_META } from "@/lib/types";
 
 const SYMBOLS: StockSymbol[] = ["005930.KS", "000660.KS"];
 const REFRESH_MS = 3 * 60 * 1000;
-const LIVE_RETRIES = 3;
 
 export default function HomePage() {
   const [symbol, setSymbol] = useState<StockSymbol>("005930.KS");
@@ -38,9 +37,23 @@ export default function HomePage() {
       setRefreshing(true);
     }
 
+    let seeded = liveCacheRef.current[sym] || null;
+    if (!seeded) {
+      const fast = await fetchStockBundleFast(sym);
+      if (gen !== loadGenRef.current) return;
+      if (fast) {
+        seeded = fast;
+        setData(fast);
+        setLoading(false);
+      }
+    } else if (!silent) {
+      setData(seeded);
+      setLoading(false);
+    }
+
     try {
       const fresh = await fetchStockBundleLive(sym, {
-        retries: silent ? 1 : LIVE_RETRIES,
+        retries: silent ? 0 : 1,
       });
       if (gen !== loadGenRef.current) return;
       liveCacheRef.current[sym] = fresh;
@@ -48,21 +61,16 @@ export default function HomePage() {
       setError(null);
     } catch (e) {
       if (gen !== loadGenRef.current) return;
-      const cached = liveCacheRef.current[sym];
-      if (cached) {
-        setData(cached);
+      if (seeded) {
+        setData(seeded);
+        if (!silent) {
+          setError("실시간 연결 실패 — 저장된 일봉을 표시합니다.");
+        }
         return;
       }
       if (!silent) {
-        const fast = await fetchStockBundleFast(sym);
-        if (gen !== loadGenRef.current) return;
-        if (fast) {
-          setData(fast);
-          setError("실시간 연결 실패 — 저장된 일봉을 표시합니다. 잠시 후 다시 시도해 주세요.");
-        } else {
-          setData(null);
-          setError(e instanceof Error ? e.message : "알 수 없는 오류");
-        }
+        setData(null);
+        setError(e instanceof Error ? e.message : "알 수 없는 오류");
       }
     } finally {
       if (gen === loadGenRef.current) {
@@ -73,7 +81,12 @@ export default function HomePage() {
   }, []);
 
   const prefetchLive = useCallback((sym: StockSymbol) => {
-    fetchStockBundleLive(sym, { retries: LIVE_RETRIES })
+    fetchStockBundleFast(sym)
+      .then((fast) => {
+        if (fast) liveCacheRef.current[sym] = fast;
+      })
+      .catch(() => {});
+    fetchStockBundleLive(sym, { retries: 0 })
       .then((fresh) => {
         liveCacheRef.current[sym] = fresh;
       })
@@ -81,25 +94,15 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const cached = liveCacheRef.current[symbol];
-    if (cached) {
-      setData(cached);
-    } else {
-      setData(null);
-    }
-    load(symbol, cached ? { silent: true } : undefined);
+    setData(null);
+    load(symbol);
 
     SYMBOLS.forEach((sym) => {
-      if (sym !== symbol && !liveCacheRef.current[sym]) {
-        prefetchLive(sym);
-      }
+      if (sym !== symbol) prefetchLive(sym);
     });
 
     const timer = window.setInterval(function () {
       load(symbol, { silent: true });
-      SYMBOLS.forEach((sym) => {
-        if (sym !== symbol) prefetchLive(sym);
-      });
     }, REFRESH_MS);
 
     function onVisible() {
@@ -159,15 +162,13 @@ export default function HomePage() {
       </div>
 
       {error && (
-        <p className="rounded-lg border-2 border-red-600 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-lg border-2 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {error}
         </p>
       )}
 
       {loading && !data && (
-        <p className="text-center text-sm text-ink/50">
-          오늘 시세 반영 중…
-        </p>
+        <p className="text-center text-sm text-ink/50">차트 불러오는 중…</p>
       )}
 
       {data && (
@@ -190,7 +191,7 @@ export default function HomePage() {
       )}
 
       <footer className="border-t border-ink/10 pt-4 text-center text-xs text-ink/45">
-        Dual Mode A/B · angrywork.com · lightweight-charts · 접속 시 실시간 갱신 · 3분마다 자동 갱신
+        Dual Mode A/B · angrywork.com · 저장 일봉 즉시 표시 · 실시간 갱신 시도
       </footer>
     </div>
   );

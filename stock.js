@@ -28,8 +28,8 @@
   const TQQQ_BAKED_URL = "data/tqqq-chart.json";
   const TQQQ_CACHE_TTL_MS = 3 * 60 * 1000;
   const TQQQ_REFRESH_MS = 3 * 60 * 1000;
-  const TQQQ_FETCH_TIMEOUT_MS = 12000;
-  const TQQQ_LIVE_RETRIES = 3;
+  const TQQQ_FETCH_TIMEOUT_MS = 6000;
+  const TQQQ_LIVE_RETRIES = 1;
 
   const YAHOO_TQQQ_URLS = [
     "https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=2y",
@@ -80,7 +80,15 @@
     if (on && !marketLoaded) loadMarketCap();
     if (on) {
       window.requestAnimationFrame(function () {
-        loadTqqq();
+        fetchBakedTqqq().then(function (baked) {
+          const seed = pickNewestTqqqCache(readStoredTqqqCache(), baked);
+          if (seed) {
+            tqqqCache = seed;
+            renderTqqqFromCache();
+            tqqqLoaded = true;
+          }
+        });
+        loadTqqq({ silent: true, force: true });
       });
       if (!tqqqTimer) {
         tqqqTimer = window.setInterval(function () {
@@ -766,23 +774,27 @@
       return;
     }
 
-    if (!silent) {
-      setTqqqRefreshBusy(true);
-      if (tqqqDate && !tqqqCache) {
-        tqqqDate.textContent = "오늘 시세 반영 중…";
-      }
-      if (!tqqqCache && tqqqStatus) {
-        tqqqStatus.textContent = "TQQQ 실시간 불러오는 중…";
-      }
-    } else {
-      setTqqqRefreshBusy(true);
-      if (tqqqCache) {
-        updateTqqqDateDisplay(tqqqCache, true);
+    setTqqqRefreshBusy(true);
+    if (silent && tqqqCache) {
+      updateTqqqDateDisplay(tqqqCache, true);
+    }
+
+    if (!tqqqCache) {
+      const stored = readStoredTqqqCache();
+      const baked = await fetchBakedTqqq();
+      const seed = pickNewestTqqqCache(stored, baked);
+      if (gen !== tqqqFetchGen) return;
+      if (seed) {
+        tqqqCache = seed;
+        renderTqqqFromCache();
+        tqqqLoaded = true;
+      } else if (!silent && tqqqDate) {
+        tqqqDate.textContent = "차트 불러오는 중…";
       }
     }
 
     try {
-      const data = await fetchTqqqChartData(silent ? 1 : TQQQ_LIVE_RETRIES);
+      const data = await fetchTqqqChartData(silent ? 0 : TQQQ_LIVE_RETRIES);
       if (gen !== tqqqFetchGen) return;
 
       tqqqCache = {
@@ -807,21 +819,7 @@
         renderTqqqFromCache();
         if (!silent && tqqqStatus) {
           tqqqStatus.textContent =
-            "실시간 연결 실패 — 마지막으로 불러온 데이터를 표시합니다.";
-        }
-        return;
-      }
-
-      const baked = await fetchBakedTqqq();
-      const stored = readStoredTqqqCache();
-      const seed = pickNewestTqqqCache(stored, baked);
-      if (seed) {
-        tqqqCache = seed;
-        renderTqqqFromCache();
-        tqqqLoaded = true;
-        if (tqqqStatus) {
-          tqqqStatus.textContent =
-            "실시간 연결 실패 — 저장된 일봉을 표시합니다. 새로고침을 눌러 주세요.";
+            "실시간 연결 실패 — 저장된 일봉을 표시합니다.";
         }
         return;
       }
