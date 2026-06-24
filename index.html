@@ -106,7 +106,7 @@
       href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat+Brush&family=Nanum+Pen+Script&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=75" />
+    <link rel="stylesheet" href="styles.css?v=76" />
   </head>
   <body>
     <div id="app" class="app">
@@ -400,8 +400,14 @@
 
         <section class="tqqq-section" aria-labelledby="tqqq-title">
           <header class="tqqq-header">
-            <h3 id="tqqq-title" class="tqqq-title">미국 주식 3배 먹기 · TQQQ</h3>
-            <span class="tqqq-source">Yahoo Finance (yfinance)</span>
+            <div class="tqqq-header-main">
+              <h3 id="tqqq-title" class="tqqq-title">미국 주식 3배 먹기 · TQQQ</h3>
+              <p id="tqqq-date" class="tqqq-date">기준 일봉: —</p>
+            </div>
+            <div class="tqqq-header-actions">
+              <span class="tqqq-source">Yahoo Finance</span>
+              <button type="button" id="tqqq-refresh-btn" class="tqqq-refresh-btn">새로고침</button>
+            </div>
           </header>
           <div class="tqqq-stats">
             <p id="tqqq-price" class="tqqq-stat">—</p>
@@ -516,6 +522,6 @@
     <script src="game.js?v=26"></script>
     <script src="market-ticker.js?v=10"></script>
     <script src="leave-countdown.js?v=1"></script>
-    <script src="stock.js?v=12"></script>
+    <script src="stock.js?v=13"></script>
   </body>
 </html>
