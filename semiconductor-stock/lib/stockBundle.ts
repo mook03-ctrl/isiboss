@@ -30,10 +30,25 @@ export async function fetchStockBundleFast(
 }
 
 export async function fetchStockBundleLive(
-  symbol: StockSymbol
+  symbol: StockSymbol,
+  opts?: { retries?: number }
 ): Promise<StockApiResponse> {
-  const bars = await fetchLiveBars(symbol);
-  return barsToResponse(symbol, bars);
+  const maxAttempts = (opts?.retries ?? 1) + 1;
+  let lastErr: Error | null = null;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const bars = await fetchLiveBars(symbol);
+      return barsToResponse(symbol, bars);
+    } catch (e) {
+      lastErr = e instanceof Error ? e : new Error(String(e));
+      if (attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      }
+    }
+  }
+
+  throw lastErr ?? new Error("실시간 시세를 가져오지 못했습니다.");
 }
 
 export async function fetchStockBundle(

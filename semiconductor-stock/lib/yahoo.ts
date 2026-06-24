@@ -23,7 +23,7 @@ interface YahooChartResult {
   };
 }
 
-const FETCH_TIMEOUT_MS = 8000;
+const FETCH_TIMEOUT_MS = 12000;
 
 const CORS_PROXIES = [
   (url: string) =>
@@ -166,12 +166,15 @@ async function fetchChartJson(symbol: StockSymbol): Promise<{
 
   let lastErr: Error | null = null;
   for (const url of attempts) {
-    try {
-      const res = await fetchJsonTimed(url);
-      if (!res.ok) continue;
-      return res.json();
-    } catch (e) {
-      lastErr = e instanceof Error ? e : new Error(String(e));
+    for (let retry = 0; retry < 2; retry++) {
+      try {
+        const res = await fetchJsonTimed(url);
+        if (!res.ok) continue;
+        const json = await res.json();
+        if (json.chart?.result?.[0]) return json;
+      } catch (e) {
+        lastErr = e instanceof Error ? e : new Error(String(e));
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import BuyScoreDashboard from "@/components/BuyScoreDashboard";
 import MarketRegimeBanner from "@/components/MarketRegimeBanner";
@@ -14,6 +14,7 @@ import { STOCK_META } from "@/lib/types";
 
 const SYMBOLS: StockSymbol[] = ["005930.KS", "000660.KS"];
 const REFRESH_MS = 3 * 60 * 1000;
+const LIVE_RETRIES = 3;
 
 export default function HomePage() {
   const [symbol, setSymbol] = useState<StockSymbol>("005930.KS");
@@ -21,60 +22,109 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const liveCacheRef = useRef<Partial<Record<StockSymbol, StockApiResponse>>>(
+    {}
+  );
+  const loadGenRef = useRef(0);
 
   const load = useCallback(async (sym: StockSymbol, opts?: { silent?: boolean }) => {
     const silent = opts?.silent;
+    const gen = ++loadGenRef.current;
 
     if (!silent) {
       setLoading(true);
       setError(null);
-      const fast = await fetchStockBundleFast(sym);
-      if (fast) {
-        setData(fast);
-        setLoading(false);
-      }
     } else {
       setRefreshing(true);
     }
 
     try {
-      const fresh = await fetchStockBundleLive(sym);
+      const fresh = await fetchStockBundleLive(sym, {
+        retries: silent ? 1 : LIVE_RETRIES,
+      });
+      if (gen !== loadGenRef.current) return;
+      liveCacheRef.current[sym] = fresh;
       setData(fresh);
       setError(null);
     } catch (e) {
+      if (gen !== loadGenRef.current) return;
+      const cached = liveCacheRef.current[sym];
+      if (cached) {
+        setData(cached);
+        return;
+      }
       if (!silent) {
-        setData((prev) => {
-          if (!prev) {
-            setError(e instanceof Error ? e.message : "알 수 없는 오류");
-          }
-          return prev;
-        });
+        const fast = await fetchStockBundleFast(sym);
+        if (gen !== loadGenRef.current) return;
+        if (fast) {
+          setData(fast);
+          setError("실시간 연결 실패 — 저장된 일봉을 표시합니다. 잠시 후 다시 시도해 주세요.");
+        } else {
+          setData(null);
+          setError(e instanceof Error ? e.message : "알 수 없는 오류");
+        }
       }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (gen === loadGenRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
+  const prefetchLive = useCallback((sym: StockSymbol) => {
+    fetchStockBundleLive(sym, { retries: LIVE_RETRIES })
+      .then((fresh) => {
+        liveCacheRef.current[sym] = fresh;
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
-    setData(null);
-    load(symbol);
+    const cached = liveCacheRef.current[symbol];
+    if (cached) {
+      setData(cached);
+    } else {
+      setData(null);
+    }
+    load(symbol, cached ? { silent: true } : undefined);
+
+    SYMBOLS.forEach((sym) => {
+      if (sym !== symbol && !liveCacheRef.current[sym]) {
+        prefetchLive(sym);
+      }
+    });
+
     const timer = window.setInterval(function () {
       load(symbol, { silent: true });
+      SYMBOLS.forEach((sym) => {
+        if (sym !== symbol) prefetchLive(sym);
+      });
     }, REFRESH_MS);
 
     function onVisible() {
-      if (!document.hidden) load(symbol, { silent: true });
+      if (!document.hidden) {
+        load(symbol, { silent: !!liveCacheRef.current[symbol] });
+      }
     }
+
+    function onPageShow(ev: PageTransitionEvent) {
+      if (ev.persisted) {
+        load(symbol);
+      }
+    }
+
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onVisible);
+    window.addEventListener("pageshow", onPageShow);
 
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onVisible);
+      window.removeEventListener("pageshow", onPageShow);
     };
-  }, [symbol, load]);
+  }, [symbol, load, prefetchLive]);
 
   const lastDate = data?.candles[data.candles.length - 1]?.time;
 
@@ -116,7 +166,7 @@ export default function HomePage() {
 
       {loading && !data && (
         <p className="text-center text-sm text-ink/50">
-          차트 불러오는 중…
+          오늘 시세 반영 중…
         </p>
       )}
 
@@ -140,7 +190,7 @@ export default function HomePage() {
       )}
 
       <footer className="border-t border-ink/10 pt-4 text-center text-xs text-ink/45">
-        Dual Mode A/B · angrywork.com · lightweight-charts · 3분마다 자동 갱신
+        Dual Mode A/B · angrywork.com · lightweight-charts · 접속 시 실시간 갱신 · 3분마다 자동 갱신
       </footer>
     </div>
   );
