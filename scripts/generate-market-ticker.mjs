@@ -1,6 +1,9 @@
 /**
- * GitHub Actions / 로컬: Yahoo v8 시세 → data/market-ticker.json
+ * market-ticker.json bake entry
+ * Primary: PyKRX (python scripts/generate-market-ticker.py)
+ * Fallback: Yahoo only (same as previous Node logic)
  */
+import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -8,6 +11,27 @@ import { fileURLToPath } from "url";
 const SYMBOLS = ["^KS11", "^IXIC", "005930.KS", "000660.KS", "KRW=X"];
 const root = path.dirname(fileURLToPath(import.meta.url));
 const outFile = path.join(root, "..", "data", "market-ticker.json");
+const pyScript = path.join(root, "generate-market-ticker.py");
+
+function tryPyKrx() {
+  const pyCmds = process.platform === "win32" ? ["python", "py"] : ["python3", "python"];
+  for (const cmd of pyCmds) {
+    const r = spawnSync(cmd, [pyScript], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      env: process.env,
+    });
+    if (r.error && r.error.code === "ENOENT") continue;
+    if (r.stdout) process.stdout.write(r.stdout);
+    if (r.stderr) process.stderr.write(r.stderr);
+    if (r.status === 0 && fs.existsSync(outFile)) {
+      console.log("market-ticker: PyKRX bake OK");
+      return true;
+    }
+    console.warn(`market-ticker: ${cmd} exit ${r.status}`);
+  }
+  return false;
+}
 
 function chartUrl(symbol) {
   return (
@@ -33,6 +57,7 @@ function parseQuote(json, symbol) {
     symbol,
     regularMarketPrice: meta.regularMarketPrice,
     regularMarketChangePercent: pct,
+    source: "yahoo",
   };
 }
 
@@ -60,6 +85,11 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+if (tryPyKrx()) {
+  process.exit(0);
+}
+
+console.warn("market-ticker: PyKRX 실패 → Yahoo 폴백");
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 
 const quotes = {};
@@ -79,6 +109,6 @@ if (Object.keys(quotes).length === 0) {
   process.exit(1);
 }
 
-const payload = { savedAt: Date.now(), quotes };
+const payload = { savedAt: Date.now(), source: "yahoo", quotes };
 fs.writeFileSync(outFile, JSON.stringify(payload, null, 2));
 console.log(`Wrote ${outFile} (${Object.keys(quotes).length} symbols)`);
