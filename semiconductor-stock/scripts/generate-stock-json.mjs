@@ -1,9 +1,19 @@
 /**
- * GitHub Actions / 로컬 빌드: Yahoo 일봉 → public/data/*.json
+ * GitHub Actions / 로컬: 일봉 → public/data/*.json
+ * 우선순위: 한국투자증권(KIS) Open API → Yahoo Finance 폴백
+ *
+ * 환경변수:
+ *   KIS_APP_KEY, KIS_APP_SECRET  (필수, KIS 사용 시)
+ *   KIS_ENV=vps                  (모의투자 API 서버)
  */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  fetchSixMonthBarsWithLive,
+  hasKisCredentials,
+  yahooSymbolToKisCode,
+} from "./kis-client.mjs";
 
 const SYMBOLS = ["005930.KS", "000660.KS"];
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -16,7 +26,7 @@ function chartUrl(symbol) {
   );
 }
 
-async function fetchBars(symbol) {
+async function fetchBarsYahoo(symbol) {
   const res = await fetch(chartUrl(symbol), {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; SemiconductorStock/1.0)" },
   });
@@ -81,14 +91,51 @@ async function fetchBars(symbol) {
   return bars;
 }
 
+async function fetchBars(symbol) {
+  if (hasKisCredentials()) {
+    const code = yahooSymbolToKisCode(symbol);
+    const bars = await fetchSixMonthBarsWithLive(code);
+    return { bars, source: "kis" };
+  }
+
+  console.warn(
+    `[warn] KIS 키 없음 → Yahoo 폴백 (${symbol}). ` +
+      "GitHub Secrets에 KIS_APP_KEY / KIS_APP_SECRET 을 등록하세요."
+  );
+  const bars = await fetchBarsYahoo(symbol);
+  return { bars, source: "yahoo" };
+}
+
 fs.mkdirSync(outDir, { recursive: true });
 
+const sourceLabel = hasKisCredentials() ? "kis" : "yahoo-fallback";
+console.log(`Baking semiconductor stock JSON via ${sourceLabel}…`);
+
 for (const symbol of SYMBOLS) {
-  const bars = await fetchBars(symbol);
   const file = path.join(outDir, `${symbol}.json`);
-  fs.writeFileSync(
-    file,
-    JSON.stringify({ symbol, fetchedAt: new Date().toISOString(), bars })
-  );
-  console.log(`Wrote ${file} (${bars.length} bars)`);
+  try {
+    const { bars, source } = await fetchBars(symbol);
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        symbol,
+        source,
+        fetchedAt: new Date().toISOString(),
+        bars,
+      })
+    );
+    const last = bars[bars.length - 1];
+    console.log(
+      `Wrote ${file} (${bars.length} bars, last=${last?.date} close=${last?.close}, source=${source})`
+    );
+  } catch (e) {
+    if (fs.existsSync(file)) {
+      console.warn(
+        `[warn] ${symbol} bake 실패 — 기존 JSON 유지:`,
+        e instanceof Error ? e.message : e
+      );
+      continue;
+    }
+    throw e;
+  }
 }

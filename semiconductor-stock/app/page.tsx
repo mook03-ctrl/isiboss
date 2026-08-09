@@ -13,7 +13,7 @@ import type { StockApiResponse, StockSymbol } from "@/lib/types";
 import { STOCK_META } from "@/lib/types";
 
 const SYMBOLS: StockSymbol[] = ["005930.KS", "000660.KS"];
-const REFRESH_MS = 3 * 60 * 1000;
+const REFRESH_MS = 2 * 60 * 1000;
 
 export default function HomePage() {
   const [symbol, setSymbol] = useState<StockSymbol>("005930.KS");
@@ -37,38 +37,31 @@ export default function HomePage() {
       setRefreshing(true);
     }
 
-    let seeded = liveCacheRef.current[sym] || null;
-    if (!seeded) {
-      const fast = await fetchStockBundleFast(sym);
-      if (gen !== loadGenRef.current) return;
-      if (fast) {
-        seeded = fast;
-        setData(fast);
-        setLoading(false);
-      }
-    } else if (!silent) {
-      setData(seeded);
-      setLoading(false);
-    }
-
     try {
-      const fresh = await fetchStockBundleLive(sym, {
-        retries: silent ? 0 : 1,
-      });
+      let bundle = await fetchStockBundleFast(sym);
       if (gen !== loadGenRef.current) return;
-      liveCacheRef.current[sym] = fresh;
-      setData(fresh);
+
+      if (!bundle) {
+        bundle = await fetchStockBundleLive(sym, { retries: 1 });
+      }
+      if (gen !== loadGenRef.current) return;
+
+      if (!bundle) {
+        throw new Error("시세 데이터를 불러오지 못했습니다.");
+      }
+
+      liveCacheRef.current[sym] = bundle;
+      setData(bundle);
       setError(null);
     } catch (e) {
       if (gen !== loadGenRef.current) return;
-      if (seeded) {
-        setData(seeded);
+      const cached = liveCacheRef.current[sym];
+      if (cached) {
+        setData(cached);
         if (!silent) {
-          setError("실시간 연결 실패 — 저장된 일봉을 표시합니다.");
+          setError("최신 갱신 실패 — 이전에 불러온 일봉을 표시합니다.");
         }
-        return;
-      }
-      if (!silent) {
+      } else if (!silent) {
         setData(null);
         setError(e instanceof Error ? e.message : "알 수 없는 오류");
       }
@@ -80,15 +73,10 @@ export default function HomePage() {
     }
   }, []);
 
-  const prefetchLive = useCallback((sym: StockSymbol) => {
+  const prefetch = useCallback((sym: StockSymbol) => {
     fetchStockBundleFast(sym)
       .then((fast) => {
         if (fast) liveCacheRef.current[sym] = fast;
-      })
-      .catch(() => {});
-    fetchStockBundleLive(sym, { retries: 0 })
-      .then((fresh) => {
-        liveCacheRef.current[sym] = fresh;
       })
       .catch(() => {});
   }, []);
@@ -98,7 +86,7 @@ export default function HomePage() {
     load(symbol);
 
     SYMBOLS.forEach((sym) => {
-      if (sym !== symbol) prefetchLive(sym);
+      if (sym !== symbol) prefetch(sym);
     });
 
     const timer = window.setInterval(function () {
@@ -127,7 +115,7 @@ export default function HomePage() {
       window.removeEventListener("online", onVisible);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [symbol, load, prefetchLive]);
+  }, [symbol, load, prefetch]);
 
   const lastDate = data?.candles[data.candles.length - 1]?.time;
 
@@ -191,7 +179,8 @@ export default function HomePage() {
       )}
 
       <footer className="border-t border-ink/10 pt-4 text-center text-xs text-ink/45">
-        Dual Mode A/B · angrywork.com · 저장 일봉 즉시 표시 · 실시간 갱신 시도
+        Dual Mode A/B · 한국투자증권(KIS) Open API 일봉 · 약 10분마다 서버 갱신 ·
+        화면 2분마다 재조회
       </footer>
     </div>
   );

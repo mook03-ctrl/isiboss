@@ -2,8 +2,8 @@ name: Refresh market data
 
 on:
   schedule:
-    # 30분마다 (UTC) — 시세·반도체 차트 JSON 갱신
-    - cron: "3,33 * * * *"
+    # 10분마다 (UTC) — KIS bake로 반도체 시세 JSON 갱신
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -23,12 +23,26 @@ jobs:
 
       - name: Bake market ticker JSON
         run: node scripts/generate-market-ticker.mjs
+        continue-on-error: true
 
-      - name: Bake semiconductor stock JSON
+      - name: Bake semiconductor stock JSON (KIS)
+        env:
+          KIS_APP_KEY: ${{ secrets.KIS_APP_KEY }}
+          KIS_APP_SECRET: ${{ secrets.KIS_APP_SECRET }}
+          KIS_ENV: ${{ secrets.KIS_ENV }}
         run: node semiconductor-stock/scripts/generate-stock-json.mjs
 
       - name: Bake TQQQ chart JSON
         run: node scripts/generate-tqqq-chart.mjs
+        continue-on-error: true
+
+      - name: Snapshot baked JSON
+        run: |
+          mkdir -p /tmp/isiboss-bake/data /tmp/isiboss-bake/semi
+          cp -f data/market-ticker.json /tmp/isiboss-bake/data/ 2>/dev/null || true
+          cp -f data/tqqq-chart.json /tmp/isiboss-bake/data/ 2>/dev/null || true
+          cp -f semiconductor-stock/public/data/005930.KS.json /tmp/isiboss-bake/semi/
+          cp -f semiconductor-stock/public/data/000660.KS.json /tmp/isiboss-bake/semi/
 
       - name: Update gh-pages branch
         run: |
@@ -37,11 +51,11 @@ jobs:
           git fetch origin gh-pages
           git checkout gh-pages
           mkdir -p data semiconductor-stock/data
-          git checkout main -- data/market-ticker.json data/tqqq-chart.json
-          git checkout main -- semiconductor-stock/public/data/005930.KS.json semiconductor-stock/public/data/000660.KS.json
-          cp semiconductor-stock/public/data/005930.KS.json semiconductor-stock/data/
-          cp semiconductor-stock/public/data/000660.KS.json semiconductor-stock/data/
-          git add data/market-ticker.json data/tqqq-chart.json semiconductor-stock/data/005930.KS.json semiconductor-stock/data/000660.KS.json
+          cp -f /tmp/isiboss-bake/data/market-ticker.json data/ 2>/dev/null || true
+          cp -f /tmp/isiboss-bake/data/tqqq-chart.json data/ 2>/dev/null || true
+          cp -f /tmp/isiboss-bake/semi/005930.KS.json semiconductor-stock/data/
+          cp -f /tmp/isiboss-bake/semi/000660.KS.json semiconductor-stock/data/
+          git add data semiconductor-stock/data || true
           git diff --staged --quiet && echo "No market data changes" && exit 0
-          git commit -m "chore: refresh market and semiconductor stock JSON [skip ci]"
+          git commit -m "chore: refresh market/semiconductor JSON via KIS [skip ci]"
           git push origin gh-pages

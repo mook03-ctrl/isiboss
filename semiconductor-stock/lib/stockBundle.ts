@@ -29,6 +29,7 @@ export async function fetchStockBundleFast(
   return barsToResponse(symbol, bars);
 }
 
+/** KIS bake JSON 재조회 (클라이언트 캐시 우회) */
 export async function fetchStockBundleLive(
   symbol: StockSymbol,
   opts?: { retries?: number }
@@ -43,12 +44,12 @@ export async function fetchStockBundleLive(
     } catch (e) {
       lastErr = e instanceof Error ? e : new Error(String(e));
       if (attempt < maxAttempts - 1) {
-        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
       }
     }
   }
 
-  throw lastErr ?? new Error("실시간 시세를 가져오지 못했습니다.");
+  throw lastErr ?? new Error("시세를 가져오지 못했습니다.");
 }
 
 export async function fetchStockBundle(
