@@ -19,8 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
-          cache-dependency-path: semiconductor-stock/package-lock.json
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -40,8 +38,9 @@ jobs:
 
       - name: Bake semiconductor stock JSON (PyKRX)
         run: python semiconductor-stock/scripts/generate-stock-json.py
+        continue-on-error: true
 
-      - name: Build semiconductor static (Dual Mode)
+      - name: Build semiconductor static
         working-directory: semiconductor-stock
         run: |
           npm ci
@@ -56,11 +55,25 @@ jobs:
           rm -f package.json package-lock.json tsconfig.json next.config.mjs postcss.config.mjs tailwind.config.ts next-env.d.ts .gitignore README.md
           rm -rf scripts
 
+      - name: Build capital-flow static
+        working-directory: capital-flow
+        run: |
+          npm ci
+          npm run build
+
+      - name: Stage capital-flow for Pages
+        run: |
+          cd capital-flow
+          shopt -s dotglob
+          cp -r out/* .
+          rm -rf out .next node_modules app components lib public scripts
+          rm -f package.json package-lock.json tsconfig.json next.config.mjs postcss.config.mjs tailwind.config.ts next-env.d.ts .gitignore README.md
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: .
-          exclude_assets: ".github, semiconductor-stock/node_modules, semiconductor-stock/.next"
+          exclude_assets: ".github,semiconductor-stock/node_modules,semiconductor-stock/.next,capital-flow/node_modules,capital-flow/.next"
           cname: angrywork.com

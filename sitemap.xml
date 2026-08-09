@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://angrywork.com/capital-flow/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://angrywork.com/semiconductor-stock/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

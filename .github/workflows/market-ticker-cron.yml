@@ -2,7 +2,6 @@ name: Refresh market data
 
 on:
   schedule:
-    # 30분마다 (UTC) — PyKRX bake (별도 API 키 없음)
     - cron: "5,35 * * * *"
   workflow_dispatch:
 
@@ -35,18 +34,26 @@ jobs:
 
       - name: Bake semiconductor stock JSON (PyKRX)
         run: python semiconductor-stock/scripts/generate-stock-json.py
+        continue-on-error: true
 
       - name: Bake TQQQ chart JSON
         run: node scripts/generate-tqqq-chart.mjs
         continue-on-error: true
 
+      - name: Bake capital-flow JSON
+        working-directory: capital-flow
+        run: |
+          npm ci
+          node scripts/generate-capital-flow.mjs
+
       - name: Snapshot baked JSON
         run: |
-          mkdir -p /tmp/isiboss-bake/data /tmp/isiboss-bake/semi
+          mkdir -p /tmp/isiboss-bake/data /tmp/isiboss-bake/semi /tmp/isiboss-bake/cf
           cp -f data/market-ticker.json /tmp/isiboss-bake/data/ 2>/dev/null || true
           cp -f data/tqqq-chart.json /tmp/isiboss-bake/data/ 2>/dev/null || true
-          cp -f semiconductor-stock/public/data/005930.KS.json /tmp/isiboss-bake/semi/
-          cp -f semiconductor-stock/public/data/000660.KS.json /tmp/isiboss-bake/semi/
+          cp -f semiconductor-stock/public/data/005930.KS.json /tmp/isiboss-bake/semi/ 2>/dev/null || true
+          cp -f semiconductor-stock/public/data/000660.KS.json /tmp/isiboss-bake/semi/ 2>/dev/null || true
+          cp -f capital-flow/public/data/capital-flow.json /tmp/isiboss-bake/cf/ 2>/dev/null || true
 
       - name: Update gh-pages branch
         run: |
@@ -54,12 +61,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin gh-pages
           git checkout gh-pages
-          mkdir -p data semiconductor-stock/data
+          mkdir -p data semiconductor-stock/data capital-flow/data
           cp -f /tmp/isiboss-bake/data/market-ticker.json data/ 2>/dev/null || true
           cp -f /tmp/isiboss-bake/data/tqqq-chart.json data/ 2>/dev/null || true
-          cp -f /tmp/isiboss-bake/semi/005930.KS.json semiconductor-stock/data/
-          cp -f /tmp/isiboss-bake/semi/000660.KS.json semiconductor-stock/data/
-          git add data semiconductor-stock/data || true
+          cp -f /tmp/isiboss-bake/semi/005930.KS.json semiconductor-stock/data/ 2>/dev/null || true
+          cp -f /tmp/isiboss-bake/semi/000660.KS.json semiconductor-stock/data/ 2>/dev/null || true
+          cp -f /tmp/isiboss-bake/cf/capital-flow.json capital-flow/data/ 2>/dev/null || true
+          git add data semiconductor-stock/data capital-flow/data || true
           git diff --staged --quiet && echo "No market data changes" && exit 0
-          git commit -m "chore: refresh semiconductor JSON via PyKRX [skip ci]"
+          git commit -m "chore: refresh market/capital-flow JSON [skip ci]"
           git push origin gh-pages
