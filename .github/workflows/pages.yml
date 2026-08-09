@@ -28,8 +28,8 @@ jobs:
       - name: Install PyKRX
         run: pip install pykrx
 
-      - name: Bake market ticker JSON
-        run: node scripts/generate-market-ticker.mjs
+      - name: Bake market ticker JSON (PyKRX + Yahoo)
+        run: python scripts/generate-market-ticker.py
         continue-on-error: true
 
       - name: Bake TQQQ chart JSON
