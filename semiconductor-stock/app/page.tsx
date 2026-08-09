@@ -179,8 +179,7 @@ export default function HomePage() {
       )}
 
       <footer className="border-t border-ink/10 pt-4 text-center text-xs text-ink/45">
-        Dual Mode A/B · 한국투자증권(KIS) Open API 일봉 · 약 10분마다 서버 갱신 ·
-        화면 2분마다 재조회
+        Dual Mode A/B · PyKRX(KRX) 일봉 · 약 30분마다 서버 갱신 · 화면 2분마다 재조회
       </footer>
     </div>
   );

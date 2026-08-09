@@ -2,8 +2,8 @@ name: Refresh market data
 
 on:
   schedule:
-    # 10분마다 (UTC) — KIS bake로 반도체 시세 JSON 갱신
-    - cron: "*/10 * * * *"
+    # 30분마다 (UTC) — PyKRX bake (별도 API 키 없음)
+    - cron: "5,35 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,16 +21,20 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyKRX
+        run: pip install pykrx
+
       - name: Bake market ticker JSON
         run: node scripts/generate-market-ticker.mjs
         continue-on-error: true
 
-      - name: Bake semiconductor stock JSON (KIS)
-        env:
-          KIS_APP_KEY: ${{ secrets.KIS_APP_KEY }}
-          KIS_APP_SECRET: ${{ secrets.KIS_APP_SECRET }}
-          KIS_ENV: ${{ secrets.KIS_ENV }}
-        run: node semiconductor-stock/scripts/generate-stock-json.mjs
+      - name: Bake semiconductor stock JSON (PyKRX)
+        run: python semiconductor-stock/scripts/generate-stock-json.py
 
       - name: Bake TQQQ chart JSON
         run: node scripts/generate-tqqq-chart.mjs
@@ -57,5 +61,5 @@ jobs:
           cp -f /tmp/isiboss-bake/semi/000660.KS.json semiconductor-stock/data/
           git add data semiconductor-stock/data || true
           git diff --staged --quiet && echo "No market data changes" && exit 0
-          git commit -m "chore: refresh market/semiconductor JSON via KIS [skip ci]"
+          git commit -m "chore: refresh semiconductor JSON via PyKRX [skip ci]"
           git push origin gh-pages

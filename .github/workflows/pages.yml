@@ -22,21 +22,29 @@ jobs:
           cache: npm
           cache-dependency-path: semiconductor-stock/package-lock.json
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyKRX
+        run: pip install pykrx
+
       - name: Bake market ticker JSON
         run: node scripts/generate-market-ticker.mjs
+        continue-on-error: true
 
       - name: Bake TQQQ chart JSON
         run: node scripts/generate-tqqq-chart.mjs
+        continue-on-error: true
+
+      - name: Bake semiconductor stock JSON (PyKRX)
+        run: python semiconductor-stock/scripts/generate-stock-json.py
 
       - name: Build semiconductor static (Dual Mode)
         working-directory: semiconductor-stock
-        env:
-          KIS_APP_KEY: ${{ secrets.KIS_APP_KEY }}
-          KIS_APP_SECRET: ${{ secrets.KIS_APP_SECRET }}
-          KIS_ENV: ${{ secrets.KIS_ENV }}
         run: |
           npm ci
-          node scripts/generate-stock-json.mjs
           npm run build
 
       - name: Stage semiconductor for Pages
