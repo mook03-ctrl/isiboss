@@ -9,30 +9,40 @@ import { fileURLToPath } from "url";
 const root = path.dirname(fileURLToPath(import.meta.url));
 const script = path.join(root, "generate-stock-json.py");
 
-const candidates = process.platform === "win32"
-  ? ["python", "py", "python3"]
-  : ["python3", "python"];
+const candidates =
+  process.platform === "win32"
+    ? [
+        { cmd: "py", args: ["-3", script] },
+        { cmd: "python", args: [script] },
+        { cmd: "python3", args: [script] },
+      ]
+    : [
+        { cmd: "python3", args: [script] },
+        { cmd: "python", args: [script] },
+      ];
 
-let lastErr = null;
-for (const cmd of candidates) {
-  const args = cmd === "py" ? ["-3", script] : [script];
+let lastStatus = 1;
+for (const { cmd, args } of candidates) {
+  // shell: false — 경로에 공백/한글이 있어도 인자가 쪼개지지 않음
   const r = spawnSync(cmd, args, {
     stdio: "inherit",
     env: process.env,
-    shell: process.platform === "win32",
+    windowsHide: true,
   });
   if (r.error) {
-    lastErr = r.error;
+    if (r.error.code === "ENOENT") continue;
+    console.error(r.error);
     continue;
   }
   if (r.status === 0) process.exit(0);
-  lastErr = new Error(`${cmd} exited ${r.status}`);
-  // pykrx missing 등으로 실패 시 다음 인터프리터 시도하지 않고 종료 코드 전달
-  if (r.status != null && r.status !== 0) process.exit(r.status);
+  lastStatus = r.status ?? 1;
+  // interpreter found but script failed — stop
+  process.exit(lastStatus);
 }
 
 console.error(
-  "Python 실행 실패. `pip install pykrx` 후 다시 시도하세요.",
-  lastErr || ""
+  "Python 실행 실패. `pip install pykrx` 후 다시 시도하세요.\n",
+  "script:",
+  script
 );
 process.exit(1);
