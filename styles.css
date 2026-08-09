@@ -234,8 +234,8 @@ body {
 }
 
 .site-links {
-  flex: 0 0 clamp(5.2rem, 21vw, 7.4rem);
-  width: clamp(5.2rem, 21vw, 7.4rem);
+  flex: 0 0 clamp(6.6rem, 24vw, 9rem);
+  width: clamp(6.6rem, 24vw, 9rem);
   display: flex;
   flex-direction: column;
   gap: 0.32rem;
@@ -251,6 +251,7 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--ink) transparent;
   transform: rotate(0.35deg);
+  z-index: 5;
 }
 
 .site-links::-webkit-scrollbar {
@@ -268,12 +269,14 @@ body {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  min-height: 2.5rem;
-  padding: 0.35rem 0.2rem;
+  min-height: 2.65rem;
+  padding: 0.38rem 0.28rem;
   text-align: center;
   font-family: var(--font-hand);
-  font-size: clamp(0.68rem, 1.9vw, 0.88rem);
-  line-height: 1.2;
+  font-size: clamp(0.7rem, 1.95vw, 0.9rem);
+  line-height: 1.25;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   color: var(--ink);
   text-decoration: none;
   border: var(--sketch-width) solid var(--ink);
@@ -290,8 +293,11 @@ button.site-link-box {
 
 .site-link-box:nth-child(1) {
   transform: rotate(-0.6deg);
-  font-size: clamp(0.62rem, 1.75vw, 0.82rem);
-  line-height: 1.15;
+  font-size: clamp(0.68rem, 1.85vw, 0.88rem);
+  line-height: 1.2;
+  min-height: 3.1rem;
+  background: rgba(29, 78, 216, 0.08);
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .site-link-box:nth-child(2) {
@@ -309,18 +315,16 @@ button.site-link-box {
 
 .site-link-box:nth-child(5) {
   font-size: clamp(0.62rem, 1.7vw, 0.8rem);
-  white-space: nowrap;
   letter-spacing: -0.02em;
   transform: rotate(-0.3deg);
 }
 
 .site-link-box:nth-child(6) {
-  border-style: dashed;
-  transform: rotate(-0.5deg);
+  transform: rotate(-0.2deg);
+  font-size: clamp(0.62rem, 1.7vw, 0.8rem);
 }
 
 .site-link-box:nth-child(7) {
-  border-style: dashed;
   transform: rotate(0.4deg);
 }
 
@@ -346,6 +350,18 @@ button.site-link-box:focus-visible {
   cursor: default;
   pointer-events: none;
   border-style: dashed;
+}
+
+.site-link-box--featured {
+  min-height: 3.2rem;
+  font-weight: 600;
+  background: rgba(29, 78, 216, 0.1);
+  outline: 2px solid rgba(29, 78, 216, 0.35);
+  outline-offset: -1px;
+}
+
+.site-link-box--featured br {
+  display: block;
 }
 
 /* ========== 주식 예측 패널 ========== */
