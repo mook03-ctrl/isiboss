@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#49b6ff">
+  <title>The Stickman Fight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
+    <div id="sat-probe"></div>
+    <button id="btn-pause" type="button" class="hidden" aria-label="멈추기">멈춤</button>
+
+    <section id="screen-title" class="screen">
+      <a class="office-home" href="../">← 다 때려쳐 @office</a>
+      <div class="logo-wrap">
+        <div class="logo-the">The</div>
+        <div class="logo-stick">Stickman</div>
+        <div class="logo-fight">Fight</div>
+      </div>
+      <p class="tag">All-Out War</p>
+      <button id="btn-start" class="start-btn" type="button">START</button>
+      <p class="how">터치로 이동 · 점프 · 공격 · 기술</p>
+      <p class="credit">Author · Jaden</p>
+    </section>
+
+    <section id="screen-select" class="screen hidden">
+      <div class="select-head">
+        <h2>캐릭터 선택</h2>
+        <p>주인공을 고르고 Next를 누르면 챕터 1이 시작됩니다</p>
+      </div>
+      <div class="select-bottom">
+        <div id="cards" class="grid"></div>
+        <button id="btn-next" type="button" disabled>NEXT</button>
+      </div>
+    </section>
+
+    <section id="screen-intro" class="screen hidden">
+      <div class="panel">
+        <div id="intro-k" class="kicker"></div>
+        <div id="intro-stars" class="stars"></div>
+        <h2 id="intro-t"></h2>
+        <p id="intro-d"></p>
+        <p class="tap">탭하면 바로 시작</p>
+      </div>
+    </section>
+
+    <section id="screen-clear" class="screen hidden">
+      <div class="panel">
+        <div class="kicker">MISSION CLEAR</div>
+        <h2>미션 성공!</h2>
+        <p id="clear-d"></p>
+        <button id="btn-next-ch" type="button">다음 챕터</button>
+      </div>
+    </section>
+
+    <section id="screen-dead" class="screen hidden">
+      <div class="panel">
+        <div class="kicker">K.O.</div>
+        <h2>쓰러졌다...</h2>
+        <p>다시 일어나서 싸워보자!</p>
+        <button id="btn-retry" type="button">다시 도전</button>
+        <button id="btn-giveup" type="button" class="ghost">캐릭터 선택</button>
+      </div>
+    </section>
+
+    <section id="screen-win" class="screen hidden">
+      <div class="panel champion">
+        <div class="kicker">CHAMPION</div>
+        <h2 id="win-title">우승!</h2>
+        <p id="win-d"></p>
+        <button id="btn-replay" type="button">처음부터</button>
+      </div>
+    </section>
+
+    <section id="screen-pause" class="screen hidden">
+      <div class="panel">
+        <div class="kicker">PAUSED</div>
+        <h2>일시정지</h2>
+        <button id="btn-resume" type="button">이어하기</button>
+        <button id="btn-retry2" type="button" class="ghost">챕터 다시</button>
+        <button id="btn-to-title" type="button" class="ghost">시작 화면</button>
+        <a class="ghost-link" href="../">사무실로</a>
+        <button id="btn-mute" type="button" class="ghost">소리 끄기</button>
+      </div>
+    </section>
+
+    <div id="controls" class="hidden">
+      <button type="button" data-hold="left" aria-label="왼쪽">←</button>
+      <button type="button" data-hold="right" aria-label="오른쪽">→</button>
+      <button type="button" data-hold="jump" aria-label="점프">점프</button>
+      <button type="button" id="btn-mine" class="mine hidden" aria-label="채굴">채굴</button>
+      <button type="button" id="btn-skill" data-tap="skill" aria-label="기술">기술</button>
+      <button type="button" id="btn-attack" class="primary" data-hold="attack" aria-label="공격">공격</button>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
