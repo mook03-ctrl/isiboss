@@ -2,379 +2,215 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
     <title>캠프 도형 수학 — 게임하기 2 | angrywork</title>
-    <meta
-      name="description"
-      content="달빛 캠프에서 도형 값을 추리하고, UFO가 떨어뜨린 블록을 모아 목표 합을 맞추는 게임."
-    />
+    <meta name="description" content="도형 식을 풀고, 블록을 드래그해 목표 합을 맞추는 모바일 퍼즐." />
     <link rel="icon" href="camp-night.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@600;800;900&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      :root {
-        --ink: #1c140f;
-        --cell: clamp(32px, 6.4vh, 52px);
-      }
+      :root { --ink: #1c140f; }
       * { box-sizing: border-box; }
-      html, body { min-height: 100%; }
+      html, body { height: 100%; margin: 0; overflow: hidden; }
       body {
-        margin: 0;
         font-family: "Nunito", "Jua", sans-serif;
         color: #fff;
-        background: #07101c url("camp-night.jpg") center / cover no-repeat fixed;
+        background: #07101c url("camp-night.jpg") center / cover no-repeat;
       }
       body::before {
         content: "";
         position: fixed;
         inset: 0;
         pointer-events: none;
-        z-index: 0;
-        background: linear-gradient(180deg, rgba(7, 12, 32, 0.22), rgba(7, 12, 32, 0.62) 48%, rgba(7, 12, 32, 0.82));
+        background: linear-gradient(180deg, rgba(7, 12, 32, 0.55), rgba(7, 12, 32, 0.82));
       }
       button, input { font-family: inherit; }
       .hidden { display: none !important; }
-      .shell { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 14px 14px 28px; }
-      .back-link {
-        display: inline-flex;
-        align-items: center;
-        margin-bottom: 10px;
-        color: #fff6d8;
-        font-weight: 800;
-        text-decoration: none;
+      .phone {
+        position: relative;
+        z-index: 1;
+        width: min(480px, 100%);
+        height: 100dvh;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        padding:
+          calc(8px + env(safe-area-inset-top))
+          calc(10px + env(safe-area-inset-right))
+          calc(8px + env(safe-area-inset-bottom))
+          calc(10px + env(safe-area-inset-left));
+        gap: 8px;
+        overflow: hidden;
+      }
+      .hud, .eq-card, .target-row, .time-row {
+        flex: 0 0 auto;
       }
       .hud {
-        position: sticky;
-        top: 8px;
-        z-index: 20;
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
-        gap: 8px;
-        padding: 10px;
-        border: 4px solid #f6e2b8;
-        border-radius: 24px;
-        background: rgba(8, 14, 36, 0.82);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+        gap: 4px;
+        padding: 4px 6px;
+        border: 3px solid #f6e2b8;
+        border-radius: 18px;
+        background: rgba(8, 14, 36, 0.88);
       }
-      .stat {
-        display: flex;
-        flex-direction: column;
-        min-width: 88px;
-        padding: 4px 8px;
-        line-height: 1.05;
-      }
-      .stat .k { font-size: 11px; letter-spacing: 0.08em; color: #f6e2b8; }
-      .stat strong { font-size: 1.35rem; font-weight: 900; }
-      .level-badge, .target-badge, .hud-btn {
-        border: 3px solid var(--ink);
-        border-radius: 999px;
+      .back {
+        color: #fff6d8;
         font-weight: 900;
-        box-shadow: 0 4px 0 var(--ink);
+        text-decoration: none;
+        padding: 0 4px;
+      }
+      .stat { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
+      .stat .k { font-size: 10px; letter-spacing: 0.06em; color: #f6e2b8; }
+      .stat strong { font-size: 0.92rem; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #hud-name { max-width: 7.6rem; font-size: 0.8rem; }
+      #hud-score { max-width: 3.4rem; }
+      .level-badge, .icon-btn, .target-badge, .live {
+        border: 3px solid var(--ink);
+        font-weight: 900;
+        box-shadow: 0 3px 0 var(--ink);
       }
       .level-badge {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 6px 14px 4px;
+        margin-left: auto;
+        padding: 3px 8px;
+        border-radius: 999px;
         background: linear-gradient(180deg, #ffe98a, #ff9e2c);
         color: #3a2208;
+        font-size: 0.78rem;
+        flex: 0 0 auto;
       }
-      .level-badge span { font-size: clamp(1.15rem, 2.4vw, 1.55rem); letter-spacing: 0.02em; }
-      .level-badge small { font-size: 11px; font-weight: 800; }
-      .target-badge {
-        padding: 8px 16px;
-        background: linear-gradient(180deg, #e7fdff, #7ee7ff);
-        color: #082033;
-        font-size: clamp(1.25rem, 3vw, 1.9rem);
-        letter-spacing: 0.01em;
-      }
-      .target-badge.pulse { animation: pulse 0.45s ease; }
-      .hud-btn {
-        padding: 8px 12px;
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        flex: 0 0 auto;
         background: #fff6d8;
         color: var(--ink);
         cursor: pointer;
       }
-      #pause-btn { margin-left: auto; }
-      .layout {
-        display: grid;
-        gap: 14px;
-        margin-top: 14px;
-      }
-      @media (min-width: 1024px) {
-        .layout { grid-template-columns: 340px minmax(0, 1fr); align-items: start; }
-      }
-      .panel {
-        border: 4px solid var(--ink);
-        border-radius: 28px;
-        background: rgba(255, 248, 235, 0.95);
-        color: var(--ink);
-        box-shadow: 0 10px 0 rgba(0, 0, 0, 0.22);
-        padding: 14px;
-      }
-      .panel h2 { margin: 0 0 6px; font-family: "Jua", sans-serif; font-size: 1.7rem; }
-      .hint { margin: 0 0 10px; font-size: 0.92rem; line-height: 1.45; }
-      .camp-card { margin: 0 0 12px; }
-      .camp-card img {
-        display: block;
-        width: 100%;
-        height: 168px;
-        object-fit: cover;
-        object-position: center 68%;
-        border-radius: 18px;
+      .eq-card {
         border: 3px solid var(--ink);
+        border-radius: 18px;
+        background: rgba(255, 248, 235, 0.96);
+        color: var(--ink);
+        padding: 8px;
       }
-      .camp-card figcaption { margin-top: 6px; font-size: 0.82rem; text-align: center; }
+      .eq-card.is-solved { box-shadow: 0 0 0 3px #86efac; }
+      .eq-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+      .eq-head h2 { margin: 0; font-family: "Jua", sans-serif; font-size: 1.15rem; }
+      .eq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
       .eq {
+        margin: 0;
+        padding: 4px 6px;
+        border-radius: 10px;
+        background: #fff;
+        border: 2px dashed rgba(28, 20, 15, 0.25);
+        font-weight: 900;
+        font-size: 0.95rem;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 4px;
-        margin: 0 0 8px;
-        padding: 8px 10px;
-        border-radius: 16px;
-        background: #fff;
-        border: 3px dashed rgba(28, 20, 15, 0.25);
-        font-size: 1.35rem;
-        font-weight: 900;
+        gap: 3px;
       }
       .eq-sum { color: #9a3412; }
-      .token { font-weight: 900; font-size: 1.45rem; min-width: 1.4rem; text-align: center; }
-      .s-tri, .s-tri .glyph { color: #0e7490; }
-      .s-sq, .s-sq .glyph { color: #b45309; }
-      .s-heart, .s-heart .glyph { color: #e11d48; }
-      .s-spade, .s-spade .glyph { color: #6d28d9; }
-      .guesses { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-      .guess {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: #fff;
-        border-radius: 14px;
-        padding: 4px 8px;
-        border: 2px solid rgba(28, 20, 15, 0.15);
-      }
+      .token { font-weight: 900; }
+      .s-tri { color: #0e7490; }
+      .s-sq { color: #b45309; }
+      .s-heart { color: #e11d48; }
+      .s-spade { color: #6d28d9; }
+      .guesses { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; align-items: center; }
+      .guess { display: flex; align-items: center; gap: 3px; background: #fff; border-radius: 10px; padding: 2px 4px; }
       .guess input {
-        width: 4rem;
-        font-size: 1.25rem;
+        width: 2.6rem;
         font-weight: 900;
         text-align: center;
-        border: 3px solid var(--ink);
-        border-radius: 12px;
-        padding: 4px;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 2px;
+        font-size: 0.95rem;
       }
-      .guess input.good { background: #dcfce7; border-color: #15803d; }
-      .guess input.bad { background: #ffe4e6; border-color: #be123c; }
+      .guess input.good { background: #dcfce7; }
+      .guess input.bad { background: #ffe4e6; }
       .check-btn, .primary, .ghost-btn {
         border: 3px solid var(--ink);
-        border-radius: 16px;
+        border-radius: 12px;
         font-weight: 900;
         cursor: pointer;
-        box-shadow: 0 4px 0 var(--ink);
+        box-shadow: 0 3px 0 var(--ink);
       }
-      .check-btn, .primary {
-        background: linear-gradient(180deg, #ffe98a, #ff9e2c);
-        color: #3a2208;
-        padding: 10px 14px;
+      .check-btn, .primary { background: linear-gradient(180deg, #ffe98a, #ff9e2c); color: #3a2208; padding: 6px 10px; }
+      .ghost-btn { background: #fff; color: var(--ink); padding: 6px 10px; }
+      .check-btn:active, .primary:active, .ghost-btn:active, .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+      #eq-status { margin: 4px 0 0; min-height: 1em; font-size: 0.78rem; font-weight: 800; }
+      .target-row { display: flex; gap: 8px; align-items: center; }
+      .target-badge, .live {
+        flex: 1;
+        text-align: center;
+        border-radius: 999px;
+        padding: 6px 8px;
+        font-size: clamp(1.05rem, 4.5vw, 1.45rem);
       }
-      .check-btn:active, .primary:active, .hud-btn:active, .pad-btn:active, .ghost-btn:active {
-        transform: translateY(2px);
-        box-shadow: 0 2px 0 var(--ink);
-      }
-      .ghost-btn { background: #fff; color: var(--ink); padding: 10px 14px; }
-      #eq-status { min-height: 1.2em; font-weight: 800; margin: 8px 0 0; }
-      .panel.is-solved { box-shadow: 0 0 0 4px #86efac, 0 10px 0 rgba(0, 0, 0, 0.22); }
-      .play {
-        border: 4px solid #f6e2b8;
-        border-radius: 28px;
-        background: rgba(6, 12, 32, 0.78);
-        box-shadow: 0 0 0 4px rgba(126, 231, 255, 0.18), 0 16px 40px rgba(0, 0, 0, 0.35);
-        padding: 12px;
-      }
-      .play-top {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 8px;
-      }
-      .drop-ufo {
-        position: relative;
-        width: 92px;
-        height: 48px;
-        margin: 0 auto;
-        animation: ufoFloat 2.6s ease-in-out infinite;
-      }
-      .drop-ufo .dome {
-        position: absolute;
-        left: 31px;
-        top: 0;
-        width: 30px;
-        height: 18px;
-        border-radius: 30px 30px 8px 8px;
-        background: radial-gradient(circle at 50% 30%, #f3fffb, #7ee7ff 62%, #146272);
-        border: 2px solid #142033;
-      }
-      .drop-ufo .saucer {
-        position: absolute;
-        left: 8px;
-        top: 14px;
-        width: 76px;
-        height: 16px;
-        border-radius: 50%;
-        background: linear-gradient(180deg, #e7eefc, #6d7c99);
-        border: 2px solid #142033;
-      }
-      .drop-ufo .beam {
-        position: absolute;
-        left: 36px;
-        top: 30px;
-        width: 20px;
-        height: 16px;
-        background: linear-gradient(180deg, rgba(126, 231, 255, 0.95), rgba(126, 231, 255, 0));
-        clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
-      }
-      .next-box { text-align: center; }
-      .next-box .k { font-size: 12px; letter-spacing: 0.08em; color: #f6e2b8; }
-      #next-grid {
+      .target-badge { background: linear-gradient(180deg, #e7fdff, #7ee7ff); color: #082033; }
+      .target-badge.pulse { animation: pulse 0.4s ease; }
+      .live { background: #fff6d8; color: var(--ink); }
+      .live.is-match { background: #86efac; }
+      .live.is-over { background: #fda4af; }
+      .time-row { display: flex; align-items: center; gap: 8px; }
+      .time-track { flex: 1; height: 12px; border-radius: 99px; background: rgba(255, 255, 255, 0.16); border: 2px solid rgba(255, 246, 216, 0.7); overflow: hidden; }
+      .time-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #7ee7ff, #ffe66d); }
+      .time-fill.is-low { background: linear-gradient(90deg, #fb7185, #f97316); }
+      .time-label { font-weight: 900; font-size: 0.8rem; min-width: 3.2rem; text-align: right; }
+      .stage { flex: 1 1 auto; min-height: 0; display: grid; place-items: center; }
+      #grid-wrap { position: relative; width: min(100%, 100%); aspect-ratio: 1; max-height: 100%; max-width: 100%; }
+      #grid {
+        width: 100%;
+        height: 100%;
         display: grid;
-        grid-template-columns: repeat(4, 18px);
-        grid-template-rows: repeat(4, 18px);
-        gap: 3px;
-        margin-top: 4px;
-        justify-content: center;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        gap: 6px;
+        touch-action: none;
+        user-select: none;
       }
-      .mini {
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.06);
-        font-size: 11px;
-        font-weight: 900;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .mini.s-tri, .mini.s-sq, .mini.s-heart, .mini.s-spade {
-        background: linear-gradient(180deg, #ffd7a1, #e8923f);
-        border: 1px solid #1c140f;
-      }
-      #board-wrap { position: relative; width: max-content; margin: 0 auto; }
-      #board {
-        position: relative;
-        display: grid;
-        grid-template-columns: repeat(6, var(--cell));
-        grid-template-rows: repeat(10, var(--cell));
-        gap: 4px;
-        padding: 8px;
-        border-radius: 20px;
-        background:
-          radial-gradient(circle at 50% 100%, rgba(255, 140, 40, 0.28), transparent 42%),
-          rgba(3, 12, 18, 0.72);
-        border: 3px solid rgba(255, 214, 140, 0.8);
-      }
-      #board.shake-board { animation: boardShake 0.28s linear; }
-      #fx { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 4; }
+      #path-svg, #fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      #path-svg { z-index: 3; }
+      #fx { z-index: 4; overflow: visible; }
       .cell {
-        width: var(--cell);
-        height: var(--cell);
-        border-radius: 10px;
+        border-radius: 14px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: rgba(8, 22, 18, 0.5);
-        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
-        position: relative;
-      }
-      .cell .glyph { font-size: calc(var(--cell) * 0.4); line-height: 1; font-weight: 900; }
-      .cell .num { font-size: calc(var(--cell) * 0.3); font-weight: 900; line-height: 1; color: var(--ink); }
-      .cell.is-set, .cell.is-active {
-        background: linear-gradient(180deg, #ffe0b5 0%, #e8923f 100%);
-        border: 2px solid var(--ink);
+        background: linear-gradient(180deg, #ffe0b5, #e8923f);
+        border: 3px solid var(--ink);
         box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.55), 0 3px 0 #7a4318;
+        position: relative;
+        min-width: 0;
+        min-height: 0;
       }
-      .cell.is-active { outline: 3px solid #7ee7ff; outline-offset: -4px; }
-      .cell.is-ghost {
-        background: rgba(255, 220, 170, 0.16);
-        box-shadow: inset 0 0 0 2px rgba(255, 230, 180, 0.5);
-      }
-      .cell.is-ghost .glyph { opacity: 0.9; }
-      .cell.is-ghost .num { color: #fff6d8; }
-      .cell.is-hot {
-        z-index: 2;
-        filter: brightness(1.4);
-        transform: scale(1.08);
-        box-shadow: 0 0 16px #ffe66d, 0 0 26px #7ee7ff;
-      }
-      .spark {
-        position: absolute;
-        width: 9px;
-        height: 9px;
-        margin: -4px 0 0 -4px;
-        border-radius: 50%;
-        animation: spark 680ms ease-out forwards;
-      }
+      .cell .glyph { font-size: clamp(1.1rem, 5vw, 1.7rem); font-weight: 900; line-height: 1; }
+      .cell .num { font-size: clamp(0.75rem, 3.4vw, 1rem); font-weight: 900; line-height: 1; color: var(--ink); }
+      .cell.is-on { transform: scale(1.06); z-index: 2; outline: 3px solid #ffe66d; box-shadow: 0 0 12px #7ee7ff, 0 3px 0 #7a4318; }
+      .cell.is-pop { animation: pop 0.22s ease forwards; }
+      .cell.is-drop { animation: drop 0.22s ease; }
+      .spark { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; animation: spark 0.6s ease-out forwards; }
       .floater {
         position: absolute;
         left: 50%;
-        top: 28%;
-        z-index: 5;
+        top: 18%;
         transform: translateX(-50%);
+        z-index: 5;
         font-weight: 900;
-        font-size: 1.55rem;
         color: #ffe66d;
-        text-shadow: 0 2px 0 #2a1b12, 0 0 12px #7ee7ff;
-        animation: floatUp 800ms ease-out forwards;
+        text-shadow: 0 2px 0 #2a1b12;
+        animation: floatUp 0.7s ease-out forwards;
         pointer-events: none;
         white-space: nowrap;
       }
-      .campfire { display: flex; justify-content: center; align-items: flex-end; height: 34px; margin-top: 4px; }
-      .campfire i {
-        display: block;
-        width: 16px;
-        height: 22px;
-        margin: 0 2px;
-        border-radius: 50% 50% 40% 40%;
-        background: linear-gradient(180deg, #fff3b0, #ff8a1e 55%, #ff4d00);
-        transform-origin: bottom center;
-        animation: flame 0.38s ease-in-out infinite alternate;
-      }
-      .campfire i:nth-child(2) { height: 30px; animation-delay: 0.12s; }
-      .campfire i:nth-child(3) { animation-delay: 0.2s; }
-      .pops-line { text-align: center; color: #ffe7b0; font-weight: 800; min-height: 1.2em; }
-      .controls { margin-top: 14px; }
-      .pad {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 8px;
-        max-width: 560px;
-        margin: 0 auto;
-      }
-      .pad-btn {
-        min-height: 62px;
-        border: 3px solid var(--ink);
-        border-radius: 18px;
-        background: linear-gradient(180deg, #ffe08a, #f4a261);
-        color: var(--ink);
-        font-weight: 900;
-        box-shadow: 0 4px 0 #8a4b16;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        touch-action: manipulation;
-        user-select: none;
-      }
-      .pad-btn small { font-size: 11px; font-weight: 800; }
-      .key-hint { text-align: center; color: #fff6d8; font-weight: 800; font-size: 0.85rem; margin: 8px 0 0; }
+      .hint { margin: 0; text-align: center; font-size: 0.75rem; font-weight: 800; color: #fff6d8; flex: 0 0 auto; }
       .modal {
         position: fixed;
         inset: 0;
@@ -383,137 +219,96 @@
         align-items: center;
         justify-content: center;
         padding: 16px;
-        background: rgba(4, 8, 20, 0.62);
+        background: rgba(4, 8, 20, 0.66);
       }
       #leaderboard { z-index: 70; }
-      #gameover { z-index: 60; }
-      #pause-layer { z-index: 45; }
       .card {
-        width: min(460px, 100%);
+        width: min(440px, 100%);
+        max-height: min(92dvh, 760px);
+        overflow: auto;
         border: 4px solid var(--ink);
-        border-radius: 28px;
-        background: rgba(255, 248, 235, 0.97);
+        border-radius: 24px;
+        background: rgba(255, 248, 235, 0.98);
         color: var(--ink);
-        box-shadow: 0 16px 0 rgba(0, 0, 0, 0.25);
-        overflow: hidden;
+        box-shadow: 0 12px 0 rgba(0, 0, 0, 0.25);
       }
-      .card.wide { width: min(680px, 100%); }
-      .hero {
-        display: block;
-        width: 100%;
-        height: 230px;
-        object-fit: cover;
-        object-position: center 32%;
-        border-bottom: 4px solid var(--ink);
-      }
-      .card-body { padding: 14px 16px 16px; }
+      .hero { display: block; width: 100%; height: 150px; object-fit: cover; object-position: center 35%; border-bottom: 4px solid var(--ink); }
+      .card-body { padding: 12px 14px 14px; }
       .card h2, .card h3 { font-family: "Jua", sans-serif; margin: 0 0 6px; }
-      .card h2 { font-size: 2rem; }
-      .name-row { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
-      .name-row input {
-        font-size: 1.15rem;
-        font-weight: 800;
-        border: 3px solid var(--ink);
-        border-radius: 14px;
-        padding: 10px 12px;
-      }
+      .name-row { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; font-weight: 800; }
+      .name-row input { font-size: 1.05rem; font-weight: 800; border: 3px solid var(--ink); border-radius: 12px; padding: 8px 10px; }
       .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
-      .rules { margin: 8px 0 0; padding-left: 18px; font-weight: 700; }
-      .rules li { margin: 4px 0; }
-      .lb-wrap { overflow-x: auto; }
-      table { width: 100%; border-collapse: collapse; font-weight: 800; }
-      th, td { padding: 8px 6px; text-align: center; border-bottom: 2px solid rgba(28, 20, 15, 0.12); }
-      th { font-size: 0.82rem; }
+      .rules { margin: 8px 0 0; padding-left: 18px; font-weight: 700; font-size: 0.92rem; }
+      table { width: 100%; border-collapse: collapse; font-weight: 800; font-size: 0.82rem; }
+      th, td { padding: 7px 4px; text-align: center; border-bottom: 2px solid rgba(28, 20, 15, 0.12); }
       tbody tr:nth-child(1) { background: rgba(255, 214, 90, 0.45); }
-      tbody tr:nth-child(2) { background: rgba(226, 232, 240, 0.7); }
-      tbody tr:nth-child(3) { background: rgba(255, 186, 140, 0.35); }
+      tbody tr:nth-child(2) { background: rgba(226, 232, 240, 0.75); }
+      tbody tr:nth-child(3) { background: rgba(255, 186, 140, 0.4); }
       tr.is-me { outline: 3px solid #0e7490; }
-      .over-score { font-size: 2.4rem; font-weight: 900; margin: 4px 0; }
+      .over-score { font-size: 2.2rem; font-weight: 900; margin: 0; }
       .toast {
         position: fixed;
         left: 50%;
-        top: 18px;
+        top: 12px;
         z-index: 80;
         transform: translateX(-50%);
         background: #fff6d8;
         color: var(--ink);
         border: 3px solid var(--ink);
         border-radius: 999px;
-        padding: 8px 14px;
+        padding: 6px 12px;
         font-weight: 900;
-        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
       }
-      .shake { animation: shake 0.35s linear; }
-      @keyframes pulse {
-        0% { transform: scale(1); }
-        40% { transform: scale(1.08); }
-        100% { transform: scale(1); }
-      }
-      @keyframes ufoFloat {
-        50% { transform: translateY(6px); }
-      }
-      @keyframes flame {
-        to { transform: scaleY(0.82) scaleX(1.1); }
-      }
-      @keyframes spark {
-        to { transform: translate(var(--dx), var(--dy)) scale(0.15); opacity: 0; }
-      }
-      @keyframes floatUp {
-        to { transform: translate(-50%, -52px); opacity: 0; }
-      }
+      .shake { animation: shake 0.32s linear; }
+      @keyframes pulse { 40% { transform: scale(1.06); } }
+      @keyframes pop { to { transform: scale(0.2); opacity: 0; } }
+      @keyframes drop { from { transform: translateY(-18px); opacity: 0.4; } }
+      @keyframes spark { to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; } }
+      @keyframes floatUp { to { transform: translate(-50%, -36px); opacity: 0; } }
       @keyframes shake {
-        20% { transform: translateX(-6px); }
-        40% { transform: translateX(6px); }
-        60% { transform: translateX(-4px); }
-        80% { transform: translateX(4px); }
-      }
-      @keyframes boardShake {
-        20% { transform: translateX(-3px); }
-        40% { transform: translateX(3px); }
-        60% { transform: translateX(-2px); }
-        80% { transform: translateX(2px); }
+        20% { transform: translateX(-5px); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(-3px); }
+        80% { transform: translateX(3px); }
       }
       @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-        }
+        *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
       }
     </style>
   </head>
-  <body class="min-h-screen">
+  <body>
     <div id="toast" class="toast hidden" role="status"></div>
 
     <div id="start-modal" class="modal">
       <div class="card">
-        <img class="hero" src="camp-night.jpg" alt="달빛 숲 캠프. UFO와 쿠키 친구들, 모닥불, 나무 뒤의 그림자." />
+        <img class="hero" src="camp-night.jpg" alt="달빛 숲 캠프와 UFO, 쿠키 친구들" />
         <div class="card-body">
-          <a class="back-link" href="../">← 다 때려쳐 @office</a>
+          <a class="back" href="../">← 다 때려쳐 @office</a>
           <h2>캠프 도형 수학</h2>
-          <p class="hint">Shape Math Puzzle × Falling Blocks. UFO가 떨어뜨린 도형 블록으로 목표 합을 맞추세요.</p>
+          <p class="hint" style="color: var(--ink)">이어 드래그해서 TARGET 합을 맞추세요.</p>
           <form id="start-form">
             <label class="name-row">
-              <span>Player Name</span>
+              Player Name
               <input id="player-name" maxlength="16" placeholder="MathExplorer" autocomplete="nickname" />
             </label>
             <div class="btn-row">
               <button class="primary" type="submit">Start Game</button>
-              <button class="ghost-btn" type="button" id="start-lb">🏆 Leaderboard</button>
+              <button class="ghost-btn" id="start-lb" type="button">🏆 Leaderboard</button>
             </div>
           </form>
           <ol class="rules">
-            <li>왼쪽 식에서 △ □ ♥ ♠의 값을 추리하면 200점 보너스.</li>
-            <li>오른쪽 블록의 숫자가 그 도형의 값이에요.</li>
-            <li>가로·세로로 맞닿아 한 덩어리가 된 칸의 합이 TARGET과 정확히 같으면 터져요.</li>
-            <li>맨 위 줄까지 쌓이면 Game Over. 500점마다 LEVEL이 오릅니다.</li>
+            <li>식에서 △ □ ♥ ♠ 값을 맞히면 +200.</li>
+            <li>위·아래·왼쪽·오른쪽으로 드래그한 합이 TARGET과 같으면 터져요.</li>
+            <li>시간이 끝나면 Game Over. 목표를 깨면 시간이 늘어요.</li>
+            <li>500점마다 LEVEL이 오릅니다.</li>
           </ol>
         </div>
       </div>
     </div>
 
-    <main id="app" class="shell mx-auto hidden max-w-6xl">
-      <a class="back-link" href="../">← 다 때려쳐 @office</a>
-      <header class="hud flex flex-wrap items-center gap-2" aria-label="게임 정보">
+    <main id="app" class="phone hidden">
+      <header class="hud">
+        <a class="back" href="../" aria-label="사무실로">←</a>
         <div class="stat">
           <span class="k">PLAYER</span>
           <strong id="hud-name">MathExplorer</strong>
@@ -522,95 +317,52 @@
           <span class="k">SCORE</span>
           <strong id="hud-score">0</strong>
         </div>
-        <div class="level-badge">
-          <span id="level-badge">LEVEL 1</span>
-          <small id="speed-label">1.00s</small>
-        </div>
-        <div class="target-badge" id="target-banner">TARGET: <span id="target-num">0</span></div>
-        <button type="button" class="hud-btn sound" id="sound-btn" aria-label="소리 끄기">🔊</button>
-        <button type="button" class="hud-btn" id="pause-btn">Pause</button>
-        <button type="button" class="hud-btn" id="hud-lb">🏆 Leaderboard</button>
+        <div class="level-badge" id="level-badge">LEVEL 1</div>
+        <button type="button" class="icon-btn" id="sound-btn" aria-label="소리 끄기">🔊</button>
+        <button type="button" class="icon-btn" id="hud-lb" aria-label="Leaderboard">🏆</button>
       </header>
 
-      <div class="layout grid gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <section class="panel" id="eq-card" aria-label="도형 식">
-          <figure class="camp-card">
-            <img src="camp-night.jpg" alt="캠프 모닥불 앞에서 쿠키 친구들이 UFO 빛을 바라보는 장면" />
-            <figcaption>밤 캠프의 도형은 서로 다른 양의 정수예요.</figcaption>
-          </figure>
+      <section class="eq-card" id="eq-card" aria-label="도형 식">
+        <div class="eq-head">
           <h2>도형 식</h2>
-          <p class="hint">같은 도형이 두 번 나오면 그 값을 두 번 더하세요. 맞추면 +200.</p>
-          <div id="eq-list"></div>
-          <div id="guess-list" class="guesses"></div>
           <button type="button" class="check-btn" id="check-btn">값 확인</button>
-          <p id="eq-status"></p>
-        </section>
-
-        <section class="play" aria-label="떨어지는 블록">
-          <div class="play-top">
-            <div class="drop-ufo" aria-hidden="true">
-              <span class="dome"></span>
-              <span class="saucer"></span>
-              <span class="beam"></span>
-            </div>
-            <div class="next-box">
-              <div class="k">NEXT</div>
-              <div id="next-grid"></div>
-            </div>
-          </div>
-          <div id="board-wrap">
-            <div id="board" aria-label="6열 10행 블록 판"></div>
-            <div id="fx"></div>
-          </div>
-          <div class="campfire" aria-hidden="true"><i></i><i></i><i></i></div>
-          <p class="pops-line" id="pops-line">터뜨린 칸 0</p>
-        </section>
-      </div>
-
-      <div class="controls">
-        <div class="pad" aria-label="터치 조작">
-          <button type="button" class="pad-btn" id="btn-left" aria-label="왼쪽">◀<small>왼쪽</small></button>
-          <button type="button" class="pad-btn" id="btn-right" aria-label="오른쪽">▶<small>오른쪽</small></button>
-          <button type="button" class="pad-btn" id="btn-down" aria-label="빠른 낙하">▼<small>빨리</small></button>
-          <button type="button" class="pad-btn" id="btn-rot" aria-label="회전">↻<small>회전</small></button>
-          <button type="button" class="pad-btn" id="btn-drop" aria-label="즉시 낙하">⬇<small>놓기</small></button>
         </div>
-        <p class="key-hint">← → / A D 이동 · ↓ / S 빠른 낙하 · ↑ / W 회전 · Space 즉시 낙하 · P 일시정지</p>
+        <div id="eq-list" class="eq-grid"></div>
+        <div id="guess-list" class="guesses"></div>
+        <p id="eq-status"></p>
+      </section>
+
+      <div class="target-row">
+        <div class="target-badge" id="target-banner">TARGET: <span id="target-num">0</span></div>
+        <div class="live" id="live-sum">SUM —</div>
       </div>
+      <div class="time-row" aria-label="남은 시간">
+        <div class="time-track"><div class="time-fill" id="time-fill"></div></div>
+        <span class="time-label" id="time-label">60s</span>
+      </div>
+
+      <div class="stage">
+        <div id="grid-wrap">
+          <div id="grid" aria-label="6열 6행 도형 판"></div>
+          <svg id="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+          <div id="fx"></div>
+        </div>
+      </div>
+      <p class="hint">손가락이나 마우스로 맞닿은 칸을 이으세요</p>
     </main>
 
-    <div id="pause-layer" class="modal hidden">
-      <div class="card">
-        <div class="card-body">
-          <h2>Pause</h2>
-          <p class="hint">잠시 모닥불 옆에서 쉬어요.</p>
-          <button type="button" class="primary" id="resume-btn">이어하기</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="gameover" class="modal hidden">
-      <div class="card">
-        <div class="card-body">
-          <h2>Game Over</h2>
-          <p id="over-name" class="hint"></p>
-          <p class="over-score" id="over-score">0</p>
-          <p id="over-level" class="hint"></p>
-          <p id="over-rank" class="hint"></p>
-          <div class="btn-row">
-            <button type="button" class="primary" id="retry-btn">다시 하기</button>
-            <button type="button" class="ghost-btn" id="over-lb">🏆 Leaderboard</button>
-            <button type="button" class="ghost-btn" id="menu-btn">처음으로</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div id="leaderboard" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="lb-title">
-      <div class="card wide">
+      <div class="card">
         <div class="card-body">
+          <div id="over-box" class="hidden">
+            <h2>Game Over</h2>
+            <p id="over-name" style="margin: 0; font-weight: 800"></p>
+            <p class="over-score" id="over-score">0</p>
+            <p id="over-level" style="margin: 0 0 8px; font-weight: 800"></p>
+            <p id="over-rank" style="margin: 0 0 8px; font-weight: 800"></p>
+          </div>
           <h3 id="lb-title">🏆 Leaderboard · Top 5</h3>
-          <div class="lb-wrap">
+          <div style="overflow-x: auto">
             <table>
               <thead>
                 <tr>
@@ -625,7 +377,8 @@
             </table>
           </div>
           <div class="btn-row" style="margin-top: 12px">
-            <button type="button" class="primary" id="lb-close">닫기</button>
+            <button type="button" class="primary hidden" id="retry-btn">다시 하기</button>
+            <button type="button" class="ghost-btn" id="lb-close">닫기</button>
           </div>
         </div>
       </div>
@@ -634,90 +387,65 @@
     <script>
       (() => {
         const COLS = 6;
-        const ROWS = 10;
+        const ROWS = 6;
         const STORAGE_KEY = "math_puzzle_high_scores";
+        const TIME_MAX = 60;
         const SHAPES = [
-          { id: "tri", glyph: "△", name: "삼각" },
-          { id: "sq", glyph: "□", name: "사각" },
-          { id: "heart", glyph: "♥", name: "하트" },
-          { id: "spade", glyph: "♠", name: "스페이드" },
-        ];
-        const TEMPLATES = [
-          [[0, 0]],
-          [[0, 0], [1, 0]],
-          [[0, 0], [0, 1]],
-          [[0, 0], [1, 0], [2, 0]],
-          [[0, 0], [0, 1], [0, 2]],
-          [[0, 0], [1, 0], [0, 1]],
-          [[0, 0], [1, 0], [1, 1]],
-          [[0, 0], [1, 0], [2, 0], [1, 1]],
-          [[0, 0], [1, 0], [1, 1], [2, 1]],
-          [[0, 0], [1, 0], [0, 1], [1, 1]],
+          { id: "tri", glyph: "△" },
+          { id: "sq", glyph: "□" },
+          { id: "heart", glyph: "♥" },
+          { id: "spade", glyph: "♠" },
         ];
         const RANKS = ["🥇", "🥈", "🥉", "4th", "5th"];
 
         const state = {
           name: "MathExplorer",
           score: 0,
-          pops: 0,
           seenLevel: 1,
           board: [],
-          piece: null,
-          next: null,
           values: {},
           activeIds: [],
           eqs: [],
           claimed: false,
           target: 0,
+          path: [],
+          dragging: false,
+          touchId: null,
           running: false,
           paused: false,
           pausedByBoard: false,
           over: false,
           resolving: false,
-          soft: false,
-          grounded: false,
-          lockMs: 0,
-          dropAcc: 0,
+          timeLeft: TIME_MAX,
           lastTs: 0,
-          rotResets: 0,
-          lastLock: new Set(),
-          tutorial: true,
           sound: true,
           latest: null,
+          clears: 0,
         };
 
         const nodes = [];
         let rafId = 0;
         let audioCtx = null;
         let toastTimer = 0;
-
+        let lastTouchAt = 0;
         const $ = (id) => document.getElementById(id);
 
         function glyphOf(id) {
           const found = SHAPES.find((shape) => shape.id === id);
           return found ? found.glyph : "";
         }
-
-        function level() {
-          return Math.floor(state.score / 500) + 1;
+        function level() { return Math.floor(state.score / 500) + 1; }
+        function shapeCount(lv) { return lv <= 2 ? 2 : lv <= 4 ? 3 : 4; }
+        function sumCap(lv) { return lv <= 2 ? 10 : lv <= 4 ? 15 : 25 + Math.max(0, lv - 5) * 2; }
+        function minPath(lv) { return lv >= 5 ? 3 : 2; }
+        function drainRate() { return 1 + (level() - 1) * 0.07; }
+        function keyOf(x, y) { return y * COLS + x; }
+        function xyOf(index) { return { x: index % COLS, y: (index / COLS) | 0 }; }
+        function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+        function todayString() {
+          const date = new Date();
+          return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
         }
-
-        function fallInterval() {
-          return Math.max(180, Math.round(1000 * Math.pow(0.92, level() - 1)));
-        }
-
-        function shapeCount(lv) {
-          if (lv <= 2) return 2;
-          if (lv <= 4) return 3;
-          return 4;
-        }
-
-        function sumCap(lv) {
-          if (lv <= 2) return 10;
-          if (lv <= 4) return 15;
-          return 25 + Math.max(0, lv - 5) * 2;
-        }
-
         function shuffle(arr) {
           for (let i = arr.length - 1; i > 0; i -= 1) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -727,16 +455,18 @@
           }
           return arr;
         }
-
-        function wait(ms) {
-          return new Promise((resolve) => setTimeout(resolve, ms));
+        function adjacent(a, b) {
+          const pa = xyOf(a);
+          const pb = xyOf(b);
+          return Math.abs(pa.x - pb.x) + Math.abs(pa.y - pb.y) === 1;
         }
-
-        function todayString() {
-          const d = new Date();
-          const m = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(d.getDate()).padStart(2, "0");
-          return d.getFullYear() + "-" + m + "-" + day;
+        function cellValue(index) {
+          const pos = xyOf(index);
+          const cell = state.board[pos.y][pos.x];
+          return cell ? state.values[cell.id] : 0;
+        }
+        function pathSum(path) {
+          return path.reduce((total, index) => total + cellValue(index), 0);
         }
 
         function beep(freq, dur, type, gain) {
@@ -754,37 +484,18 @@
             amp.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + dur);
-          } catch (err) {
-            /* audio is optional */
-          }
+          } catch (err) { /* audio is optional */ }
         }
-
-        function chime(chain) {
-          beep(560 + chain * 70, 0.1, "triangle", 0.05);
-          setTimeout(() => beep(760 + chain * 40, 0.12, "triangle", 0.04), 70);
-        }
-
         function toast(message) {
           const el = $("toast");
           el.textContent = message;
           el.classList.remove("hidden");
           clearTimeout(toastTimer);
-          toastTimer = setTimeout(() => el.classList.add("hidden"), 1700);
-        }
-
-        function emptyBoard() {
-          return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-        }
-
-        function keyOf(x, y) {
-          return y * COLS + x;
+          toastTimer = setTimeout(() => el.classList.add("hidden"), 1500);
         }
 
         function buildEquations(ids, map) {
-          const eq = (terms) => ({
-            terms,
-            sum: terms.reduce((total, id) => total + map[id], 0),
-          });
+          const eq = (terms) => ({ terms, sum: terms.reduce((total, id) => total + map[id], 0) });
           if (ids.length === 2) {
             const [a, b] = ids;
             return [eq([a, b]), eq([a, b, b])];
@@ -796,11 +507,9 @@
           const [a, b, c, d] = ids;
           return [eq([a, b]), eq([c, d]), eq([a, c]), eq([b, d, d])];
         }
-
         function equationsOk(ids, map, lv) {
           return buildEquations(ids, map).every((eq) => eq.sum > 0 && eq.sum <= sumCap(lv));
         }
-
         function pickInitialMap() {
           for (let attempt = 0; attempt < 80; attempt += 1) {
             const pool = shuffle([2, 3, 4, 5, 6]);
@@ -809,15 +518,12 @@
           }
           return { tri: 2, sq: 3 };
         }
-
         function pickNewValue(id) {
           const used = new Set(state.activeIds.map((sid) => state.values[sid]));
           const lv = level();
           const hi = lv <= 4 ? 8 : 9;
           const options = [];
-          for (let value = 2; value <= hi; value += 1) {
-            if (!used.has(value)) options.push(value);
-          }
+          for (let value = 2; value <= hi; value += 1) if (!used.has(value)) options.push(value);
           shuffle(options);
           const ids = state.activeIds.concat(id);
           for (const value of options) {
@@ -826,38 +532,66 @@
           }
           return options[0] || 2;
         }
+        function randomCell() {
+          const id = state.activeIds[Math.floor(Math.random() * state.activeIds.length)];
+          return { id };
+        }
+        function emptyBoard() {
+          return Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => randomCell()));
+        }
 
-        function achievableSums(vals, cap, maxParts) {
+        function pathSumsOnBoard(minLen) {
+          const cap = sumCap(level());
+          const maxLen = Math.min(6, Math.max(minLen, Math.floor(cap / 2)));
           const sums = new Set();
-          const walk = (left, total) => {
-            if (left === 0) {
-              if (total >= 4 && total <= cap) sums.add(total);
-              return;
-            }
-            vals.forEach((value) => walk(left - 1, total + value));
+          let budget = 9000;
+          const dfs = (x, y, sum, len, seen) => {
+            if (budget <= 0) return;
+            budget -= 1;
+            if (len >= minLen && sum <= cap) sums.add(sum);
+            if (len >= maxLen || sum >= cap) return;
+            [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return;
+              const id = keyOf(nx, ny);
+              if (seen.has(id) || !state.board[ny][nx]) return;
+              seen.add(id);
+              dfs(nx, ny, sum + state.values[state.board[ny][nx].id], len + 1, seen);
+              seen.delete(id);
+            });
           };
-          for (let parts = 2; parts <= maxParts; parts += 1) walk(parts, 0);
-          return [...sums];
+          for (let y = 0; y < ROWS; y += 1) {
+            for (let x = 0; x < COLS; x += 1) {
+              if (!state.board[y][x]) continue;
+              const seen = new Set([keyOf(x, y)]);
+              dfs(x, y, state.values[state.board[y][x].id], 1, seen);
+              if (budget <= 0) return sums;
+            }
+          }
+          return sums;
         }
-
-        function rollTarget() {
-          const vals = state.activeIds.map((id) => state.values[id]);
-          const lv = level();
-          const maxParts = lv <= 2 ? 2 : lv <= 4 ? 3 : 4;
-          const options = achievableSums(vals, sumCap(lv), maxParts).filter((sum) => sum !== state.target);
-          if (!options.length) return state.target || vals[0] + vals[1];
-          return options[Math.floor(Math.random() * options.length)];
+        function pickTarget() {
+          const preferred = [...pathSumsOnBoard(minPath(level()))].filter((sum) => sum !== state.target && sum >= 4);
+          const pool = preferred.length ? preferred : [...pathSumsOnBoard(2)].filter((sum) => sum !== state.target && sum >= 4);
+          if (!pool.length) return state.values.tri + state.values.sq;
+          return pool[Math.floor(Math.random() * pool.length)];
         }
-
+        function seedBoard() {
+          state.board = emptyBoard();
+          state.board[2][2] = { id: "tri" };
+          state.board[2][3] = { id: "sq" };
+          state.target = state.values.tri + state.values.sq;
+          if (![...pathSumsOnBoard(2)].includes(state.target)) state.target = pickTarget();
+        }
         function setupPuzzle() {
           state.values = pickInitialMap();
           state.activeIds = ["tri", "sq"];
           state.eqs = buildEquations(state.activeIds, state.values);
           state.claimed = false;
-          state.target = state.values.tri + state.values.sq;
+          seedBoard();
           renderEquations();
         }
-
         function syncShapes() {
           const count = shapeCount(level());
           if (count <= state.activeIds.length) return false;
@@ -870,407 +604,19 @@
           }
           state.eqs = buildEquations(state.activeIds, state.values);
           state.claimed = false;
-          state.target = rollTarget();
+          state.target = pickTarget();
           renderEquations();
-          toast(added.join(" ") + " 새 도형 등장!");
+          pulseTarget();
+          toast(added.join(" ") + " 새 도형!");
           return true;
         }
-
         function noteLevel() {
           const lv = level();
           if (lv === state.seenLevel) return false;
           state.seenLevel = lv;
           const expanded = syncShapes();
-          if (!expanded) toast("LEVEL " + lv + " · 낙하가 빨라졌어요");
+          if (!expanded) toast("LEVEL " + lv);
           return expanded;
-        }
-
-        function fits(cells) {
-          return cells.every((cell) => {
-            if (cell.x < 0 || cell.x >= COLS || cell.y < 0 || cell.y >= ROWS) return false;
-            return !state.board[cell.y][cell.x];
-          });
-        }
-
-        function makePiece() {
-          const maxLen = level() <= 2 ? 2 : level() <= 4 ? 3 : 4;
-          const pool = TEMPLATES.filter((template) => template.length <= maxLen);
-          const template = pool[Math.floor(Math.random() * pool.length)];
-          const local = template.map(([x, y]) => ({
-            x,
-            y,
-            id: state.activeIds[Math.floor(Math.random() * state.activeIds.length)],
-          }));
-          const width = Math.max(...local.map((cell) => cell.x)) + 1;
-          const ox = Math.floor((COLS - width) / 2);
-          local.forEach((cell) => {
-            cell.x += ox;
-          });
-          return local;
-        }
-
-        function tutorialPiece() {
-          const ox = Math.floor((COLS - 2) / 2);
-          return [
-            { x: ox, y: 0, id: "tri" },
-            { x: ox + 1, y: 0, id: "sq" },
-          ];
-        }
-
-        function spawn() {
-          if (state.tutorial) {
-            state.piece = tutorialPiece();
-            state.tutorial = false;
-            state.next = makePiece();
-          } else {
-            state.piece = state.next || makePiece();
-            state.next = makePiece();
-          }
-          state.grounded = false;
-          state.lockMs = 0;
-          state.rotResets = 0;
-          state.dropAcc = 0;
-          if (!fits(state.piece)) {
-            state.piece = null;
-            return false;
-          }
-          renderNext();
-          renderBoard();
-          return true;
-        }
-
-        function shiftDown() {
-          if (!state.piece) return false;
-          const next = state.piece.map((cell) => ({ ...cell, y: cell.y + 1 }));
-          if (!fits(next)) return false;
-          state.piece = next;
-          return true;
-        }
-
-        function canPlay() {
-          return state.running && !state.paused && !state.resolving && !state.over && state.piece;
-        }
-
-        function move(dx) {
-          if (!canPlay()) return;
-          const next = state.piece.map((cell) => ({ ...cell, x: cell.x + dx }));
-          if (!fits(next)) return;
-          state.piece = next;
-          const down = next.map((cell) => ({ ...cell, y: cell.y + 1 }));
-          if (fits(down)) {
-            state.grounded = false;
-            state.lockMs = 0;
-            state.rotResets = 0;
-            state.dropAcc = 0;
-          }
-          renderBoard();
-        }
-
-        function rotated(cells) {
-          const minX = Math.min(...cells.map((cell) => cell.x));
-          const minY = Math.min(...cells.map((cell) => cell.y));
-          const turned = cells.map((cell) => ({ id: cell.id, x: cell.y - minY, y: -(cell.x - minX) }));
-          const rx = Math.min(...turned.map((cell) => cell.x));
-          const ry = Math.min(...turned.map((cell) => cell.y));
-          return turned.map((cell) => ({
-            id: cell.id,
-            x: cell.x - rx + minX,
-            y: cell.y - ry + minY,
-          }));
-        }
-
-        function rotatePiece() {
-          if (!canPlay()) return;
-          const turned = rotated(state.piece);
-          const kicks = [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1], [0, 1]];
-          for (const [kx, ky] of kicks) {
-            const kicked = turned.map((cell) => ({ ...cell, x: cell.x + kx, y: cell.y + ky }));
-            if (!fits(kicked)) continue;
-            state.piece = kicked;
-            const down = kicked.map((cell) => ({ ...cell, y: cell.y + 1 }));
-            if (fits(down)) {
-              state.grounded = false;
-              state.lockMs = 0;
-              state.rotResets = 0;
-              state.dropAcc = 0;
-            } else if (state.rotResets < 6) {
-              state.rotResets += 1;
-              state.lockMs = 0;
-            }
-            renderBoard();
-            beep(480, 0.04, "square", 0.03);
-            return;
-          }
-        }
-
-        function hardDrop() {
-          if (!canPlay()) return;
-          let guard = 0;
-          while (guard < ROWS && shiftDown()) guard += 1;
-          renderBoard();
-          lockPiece();
-        }
-
-        function findPopGroups() {
-          if (!state.target) return [];
-          const seen = new Set();
-          const groups = [];
-          for (let y = 0; y < ROWS; y += 1) {
-            for (let x = 0; x < COLS; x += 1) {
-              const start = keyOf(x, y);
-              if (!state.board[y][x] || seen.has(start)) continue;
-              const group = [];
-              const stack = [start];
-              seen.add(start);
-              let sum = 0;
-              while (stack.length) {
-                const id = stack.pop();
-                const cx = id % COLS;
-                const cy = (id / COLS) | 0;
-                sum += state.values[state.board[cy][cx].id];
-                group.push(id);
-                [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-                  const nx = cx + dx;
-                  const ny = cy + dy;
-                  if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return;
-                  const nid = keyOf(nx, ny);
-                  if (seen.has(nid) || !state.board[ny][nx]) return;
-                  seen.add(nid);
-                  stack.push(nid);
-                });
-              }
-              if (group.length >= 2 && sum === state.target) groups.push(group);
-            }
-          }
-          return groups;
-        }
-
-        function markHot(groups) {
-          groups.forEach((group) => group.forEach((id) => nodes[id].classList.add("is-hot")));
-        }
-
-        function burstGroups(groups) {
-          const origin = $("fx").getBoundingClientRect();
-          const colors = ["#ffe66d", "#ff8a1e", "#7ee7ff", "#fff6d8", "#ff6b9a", "#b9f6a2"];
-          groups.forEach((group) => {
-            group.forEach((id) => {
-              const rect = nodes[id].getBoundingClientRect();
-              const x = rect.left - origin.left + rect.width / 2;
-              const y = rect.top - origin.top + rect.height / 2;
-              for (let i = 0; i < 10; i += 1) {
-                const spark = document.createElement("i");
-                spark.className = "spark";
-                const angle = (Math.PI * 2 * i) / 10 + Math.random() * 0.4;
-                const dist = 16 + Math.random() * 40;
-                spark.style.left = x + "px";
-                spark.style.top = y + "px";
-                spark.style.background = colors[i % colors.length];
-                spark.style.setProperty("--dx", (Math.cos(angle) * dist).toFixed(1) + "px");
-                spark.style.setProperty("--dy", (Math.sin(angle) * dist).toFixed(1) + "px");
-                $("fx").appendChild(spark);
-                setTimeout(() => spark.remove(), 700);
-              }
-            });
-          });
-          const board = $("board");
-          board.classList.remove("shake-board");
-          void board.offsetWidth;
-          board.classList.add("shake-board");
-        }
-
-        function clearGroups(groups) {
-          groups.forEach((group) => {
-            group.forEach((id) => {
-              const x = id % COLS;
-              const y = (id / COLS) | 0;
-              state.board[y][x] = null;
-            });
-          });
-        }
-
-        function applyGravity() {
-          for (let x = 0; x < COLS; x += 1) {
-            const stack = [];
-            for (let y = ROWS - 1; y >= 0; y -= 1) {
-              if (state.board[y][x]) stack.push(state.board[y][x]);
-            }
-            for (let y = ROWS - 1; y >= 0; y -= 1) {
-              state.board[y][x] = stack[ROWS - 1 - y] || null;
-            }
-          }
-        }
-
-        function floatText(text) {
-          const el = document.createElement("div");
-          el.className = "floater";
-          el.textContent = text;
-          $("board-wrap").appendChild(el);
-          setTimeout(() => el.remove(), 820);
-        }
-
-        function pulseTarget() {
-          const banner = $("target-banner");
-          banner.classList.remove("pulse");
-          void banner.offsetWidth;
-          banner.classList.add("pulse");
-        }
-
-        async function resolveChain() {
-          let chain = 0;
-          while (chain < 12 && state.running) {
-            while (state.paused && state.running) await wait(50);
-            const groups = findPopGroups();
-            if (!groups.length) break;
-            chain += 1;
-            markHot(groups);
-            await wait(150);
-            if (!state.running) return;
-            burstGroups(groups);
-            const count = groups.reduce((total, group) => total + group.length, 0);
-            clearGroups(groups);
-            const gain = count * 40 * chain + 60;
-            state.score += gain;
-            state.pops += count;
-            floatText("+" + gain + (chain > 1 ? "  COMBO ×" + chain : ""));
-            chime(chain);
-            applyGravity();
-            renderBoard();
-            renderHud();
-            await wait(160);
-          }
-          if (chain > 0 && state.running) {
-            const expanded = noteLevel();
-            if (!expanded) state.target = rollTarget();
-            pulseTarget();
-            renderHud();
-          }
-        }
-
-        function row0Filled() {
-          return state.board[0].some(Boolean);
-        }
-
-        async function lockPiece() {
-          if (state.resolving || !state.piece || !state.running || state.over) return;
-          state.resolving = true;
-          const locked = [];
-          state.piece.forEach((cell) => {
-            if (cell.y < 0 || cell.y >= ROWS || cell.x < 0 || cell.x >= COLS) return;
-            state.board[cell.y][cell.x] = { id: cell.id };
-            locked.push(keyOf(cell.x, cell.y));
-          });
-          state.lastLock = new Set(locked);
-          state.piece = null;
-          state.grounded = false;
-          renderBoard();
-          beep(170, 0.05, "square", 0.035);
-          await resolveChain();
-          if (!state.running || state.over) {
-            state.resolving = false;
-            return;
-          }
-          if (row0Filled() || !spawn()) {
-            state.resolving = false;
-            gameOver();
-            return;
-          }
-          state.resolving = false;
-          renderHud();
-        }
-
-        function loop(ts) {
-          if (!state.running) return;
-          rafId = requestAnimationFrame(loop);
-          if (!state.lastTs) state.lastTs = ts;
-          const dt = Math.min(80, ts - state.lastTs);
-          state.lastTs = ts;
-          if (state.paused || state.resolving || state.over || !state.piece) return;
-          if (state.grounded) {
-            state.lockMs += dt;
-            if (state.lockMs >= (state.soft ? 45 : 300)) lockPiece();
-            return;
-          }
-          state.dropAcc += dt;
-          const interval = state.soft ? 65 : fallInterval();
-          let moved = false;
-          while (state.dropAcc >= interval && !state.resolving) {
-            state.dropAcc -= interval;
-            if (!shiftDown()) {
-              state.grounded = true;
-              state.lockMs = 0;
-              break;
-            }
-            moved = true;
-          }
-          if (moved) renderBoard();
-        }
-
-        function paint(x, y, id, mode) {
-          const el = nodes[keyOf(x, y)];
-          el.className = "cell" + (id ? " s-" + id : "") + (mode ? " is-" + mode : "");
-          el.querySelector(".glyph").textContent = id ? glyphOf(id) : "";
-          el.querySelector(".num").textContent = id ? String(state.values[id]) : "";
-        }
-
-        function ghostOf(cells) {
-          let current = cells.map((cell) => ({ ...cell }));
-          for (let guard = 0; guard < ROWS; guard += 1) {
-            const next = current.map((cell) => ({ ...cell, y: cell.y + 1 }));
-            if (!fits(next)) return current;
-            current = next;
-          }
-          return current;
-        }
-
-        function renderBoard() {
-          for (let y = 0; y < ROWS; y += 1) {
-            for (let x = 0; x < COLS; x += 1) {
-              const cell = state.board[y][x];
-              paint(x, y, cell ? cell.id : null, cell ? "set" : "");
-            }
-          }
-          if (!state.piece) return;
-          const occupied = new Set(state.piece.map((cell) => keyOf(cell.x, cell.y)));
-          ghostOf(state.piece).forEach((cell) => {
-            const id = keyOf(cell.x, cell.y);
-            if (occupied.has(id) || cell.y < 0 || cell.y >= ROWS) return;
-            paint(cell.x, cell.y, cell.id, "ghost");
-          });
-          state.piece.forEach((cell) => {
-            if (cell.y < 0 || cell.y >= ROWS || cell.x < 0 || cell.x >= COLS) return;
-            paint(cell.x, cell.y, cell.id, "active");
-          });
-        }
-
-        function renderNext() {
-          const minis = $("next-grid").children;
-          Array.from(minis).forEach((el) => {
-            el.className = "mini";
-            el.textContent = "";
-          });
-          if (!state.next) return;
-          const minX = Math.min(...state.next.map((cell) => cell.x));
-          const minY = Math.min(...state.next.map((cell) => cell.y));
-          state.next.forEach((cell) => {
-            const x = cell.x - minX;
-            const y = cell.y - minY;
-            if (x < 0 || y < 0 || x > 3 || y > 3) return;
-            const el = minis[y * 4 + x];
-            el.className = "mini s-" + cell.id;
-            el.textContent = glyphOf(cell.id);
-          });
-        }
-
-        function renderHud() {
-          const lv = level();
-          const ms = fallInterval();
-          $("hud-name").textContent = state.name;
-          $("hud-score").textContent = String(state.score);
-          $("level-badge").textContent = "LEVEL " + lv;
-          $("speed-label").textContent = (ms / 1000).toFixed(2) + "s";
-          $("target-num").textContent = String(state.target);
-          $("pops-line").textContent = "터뜨린 칸 " + state.pops;
-          $("pause-btn").textContent = state.paused ? "Resume" : "Pause";
         }
 
         function renderEquations() {
@@ -1298,7 +644,6 @@
             row.append(sign, sum);
             list.appendChild(row);
           });
-
           const guesses = $("guess-list");
           guesses.replaceChildren();
           state.activeIds.forEach((id) => {
@@ -1310,7 +655,7 @@
             row.appendChild(token);
             if (state.claimed) {
               const answer = document.createElement("strong");
-              answer.textContent = "= " + state.values[id];
+              answer.textContent = "=" + state.values[id];
               row.appendChild(answer);
             } else {
               const input = document.createElement("input");
@@ -1326,13 +671,212 @@
           });
           $("check-btn").classList.toggle("hidden", state.claimed);
           $("eq-card").classList.toggle("is-solved", state.claimed);
-          $("eq-status").textContent = state.claimed ? "이 레벨의 도형 값을 맞췄어요. +200" : "";
+          $("eq-status").textContent = state.claimed ? "도형 값을 맞췄어요. +200" : "";
+        }
+        function renderHud() {
+          $("hud-name").textContent = state.name;
+          $("hud-score").textContent = String(state.score);
+          $("level-badge").textContent = "LEVEL " + level();
+          $("target-num").textContent = String(state.target);
+          const pct = Math.max(0, Math.min(100, (state.timeLeft / TIME_MAX) * 100));
+          const fill = $("time-fill");
+          fill.style.width = pct + "%";
+          fill.classList.toggle("is-low", state.timeLeft <= 15);
+          $("time-label").textContent = Math.ceil(state.timeLeft) + "s";
+        }
+        function renderLive() {
+          const el = $("live-sum");
+          if (!state.path.length) {
+            el.textContent = "SUM —";
+            el.className = "live";
+            return;
+          }
+          const sum = pathSum(state.path);
+          el.textContent = "SUM " + sum;
+          el.className = "live" + (sum === state.target ? " is-match" : sum > state.target ? " is-over" : "");
+        }
+        function renderGrid() {
+          for (let index = 0; index < COLS * ROWS; index += 1) {
+            const pos = xyOf(index);
+            const cell = state.board[pos.y][pos.x];
+            const el = nodes[index];
+            el.className = "cell" + (cell ? " s-" + cell.id : "") + (state.path.includes(index) ? " is-on" : "");
+            el.querySelector(".glyph").textContent = cell ? glyphOf(cell.id) : "";
+            el.querySelector(".num").textContent = cell ? String(state.values[cell.id]) : "";
+          }
+          renderPath();
+          renderLive();
+        }
+        function renderPath() {
+          const svg = $("path-svg");
+          svg.replaceChildren();
+          if (state.path.length < 2) return;
+          const wrap = $("grid-wrap").getBoundingClientRect();
+          const points = state.path.map((index) => {
+            const rect = nodes[index].getBoundingClientRect();
+            const x = ((rect.left + rect.width / 2 - wrap.left) / wrap.width) * 100;
+            const y = ((rect.top + rect.height / 2 - wrap.top) / wrap.height) * 100;
+            return x.toFixed(2) + "," + y.toFixed(2);
+          }).join(" ");
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+          line.setAttribute("points", points);
+          line.setAttribute("fill", "none");
+          line.setAttribute("stroke", "#fff6c2");
+          line.setAttribute("stroke-width", "3.2");
+          line.setAttribute("stroke-linecap", "round");
+          line.setAttribute("stroke-linejoin", "round");
+          svg.appendChild(line);
+        }
+        function pulseTarget() {
+          const banner = $("target-banner");
+          banner.classList.remove("pulse");
+          void banner.offsetWidth;
+          banner.classList.add("pulse");
+        }
+        function floatText(text) {
+          const el = document.createElement("div");
+          el.className = "floater";
+          el.textContent = text;
+          $("grid-wrap").appendChild(el);
+          setTimeout(() => el.remove(), 720);
+        }
+        function burst(indexes) {
+          const wrap = $("fx").getBoundingClientRect();
+          const colors = ["#ffe66d", "#ff8a1e", "#7ee7ff", "#fff6d8", "#ff6b9a", "#b9f6a2"];
+          indexes.forEach((index) => {
+            const rect = nodes[index].getBoundingClientRect();
+            const x = rect.left - wrap.left + rect.width / 2;
+            const y = rect.top - wrap.top + rect.height / 2;
+            for (let i = 0; i < 8; i += 1) {
+              const spark = document.createElement("i");
+              spark.className = "spark";
+              const angle = (Math.PI * 2 * i) / 8;
+              const dist = 16 + Math.random() * 28;
+              spark.style.left = x + "px";
+              spark.style.top = y + "px";
+              spark.style.background = colors[i % colors.length];
+              spark.style.setProperty("--dx", (Math.cos(angle) * dist).toFixed(1) + "px");
+              spark.style.setProperty("--dy", (Math.sin(angle) * dist).toFixed(1) + "px");
+              $("fx").appendChild(spark);
+              setTimeout(() => spark.remove(), 620);
+            }
+          });
+        }
+        function shakeGrid() {
+          const grid = $("grid");
+          grid.classList.remove("shake");
+          void grid.offsetWidth;
+          grid.classList.add("shake");
+          beep(150, 0.1, "sawtooth", 0.03);
         }
 
-        function renderAll() {
+        function applyGravity() {
+          const born = [];
+          for (let x = 0; x < COLS; x += 1) {
+            const stack = [];
+            for (let y = ROWS - 1; y >= 0; y -= 1) if (state.board[y][x]) stack.push(state.board[y][x]);
+            for (let y = ROWS - 1; y >= 0; y -= 1) {
+              const kept = stack[ROWS - 1 - y];
+              if (kept) state.board[y][x] = kept;
+              else {
+                state.board[y][x] = randomCell();
+                born.push(keyOf(x, y));
+              }
+            }
+          }
+          return born;
+        }
+        async function popPath(indexes) {
+          state.resolving = true;
+          indexes.forEach((index) => nodes[index].classList.add("is-pop"));
+          burst(indexes);
+          beep(620, 0.08, "triangle", 0.05);
+          setTimeout(() => beep(820, 0.1, "triangle", 0.04), 70);
+          await wait(180);
+          indexes.forEach((index) => {
+            const pos = xyOf(index);
+            state.board[pos.y][pos.x] = null;
+          });
+          const gain = indexes.length * 45 + 30;
+          state.score += gain;
+          state.clears += 1;
+          state.timeLeft = Math.min(TIME_MAX, state.timeLeft + Math.max(3, 7 - Math.floor(level() / 4)));
+          const born = applyGravity();
+          noteLevel();
+          state.target = pickTarget();
+          renderGrid();
+          born.forEach((index) => nodes[index].classList.add("is-drop"));
           renderHud();
-          renderBoard();
-          renderNext();
+          pulseTarget();
+          floatText("+" + gain + "  +" + Math.max(3, 7 - Math.floor(level() / 4)) + "s");
+          state.resolving = false;
+        }
+
+        function indexFromPoint(x, y) {
+          const el = document.elementFromPoint(x, y);
+          const cell = el && el.closest ? el.closest("[data-i]") : null;
+          if (!cell || !$("grid").contains(cell)) return -1;
+          return Number(cell.dataset.i);
+        }
+        function canDrag() {
+          return state.running && !state.paused && !state.over && !state.resolving;
+        }
+        function beginDrag(x, y) {
+          if (!canDrag()) return;
+          const index = indexFromPoint(x, y);
+          if (index < 0 || !state.board[xyOf(index).y][xyOf(index).x]) return;
+          state.dragging = true;
+          state.path = [index];
+          renderGrid();
+        }
+        function moveDrag(x, y) {
+          if (!state.dragging || !canDrag()) return;
+          const index = indexFromPoint(x, y);
+          if (index < 0) return;
+          const path = state.path;
+          const last = path[path.length - 1];
+          if (index === last) return;
+          if (path.length >= 2 && index === path[path.length - 2]) {
+            path.pop();
+            renderGrid();
+            return;
+          }
+          if (path.includes(index) || !adjacent(last, index)) return;
+          if (path.length >= 8) return;
+          path.push(index);
+          renderGrid();
+          if (pathSum(path) === state.target) beep(740, 0.04, "square", 0.02);
+        }
+        function endDrag() {
+          if (!state.dragging) return;
+          state.dragging = false;
+          state.touchId = null;
+          const chosen = state.path.slice();
+          state.path = [];
+          renderGrid();
+          if (!canDrag()) return;
+          if (chosen.length >= 2 && pathSum(chosen) === state.target) {
+            popPath(chosen);
+            return;
+          }
+          if (chosen.length > 1) shakeGrid();
+        }
+
+        function loop(ts) {
+          if (!state.running) return;
+          rafId = requestAnimationFrame(loop);
+          if (!state.lastTs) state.lastTs = ts;
+          const dt = Math.min(0.05, (ts - state.lastTs) / 1000);
+          state.lastTs = ts;
+          if (state.paused || state.resolving || state.over) return;
+          state.timeLeft -= dt * drainRate();
+          if (state.timeLeft <= 0) {
+            state.timeLeft = 0;
+            renderHud();
+            gameOver();
+            return;
+          }
+          renderHud();
         }
 
         function checkAnswers() {
@@ -1351,17 +895,16 @@
             $("eq-card").classList.remove("shake");
             void $("eq-card").offsetWidth;
             $("eq-card").classList.add("shake");
-            beep(140, 0.12, "sawtooth", 0.03);
+            beep(140, 0.1, "sawtooth", 0.03);
             return;
           }
           state.claimed = true;
           state.score += 200;
-          $("eq-status").textContent = "정답! +200";
+          state.timeLeft = Math.min(TIME_MAX, state.timeLeft + 5);
           beep(523, 0.08, "triangle", 0.05);
-          setTimeout(() => beep(659, 0.08, "triangle", 0.05), 90);
-          setTimeout(() => beep(784, 0.12, "triangle", 0.05), 180);
-          const expanded = noteLevel();
-          if (!expanded) renderEquations();
+          setTimeout(() => beep(784, 0.12, "triangle", 0.05), 90);
+          noteLevel();
+          renderEquations();
           renderHud();
           floatText("+200");
         }
@@ -1380,19 +923,15 @@
               }))
               .sort((a, b) => b.score - a.score || b.level - a.level)
               .slice(0, 5);
-          } catch (err) {
-            return [];
-          }
+          } catch (err) { return []; }
         }
-
         function commitScore(entry) {
           try {
+            if (entry.score <= 0) return false;
             const list = loadScores();
             const lowest = list.length ? list[list.length - 1].score : 0;
-            if (entry.score <= 0) return false;
             if (list.length >= 5 && entry.score < lowest) return false;
-            const merged = list.concat(entry);
-            const tagged = merged.map((item, index) => ({ item, index }));
+            const tagged = list.concat(entry).map((item, index) => ({ item, index }));
             tagged.sort((a, b) => b.item.score - a.item.score || b.item.level - a.item.level || b.index - a.index);
             const top = tagged.slice(0, 5).map((row) => ({
               name: row.item.name,
@@ -1401,13 +940,9 @@
               date: row.item.date,
             }));
             localStorage.setItem(STORAGE_KEY, JSON.stringify(top));
-            renderLeaderboard();
-            return top.some((row) => row.name === entry.name && row.score === entry.score && row.date === entry.date && row.level === entry.level);
-          } catch (err) {
-            return false;
-          }
+            return top.some((row) => row.name === entry.name && row.score === entry.score && row.level === entry.level && row.date === entry.date);
+          } catch (err) { return false; }
         }
-
         function renderLeaderboard() {
           const body = $("lb-body");
           body.replaceChildren();
@@ -1415,17 +950,8 @@
           for (let i = 0; i < 5; i += 1) {
             const entry = scores[i];
             const tr = document.createElement("tr");
-            const cells = [
-              RANKS[i],
-              entry ? entry.name : "—",
-              entry ? String(entry.score) : "—",
-              entry ? String(entry.level) : "—",
-              entry ? entry.date : "—",
-            ];
-            if (entry && state.latest && entry.name === state.latest.name && entry.score === state.latest.score && entry.date === state.latest.date) {
-              tr.classList.add("is-me");
-            }
-            cells.forEach((text) => {
+            if (entry && state.latest && entry.name === state.latest.name && entry.score === state.latest.score && entry.date === state.latest.date) tr.classList.add("is-me");
+            [RANKS[i], entry ? entry.name : "—", entry ? String(entry.score) : "—", entry ? String(entry.level) : "—", entry ? entry.date : "—"].forEach((text) => {
               const td = document.createElement("td");
               td.textContent = text;
               tr.appendChild(td);
@@ -1433,198 +959,153 @@
             body.appendChild(tr);
           }
         }
-
-        function openLeaderboard() {
+        function openLeaderboard(fromOver) {
           if (state.running && !state.over && !state.paused) {
             state.paused = true;
             state.pausedByBoard = true;
-            $("pause-btn").textContent = "Resume";
           }
+          $("over-box").classList.toggle("hidden", !fromOver);
+          $("retry-btn").classList.toggle("hidden", !fromOver);
+          $("lb-title").textContent = fromOver ? "🏆 Leaderboard · Top 5" : "🏆 Leaderboard · Top 5";
           renderLeaderboard();
           $("leaderboard").classList.remove("hidden");
         }
-
         function closeLeaderboard() {
           $("leaderboard").classList.add("hidden");
+          if (state.over) return;
           if (state.pausedByBoard) {
             state.paused = false;
             state.pausedByBoard = false;
             state.lastTs = 0;
-            state.dropAcc = 0;
-            $("pause-btn").textContent = "Pause";
           }
         }
-
-        function togglePause(force) {
-          if (!state.running || state.over) return;
-          state.paused = typeof force === "boolean" ? force : !state.paused;
-          state.pausedByBoard = false;
-          $("pause-layer").classList.toggle("hidden", !state.paused);
-          if (!state.paused) {
-            state.lastTs = 0;
-            state.dropAcc = 0;
-            state.soft = false;
-          }
-          renderHud();
-        }
-
         function gameOver() {
           if (state.over) return;
           state.over = true;
           state.running = false;
-          state.paused = false;
-          state.resolving = false;
-          state.piece = null;
+          state.dragging = false;
+          state.path = [];
           cancelAnimationFrame(rafId);
-          const entry = {
-            name: state.name,
-            score: state.score,
-            level: level(),
-            date: todayString(),
-          };
+          const entry = { name: state.name, score: state.score, level: level(), date: todayString() };
           state.latest = entry;
           const made = commitScore(entry);
           $("over-name").textContent = entry.name;
           $("over-score").textContent = String(entry.score);
-          $("over-level").textContent = "LEVEL " + entry.level + " · 터뜨린 칸 " + state.pops;
-          $("over-rank").textContent = made
-            ? "🏆 Top 5에 올랐어요!"
-            : entry.score <= 0
-              ? "점수를 내면 순위표에 올라가요."
-              : "아쉽지만 Top 5는 다음 기회에!";
-          $("pause-layer").classList.add("hidden");
-          $("gameover").classList.remove("hidden");
-          renderBoard();
-          beep(392, 0.16, "triangle", 0.05);
-          setTimeout(() => beep(311, 0.16, "triangle", 0.05), 150);
-          setTimeout(() => beep(247, 0.24, "triangle", 0.05), 300);
+          $("over-level").textContent = "LEVEL " + entry.level + " · 클리어 " + state.clears;
+          $("over-rank").textContent = made ? "🏆 Top 5에 올랐어요!" : entry.score <= 0 ? "점수를 내면 순위표에 올라가요." : "아쉽지만 Top 5는 다음 기회에!";
+          renderGrid();
+          openLeaderboard(true);
+          beep(392, 0.14, "triangle", 0.05);
+          setTimeout(() => beep(262, 0.2, "triangle", 0.04), 140);
         }
-
         function startGame() {
           const typed = ($("player-name").value || "").trim().slice(0, 16);
           state.name = typed || "MathExplorer";
           $("player-name").value = state.name;
           state.score = 0;
-          state.pops = 0;
+          state.clears = 0;
           state.seenLevel = 1;
-          state.board = emptyBoard();
-          state.piece = null;
-          state.next = null;
+          state.path = [];
+          state.dragging = false;
           state.paused = false;
           state.pausedByBoard = false;
           state.over = false;
           state.resolving = false;
-          state.soft = false;
-          state.grounded = false;
-          state.lockMs = 0;
-          state.dropAcc = 0;
+          state.timeLeft = TIME_MAX;
           state.lastTs = 0;
-          state.rotResets = 0;
-          state.lastLock = new Set();
-          state.tutorial = true;
           state.latest = null;
           state.running = true;
           setupPuzzle();
           $("start-modal").classList.add("hidden");
-          $("gameover").classList.add("hidden");
-          $("pause-layer").classList.add("hidden");
           $("leaderboard").classList.add("hidden");
           $("app").classList.remove("hidden");
-          if (!spawn()) {
-            gameOver();
-            return;
-          }
-          renderAll();
+          renderHud();
+          renderGrid();
           pulseTarget();
-          toast("첫 블록을 내려 보세요. 두 도형의 합이 TARGET이에요.");
+          toast("△과 □를 이어서 TARGET을 맞춰 보세요.");
           cancelAnimationFrame(rafId);
           rafId = requestAnimationFrame(loop);
           if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
         }
-
-        function goMenu() {
-          state.running = false;
-          state.over = false;
-          state.paused = false;
-          cancelAnimationFrame(rafId);
-          $("app").classList.add("hidden");
-          $("gameover").classList.add("hidden");
-          $("pause-layer").classList.add("hidden");
-          $("start-modal").classList.remove("hidden");
-        }
-
         function typing() {
           const el = document.activeElement;
           return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
         }
 
-        function bindRepeat(button, fn) {
-          let delay = 0;
-          let repeat = 0;
-          const stop = () => {
-            clearTimeout(delay);
-            clearInterval(repeat);
-          };
-          button.addEventListener("pointerdown", (event) => {
-            event.preventDefault();
-            try { button.setPointerCapture(event.pointerId); } catch (err) { /* ignore */ }
-            fn();
-            stop();
-            delay = setTimeout(() => {
-              repeat = setInterval(fn, 65);
-            }, 150);
-          });
-          button.addEventListener("pointerup", stop);
-          button.addEventListener("pointercancel", stop);
-          button.addEventListener("contextmenu", (event) => event.preventDefault());
-        }
-
-        function bindTap(button, fn) {
-          button.addEventListener("pointerdown", (event) => {
-            event.preventDefault();
-            fn();
-          });
-          button.addEventListener("contextmenu", (event) => event.preventDefault());
-        }
-
-        function buildGrids() {
-          const board = $("board");
-          board.replaceChildren();
+        function buildGrid() {
+          const grid = $("grid");
+          grid.replaceChildren();
           nodes.length = 0;
-          for (let i = 0; i < COLS * ROWS; i += 1) {
+          for (let index = 0; index < COLS * ROWS; index += 1) {
             const el = document.createElement("div");
             el.className = "cell";
+            el.dataset.i = String(index);
             const glyph = document.createElement("span");
             glyph.className = "glyph";
             const num = document.createElement("span");
             num.className = "num";
             el.append(glyph, num);
-            board.appendChild(el);
+            grid.appendChild(el);
             nodes.push(el);
-          }
-          const next = $("next-grid");
-          for (let i = 0; i < 16; i += 1) {
-            const el = document.createElement("div");
-            el.className = "mini";
-            next.appendChild(el);
           }
         }
 
-        $("start-form").addEventListener("submit", (event) => {
+        const grid = $("grid");
+        grid.addEventListener("touchstart", (event) => {
+          if (typing()) return;
+          lastTouchAt = Date.now();
+          const touch = event.changedTouches[0];
+          state.touchId = touch.identifier;
+          beginDrag(touch.clientX, touch.clientY);
+        }, { passive: true });
+        grid.addEventListener("touchmove", (event) => {
+          if (!state.dragging) return;
           event.preventDefault();
-          startGame();
+          const touch = [...event.changedTouches].find((item) => item.identifier === state.touchId) || event.changedTouches[0];
+          if (!touch) return;
+          moveDrag(touch.clientX, touch.clientY);
+        }, { passive: false });
+        grid.addEventListener("touchend", (event) => {
+          lastTouchAt = Date.now();
+          const touch = [...event.changedTouches].find((item) => item.identifier === state.touchId);
+          if (!touch && state.touchId != null) return;
+          endDrag();
         });
-        $("start-lb").addEventListener("click", openLeaderboard);
-        $("hud-lb").addEventListener("click", openLeaderboard);
-        $("over-lb").addEventListener("click", openLeaderboard);
+        grid.addEventListener("touchcancel", () => endDrag());
+        grid.addEventListener("mousedown", (event) => {
+          if (Date.now() - lastTouchAt < 500 || typing()) return;
+          event.preventDefault();
+          beginDrag(event.clientX, event.clientY);
+        });
+        window.addEventListener("mousemove", (event) => {
+          if (!state.dragging || state.touchId != null) return;
+          moveDrag(event.clientX, event.clientY);
+        });
+        window.addEventListener("mouseup", () => {
+          if (state.touchId != null) return;
+          endDrag();
+        });
+        grid.addEventListener("contextmenu", (event) => event.preventDefault());
+        window.addEventListener("blur", () => { if (state.dragging) endDrag(); });
+        document.addEventListener("visibilitychange", () => {
+          if (!state.running || state.over) return;
+          if (document.hidden) {
+            state.paused = true;
+            if (state.dragging) endDrag();
+            return;
+          }
+          if (!state.pausedByBoard && $("leaderboard").classList.contains("hidden")) {
+            state.paused = false;
+            state.lastTs = 0;
+          }
+        });
+
+        $("start-form").addEventListener("submit", (event) => { event.preventDefault(); startGame(); });
+        $("start-lb").addEventListener("click", () => openLeaderboard(false));
+        $("hud-lb").addEventListener("click", () => openLeaderboard(false));
         $("lb-close").addEventListener("click", closeLeaderboard);
-        $("leaderboard").addEventListener("click", (event) => {
-          if (event.target === $("leaderboard")) closeLeaderboard();
-        });
-        $("pause-btn").addEventListener("click", () => togglePause());
-        $("resume-btn").addEventListener("click", () => togglePause(false));
+        $("leaderboard").addEventListener("click", (event) => { if (event.target === $("leaderboard")) closeLeaderboard(); });
         $("retry-btn").addEventListener("click", startGame);
-        $("menu-btn").addEventListener("click", goMenu);
         $("check-btn").addEventListener("click", checkAnswers);
         $("sound-btn").addEventListener("click", () => {
           state.sound = !state.sound;
@@ -1632,67 +1113,10 @@
           $("sound-btn").setAttribute("aria-label", state.sound ? "소리 끄기" : "소리 켜기");
         });
         $("guess-list").addEventListener("keydown", (event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            event.stopPropagation();
-            checkAnswers();
-          }
+          if (event.key === "Enter") { event.preventDefault(); checkAnswers(); }
         });
 
-        bindRepeat($("btn-left"), () => move(-1));
-        bindRepeat($("btn-right"), () => move(1));
-        bindTap($("btn-rot"), rotatePiece);
-        bindTap($("btn-drop"), hardDrop);
-        $("btn-down").addEventListener("pointerdown", (event) => {
-          event.preventDefault();
-          if (!state.soft) state.dropAcc = 0;
-          state.soft = true;
-          try { $("btn-down").setPointerCapture(event.pointerId); } catch (err) { /* ignore */ }
-          if (canPlay() && !state.grounded) {
-            shiftDown();
-            renderBoard();
-          }
-        });
-        const releaseSoft = () => { state.soft = false; };
-        $("btn-down").addEventListener("pointerup", releaseSoft);
-        $("btn-down").addEventListener("pointercancel", releaseSoft);
-
-        window.addEventListener("keydown", (event) => {
-          if (!$("leaderboard").classList.contains("hidden")) {
-            if (event.key === "Escape") closeLeaderboard();
-            return;
-          }
-          if (typing()) return;
-          const key = event.key.toLowerCase();
-          if (["arrowleft", "arrowright", "arrowdown", "arrowup", " "].includes(key) || event.code === "Space") {
-            event.preventDefault();
-          }
-          if (!state.running || state.over) return;
-          if (key === "p" || event.key === "Escape") {
-            togglePause();
-            return;
-          }
-          if (state.paused || state.resolving) return;
-          if (event.repeat && (key === "arrowup" || key === "w" || event.code === "Space")) return;
-          if (key === "arrowleft" || key === "a") move(-1);
-          else if (key === "arrowright" || key === "d") move(1);
-          else if (key === "arrowup" || key === "w") rotatePiece();
-          else if (event.code === "Space") hardDrop();
-          else if (key === "arrowdown" || key === "s") {
-            if (!state.soft) state.dropAcc = 0;
-            state.soft = true;
-          }
-        });
-        window.addEventListener("keyup", (event) => {
-          const key = event.key.toLowerCase();
-          if (key === "arrowdown" || key === "s") state.soft = false;
-        });
-        window.addEventListener("blur", () => { state.soft = false; });
-        document.addEventListener("visibilitychange", () => {
-          if (document.hidden && state.running && !state.over) togglePause(true);
-        });
-
-        buildGrids();
+        buildGrid();
         renderLeaderboard();
       })();
     </script>
