@@ -364,6 +364,14 @@ button.site-link-box:focus-visible {
   display: block;
 }
 
+.site-link-box--game2 {
+  min-height: 3.2rem;
+  font-weight: 600;
+  background: linear-gradient(180deg, rgba(255, 176, 46, 0.34), rgba(110, 220, 255, 0.2));
+  outline: 2px solid rgba(255, 140, 40, 0.55);
+  outline-offset: -1px;
+}
+
 /* ========== 주식 예측 패널 ========== */
 .stock-panel {
   display: none;
