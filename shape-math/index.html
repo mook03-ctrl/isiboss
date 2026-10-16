@@ -298,7 +298,7 @@
         <div class="card-body">
           <a class="back" href="../">← 다 때려쳐 @office</a>
           <h2>캠프 도형 수학</h2>
-          <p class="hint" style="color: var(--ink)">상단 문제의 도형 합과 같은 합을 드래그해서 찾으세요.</p>
+          <p class="hint" style="color: var(--ink)">찾기에 나온 숫자와 같은 합을 드래그하세요.</p>
           <form id="start-form">
             <label class="name-row">
               Player Name
@@ -310,7 +310,7 @@
             </div>
           </form>
           <ol class="rules">
-            <li>위 문제의 도형 합을 보고, 같은 합이 되는 칸을 드래그하면 터져요.</li>
+            <li>찾기의 숫자와 드래그한 도형의 합이 같으면 터져요.</li>
             <li>가로나 세로 어느 쪽이든 되고, 드래그한 칸 수는 상관없어요.</li>
             <li>시간이 끝나면 Game Over. 목표를 깨면 시간이 늘어요.</li>
             <li>500점마다 LEVEL이 오릅니다.</li>
@@ -345,7 +345,7 @@
         <p id="eq-status"></p>
       </section>
 
-      <p class="mission" id="mission">상단의 도형의 합과 같은 도형의 합을 드래그해서 찾으세요</p>
+      <p class="mission" id="mission">찾기의 숫자와 같은 합이 되도록 도형을 드래그하세요</p>
       <div class="target-row">
         <div class="target-badge" id="target-banner"><span id="target-problem">찾기</span></div>
         <div class="live" id="live-sum">합 —</div>
@@ -644,9 +644,9 @@
         function renderEquations() {
           const list = $("eq-list");
           list.replaceChildren();
-          state.eqs.forEach((eq, index) => {
+          state.eqs.forEach((eq) => {
             const row = document.createElement("p");
-            row.className = "eq" + (index === state.missionIndex ? " is-mission" : "");
+            row.className = "eq";
             eq.terms.forEach((id, index) => {
               if (index) {
                 const plus = document.createElement("span");
@@ -699,28 +699,7 @@
         function renderMission() {
           const eq = state.eqs[state.missionIndex];
           const box = $("target-problem");
-          box.replaceChildren();
-          if (!eq) return;
-          const label = document.createElement("span");
-          label.textContent = "찾기 ";
-          box.appendChild(label);
-          eq.terms.forEach((id, index) => {
-            if (index) {
-              const plus = document.createElement("span");
-              plus.textContent = "+";
-              box.appendChild(plus);
-            }
-            const token = document.createElement("span");
-            token.className = "token s-" + id;
-            token.textContent = glyphOf(id);
-            box.appendChild(token);
-          });
-          const sum = document.createElement("strong");
-          sum.textContent = " = " + eq.sum;
-          box.appendChild(sum);
-          [...$("eq-list").children].forEach((row, index) => {
-            row.classList.toggle("is-mission", index === state.missionIndex);
-          });
+          box.textContent = eq ? "찾기 " + eq.sum : "찾기";
         }
         function renderHud() {
           $("hud-name").textContent = state.name;
@@ -1078,7 +1057,7 @@
           renderHud();
           renderGrid();
           pulseTarget();
-          toast("위 문제 합과 같은 가로·세로 줄을 드래그하세요.");
+          toast("찾기의 숫자와 같은 가로·세로 줄을 드래그하세요.");
           cancelAnimationFrame(rafId);
           rafId = requestAnimationFrame(loop);
           if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
