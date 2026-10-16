@@ -421,7 +421,6 @@
           activeIds: [],
           eqs: [],
           claimed: false,
-          missionIndex: 0,
           target: 0,
           path: [],
           dragging: false,
@@ -573,38 +572,54 @@
           }
           return sums;
         }
-        function placeMissionLine() {
-          const eq = state.eqs[state.missionIndex];
+        function problemNumbers() {
+          const nums = new Set();
+          state.eqs.forEach((eq) => nums.add(eq.sum));
+          if (state.claimed) state.activeIds.forEach((id) => nums.add(state.values[id]));
+          return nums;
+        }
+        function placeTerms(terms) {
           const horizontal = Math.random() < 0.5;
           if (horizontal) {
             const y = Math.floor(Math.random() * ROWS);
-            const x0 = Math.floor(Math.random() * (COLS - eq.terms.length + 1));
-            eq.terms.forEach((id, offset) => { state.board[y][x0 + offset] = { id }; });
+            const x0 = Math.floor(Math.random() * (COLS - terms.length + 1));
+            terms.forEach((id, offset) => { state.board[y][x0 + offset] = { id }; });
             return;
           }
           const x = Math.floor(Math.random() * COLS);
-          const y0 = Math.floor(Math.random() * (ROWS - eq.terms.length + 1));
-          eq.terms.forEach((id, offset) => { state.board[y0 + offset][x] = { id }; });
+          const y0 = Math.floor(Math.random() * (ROWS - terms.length + 1));
+          terms.forEach((id, offset) => { state.board[y0 + offset][x] = { id }; });
         }
         function pickMission() {
-          const available = straightSums();
-          let choices = state.eqs.map((eq, index) => index).filter((index) => available.has(state.eqs[index].sum));
-          const other = choices.filter((index) => index !== state.missionIndex);
-          if (other.length) choices = other;
-          if (!choices.length) {
-            state.missionIndex = (state.missionIndex + 1) % state.eqs.length;
-            state.target = state.eqs[state.missionIndex].sum;
-            placeMissionLine();
+          const banned = problemNumbers();
+          const fresh = [...straightSums()].filter((sum) => !banned.has(sum) && sum !== state.target);
+          const modest = fresh.filter((sum) => sum <= sumCap(level()) + 4);
+          const pool = modest.length ? modest : fresh;
+          if (pool.length) {
+            state.target = pool[Math.floor(Math.random() * pool.length)];
             return;
           }
-          state.missionIndex = choices[Math.floor(Math.random() * choices.length)];
-          state.target = state.eqs[state.missionIndex].sum;
+          const ids = state.activeIds;
+          for (let attempt = 0; attempt < 50; attempt += 1) {
+            const len = 1 + Math.floor(Math.random() * Math.min(4, COLS));
+            const terms = Array.from({ length: len }, () => ids[Math.floor(Math.random() * ids.length)]);
+            const sum = terms.reduce((total, id) => total + state.values[id], 0);
+            if (banned.has(sum) || sum === state.target) continue;
+            state.target = sum;
+            placeTerms(terms);
+            return;
+          }
+          const id = ids[0];
+          const value = state.values[id];
+          let count = 1;
+          while ((banned.has(value * count) || value * count === state.target) && count < COLS) count += 1;
+          state.target = value * count;
+          placeTerms(Array.from({ length: count }, () => id));
         }
         function seedBoard() {
           state.board = emptyBoard();
-          state.missionIndex = 0;
-          state.target = state.eqs[0].sum;
-          if (!straightSums().has(state.target)) placeMissionLine();
+          state.target = 0;
+          pickMission();
         }
         function setupPuzzle() {
           state.values = pickInitialMap();
@@ -697,9 +712,7 @@
           renderMission();
         }
         function renderMission() {
-          const eq = state.eqs[state.missionIndex];
-          const box = $("target-problem");
-          box.textContent = eq ? "찾기 " + eq.sum : "찾기";
+          $("target-problem").textContent = state.target ? "찾기 " + state.target : "찾기";
         }
         function renderHud() {
           $("hud-name").textContent = state.name;
@@ -938,7 +951,8 @@
           state.timeLeft = Math.min(TIME_MAX, state.timeLeft + 5);
           beep(523, 0.08, "triangle", 0.05);
           setTimeout(() => beep(784, 0.12, "triangle", 0.05), 90);
-          noteLevel();
+          const leveled = noteLevel();
+          if (!leveled && problemNumbers().has(state.target)) pickMission();
           renderEquations();
           renderHud();
           floatText("+200");
