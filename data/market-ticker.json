@@ -1,5 +1,5 @@
 {
-  "savedAt": 1792166388944,
+  "savedAt": 1792193518617,
   "source": "pykrx+yahoo",
   "quotes": {
     "^KS11": {
@@ -22,14 +22,14 @@
     },
     "^IXIC": {
       "symbol": "^IXIC",
-      "regularMarketPrice": 26367.031,
-      "regularMarketChangePercent": -1.295,
+      "regularMarketPrice": 26140.033,
+      "regularMarketChangePercent": -2.145,
       "source": "yahoo"
     },
     "KRW=X": {
       "symbol": "KRW=X",
-      "regularMarketPrice": 1333.98,
-      "regularMarketChangePercent": -0.5376,
+      "regularMarketPrice": 1334.2,
+      "regularMarketChangePercent": -0.5212,
       "source": "yahoo"
     }
   }
