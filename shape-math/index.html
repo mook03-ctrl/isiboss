@@ -115,7 +115,21 @@
         align-items: center;
         gap: 3px;
       }
+      .eq.is-mission {
+        background: #fff4c2;
+        border-style: solid;
+        border-color: #d97706;
+        box-shadow: 0 0 0 2px #fbbf24;
+      }
       .eq-sum { color: #9a3412; }
+      .mission {
+        margin: 0;
+        text-align: center;
+        font-size: 0.78rem;
+        font-weight: 900;
+        line-height: 1.3;
+        color: #fff6d8;
+      }
       .token { font-weight: 900; }
       .s-tri { color: #0e7490; }
       .s-sq { color: #b45309; }
@@ -153,7 +167,7 @@
         padding: 6px 8px;
         font-size: clamp(1.05rem, 4.5vw, 1.45rem);
       }
-      .target-badge { background: linear-gradient(180deg, #e7fdff, #7ee7ff); color: #082033; }
+      .target-badge { background: linear-gradient(180deg, #e7fdff, #7ee7ff); color: #082033; white-space: nowrap; font-size: clamp(0.92rem, 3.8vw, 1.2rem); }
       .target-badge.pulse { animation: pulse 0.4s ease; }
       .live { background: #fff6d8; color: var(--ink); }
       .live.is-match { background: #86efac; }
@@ -191,8 +205,7 @@
         min-width: 0;
         min-height: 0;
       }
-      .cell .glyph { font-size: clamp(1.1rem, 5vw, 1.7rem); font-weight: 900; line-height: 1; }
-      .cell .num { font-size: clamp(0.75rem, 3.4vw, 1rem); font-weight: 900; line-height: 1; color: var(--ink); }
+      .cell .glyph { font-size: clamp(1.35rem, 6vw, 2rem); font-weight: 900; line-height: 1; }
       .cell.is-on { transform: scale(1.06); z-index: 2; outline: 3px solid #ffe66d; box-shadow: 0 0 12px #7ee7ff, 0 3px 0 #7a4318; }
       .cell.is-pop { animation: pop 0.22s ease forwards; }
       .cell.is-drop { animation: drop 0.22s ease; }
@@ -285,7 +298,7 @@
         <div class="card-body">
           <a class="back" href="../">← 다 때려쳐 @office</a>
           <h2>캠프 도형 수학</h2>
-          <p class="hint" style="color: var(--ink)">이어 드래그해서 TARGET 합을 맞추세요.</p>
+          <p class="hint" style="color: var(--ink)">상단 문제의 도형 합과 같은 합을 드래그해서 찾으세요.</p>
           <form id="start-form">
             <label class="name-row">
               Player Name
@@ -297,8 +310,8 @@
             </div>
           </form>
           <ol class="rules">
-            <li>식에서 △ □ ♥ ♠ 값을 맞히면 +200.</li>
-            <li>위·아래·왼쪽·오른쪽으로 드래그한 합이 TARGET과 같으면 터져요.</li>
+            <li>위 문제의 도형 합을 보고, 같은 합이 되는 칸을 드래그하면 터져요.</li>
+            <li>가로나 세로 어느 쪽이든 되고, 드래그한 칸 수는 상관없어요.</li>
             <li>시간이 끝나면 Game Over. 목표를 깨면 시간이 늘어요.</li>
             <li>500점마다 LEVEL이 오릅니다.</li>
           </ol>
@@ -324,7 +337,7 @@
 
       <section class="eq-card" id="eq-card" aria-label="도형 식">
         <div class="eq-head">
-          <h2>도형 식</h2>
+          <h2>문제</h2>
           <button type="button" class="check-btn" id="check-btn">값 확인</button>
         </div>
         <div id="eq-list" class="eq-grid"></div>
@@ -332,9 +345,10 @@
         <p id="eq-status"></p>
       </section>
 
+      <p class="mission" id="mission">상단의 도형의 합과 같은 도형의 합을 드래그해서 찾으세요</p>
       <div class="target-row">
-        <div class="target-badge" id="target-banner">TARGET: <span id="target-num">0</span></div>
-        <div class="live" id="live-sum">SUM —</div>
+        <div class="target-badge" id="target-banner"><span id="target-problem">찾기</span></div>
+        <div class="live" id="live-sum">합 —</div>
       </div>
       <div class="time-row" aria-label="남은 시간">
         <div class="time-track"><div class="time-fill" id="time-fill"></div></div>
@@ -348,7 +362,7 @@
           <div id="fx"></div>
         </div>
       </div>
-      <p class="hint">손가락이나 마우스로 맞닿은 칸을 이으세요</p>
+      <p class="hint">가로 또는 세로로 이어 드래그하세요. 칸 수는 상관없어요.</p>
     </main>
 
     <div id="leaderboard" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="lb-title">
@@ -407,6 +421,7 @@
           activeIds: [],
           eqs: [],
           claimed: false,
+          missionIndex: 0,
           target: 0,
           path: [],
           dragging: false,
@@ -437,7 +452,6 @@
         function level() { return Math.floor(state.score / 500) + 1; }
         function shapeCount(lv) { return lv <= 2 ? 2 : lv <= 4 ? 3 : 4; }
         function sumCap(lv) { return lv <= 2 ? 10 : lv <= 4 ? 15 : 25 + Math.max(0, lv - 5) * 2; }
-        function minPath(lv) { return lv >= 5 ? 3 : 2; }
         function drainRate() { return 1 + (level() - 1) * 0.07; }
         function keyOf(x, y) { return y * COLS + x; }
         function xyOf(index) { return { x: index % COLS, y: (index / COLS) | 0 }; }
@@ -540,49 +554,57 @@
           return Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => randomCell()));
         }
 
-        function pathSumsOnBoard(minLen) {
-          const cap = sumCap(level());
-          const maxLen = Math.min(6, Math.max(minLen, Math.floor(cap / 2)));
+        function straightSums() {
           const sums = new Set();
-          let budget = 9000;
-          const dfs = (x, y, sum, len, seen) => {
-            if (budget <= 0) return;
-            budget -= 1;
-            if (len >= minLen && sum <= cap) sums.add(sum);
-            if (len >= maxLen || sum >= cap) return;
-            [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-              const nx = x + dx;
-              const ny = y + dy;
-              if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return;
-              const id = keyOf(nx, ny);
-              if (seen.has(id) || !state.board[ny][nx]) return;
-              seen.add(id);
-              dfs(nx, ny, sum + state.values[state.board[ny][nx].id], len + 1, seen);
-              seen.delete(id);
-            });
-          };
-          for (let y = 0; y < ROWS; y += 1) {
-            for (let x = 0; x < COLS; x += 1) {
-              if (!state.board[y][x]) continue;
-              const seen = new Set([keyOf(x, y)]);
-              dfs(x, y, state.values[state.board[y][x].id], 1, seen);
-              if (budget <= 0) return sums;
+          const consume = (ids) => {
+            for (let start = 0; start < ids.length; start += 1) {
+              let sum = 0;
+              for (let end = start; end < ids.length; end += 1) {
+                sum += state.values[ids[end]];
+                sums.add(sum);
+              }
             }
+          };
+          for (let y = 0; y < ROWS; y += 1) consume(state.board[y].map((cell) => cell.id));
+          for (let x = 0; x < COLS; x += 1) {
+            const col = [];
+            for (let y = 0; y < ROWS; y += 1) col.push(state.board[y][x].id);
+            consume(col);
           }
           return sums;
         }
-        function pickTarget() {
-          const preferred = [...pathSumsOnBoard(minPath(level()))].filter((sum) => sum !== state.target && sum >= 4);
-          const pool = preferred.length ? preferred : [...pathSumsOnBoard(2)].filter((sum) => sum !== state.target && sum >= 4);
-          if (!pool.length) return state.values.tri + state.values.sq;
-          return pool[Math.floor(Math.random() * pool.length)];
+        function placeMissionLine() {
+          const eq = state.eqs[state.missionIndex];
+          const horizontal = Math.random() < 0.5;
+          if (horizontal) {
+            const y = Math.floor(Math.random() * ROWS);
+            const x0 = Math.floor(Math.random() * (COLS - eq.terms.length + 1));
+            eq.terms.forEach((id, offset) => { state.board[y][x0 + offset] = { id }; });
+            return;
+          }
+          const x = Math.floor(Math.random() * COLS);
+          const y0 = Math.floor(Math.random() * (ROWS - eq.terms.length + 1));
+          eq.terms.forEach((id, offset) => { state.board[y0 + offset][x] = { id }; });
+        }
+        function pickMission() {
+          const available = straightSums();
+          let choices = state.eqs.map((eq, index) => index).filter((index) => available.has(state.eqs[index].sum));
+          const other = choices.filter((index) => index !== state.missionIndex);
+          if (other.length) choices = other;
+          if (!choices.length) {
+            state.missionIndex = (state.missionIndex + 1) % state.eqs.length;
+            state.target = state.eqs[state.missionIndex].sum;
+            placeMissionLine();
+            return;
+          }
+          state.missionIndex = choices[Math.floor(Math.random() * choices.length)];
+          state.target = state.eqs[state.missionIndex].sum;
         }
         function seedBoard() {
           state.board = emptyBoard();
-          state.board[2][2] = { id: "tri" };
-          state.board[2][3] = { id: "sq" };
-          state.target = state.values.tri + state.values.sq;
-          if (![...pathSumsOnBoard(2)].includes(state.target)) state.target = pickTarget();
+          state.missionIndex = 0;
+          state.target = state.eqs[0].sum;
+          if (!straightSums().has(state.target)) placeMissionLine();
         }
         function setupPuzzle() {
           state.values = pickInitialMap();
@@ -604,7 +626,7 @@
           }
           state.eqs = buildEquations(state.activeIds, state.values);
           state.claimed = false;
-          state.target = pickTarget();
+          pickMission();
           renderEquations();
           pulseTarget();
           toast(added.join(" ") + " 새 도형!");
@@ -622,9 +644,9 @@
         function renderEquations() {
           const list = $("eq-list");
           list.replaceChildren();
-          state.eqs.forEach((eq) => {
+          state.eqs.forEach((eq, index) => {
             const row = document.createElement("p");
-            row.className = "eq";
+            row.className = "eq" + (index === state.missionIndex ? " is-mission" : "");
             eq.terms.forEach((id, index) => {
               if (index) {
                 const plus = document.createElement("span");
@@ -672,12 +694,38 @@
           $("check-btn").classList.toggle("hidden", state.claimed);
           $("eq-card").classList.toggle("is-solved", state.claimed);
           $("eq-status").textContent = state.claimed ? "도형 값을 맞췄어요. +200" : "";
+          renderMission();
+        }
+        function renderMission() {
+          const eq = state.eqs[state.missionIndex];
+          const box = $("target-problem");
+          box.replaceChildren();
+          if (!eq) return;
+          const label = document.createElement("span");
+          label.textContent = "찾기 ";
+          box.appendChild(label);
+          eq.terms.forEach((id, index) => {
+            if (index) {
+              const plus = document.createElement("span");
+              plus.textContent = "+";
+              box.appendChild(plus);
+            }
+            const token = document.createElement("span");
+            token.className = "token s-" + id;
+            token.textContent = glyphOf(id);
+            box.appendChild(token);
+          });
+          const sum = document.createElement("strong");
+          sum.textContent = " = " + eq.sum;
+          box.appendChild(sum);
+          [...$("eq-list").children].forEach((row, index) => {
+            row.classList.toggle("is-mission", index === state.missionIndex);
+          });
         }
         function renderHud() {
           $("hud-name").textContent = state.name;
           $("hud-score").textContent = String(state.score);
           $("level-badge").textContent = "LEVEL " + level();
-          $("target-num").textContent = String(state.target);
           const pct = Math.max(0, Math.min(100, (state.timeLeft / TIME_MAX) * 100));
           const fill = $("time-fill");
           fill.style.width = pct + "%";
@@ -687,12 +735,12 @@
         function renderLive() {
           const el = $("live-sum");
           if (!state.path.length) {
-            el.textContent = "SUM —";
+            el.textContent = "합 —";
             el.className = "live";
             return;
           }
           const sum = pathSum(state.path);
-          el.textContent = "SUM " + sum;
+          el.textContent = "합 " + sum;
           el.className = "live" + (sum === state.target ? " is-match" : sum > state.target ? " is-over" : "");
         }
         function renderGrid() {
@@ -702,7 +750,6 @@
             const el = nodes[index];
             el.className = "cell" + (cell ? " s-" + cell.id : "") + (state.path.includes(index) ? " is-on" : "");
             el.querySelector(".glyph").textContent = cell ? glyphOf(cell.id) : "";
-            el.querySelector(".num").textContent = cell ? String(state.values[cell.id]) : "";
           }
           renderPath();
           renderLive();
@@ -802,8 +849,9 @@
           state.clears += 1;
           state.timeLeft = Math.min(TIME_MAX, state.timeLeft + Math.max(3, 7 - Math.floor(level() / 4)));
           const born = applyGravity();
-          noteLevel();
-          state.target = pickTarget();
+          const leveled = noteLevel();
+          if (!leveled) pickMission();
+          renderMission();
           renderGrid();
           born.forEach((index) => nodes[index].classList.add("is-drop"));
           renderHud();
@@ -842,7 +890,15 @@
             return;
           }
           if (path.includes(index) || !adjacent(last, index)) return;
-          if (path.length >= 8) return;
+          if (path.length >= 2) {
+            const origin = xyOf(path[0]);
+            const second = xyOf(path[1]);
+            const next = xyOf(index);
+            const horizontal = origin.y === second.y;
+            if (horizontal && next.y !== origin.y) return;
+            if (!horizontal && next.x !== origin.x) return;
+          }
+          if (path.length >= COLS) return;
           path.push(index);
           renderGrid();
           if (pathSum(path) === state.target) beep(740, 0.04, "square", 0.02);
@@ -855,7 +911,7 @@
           state.path = [];
           renderGrid();
           if (!canDrag()) return;
-          if (chosen.length >= 2 && pathSum(chosen) === state.target) {
+          if (chosen.length >= 1 && pathSum(chosen) === state.target) {
             popPath(chosen);
             return;
           }
@@ -1022,7 +1078,7 @@
           renderHud();
           renderGrid();
           pulseTarget();
-          toast("△과 □를 이어서 TARGET을 맞춰 보세요.");
+          toast("위 문제 합과 같은 가로·세로 줄을 드래그하세요.");
           cancelAnimationFrame(rafId);
           rafId = requestAnimationFrame(loop);
           if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
@@ -1042,9 +1098,7 @@
             el.dataset.i = String(index);
             const glyph = document.createElement("span");
             glyph.className = "glyph";
-            const num = document.createElement("span");
-            num.className = "num";
-            el.append(glyph, num);
+            el.appendChild(glyph);
             grid.appendChild(el);
             nodes.push(el);
           }
