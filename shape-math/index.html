@@ -450,6 +450,7 @@
         const COLS = 6;
         const ROWS = 6;
         const STORAGE_KEY = "math_puzzle_high_scores";
+        const SCORE_URL = "https://crudcrud.com/api/1fb6a4cd9b9a4ec0aca9ac68221f4cea/scores";
         const TIME_MAX = 60;
         const SHAPES = [
           { id: "tri", glyph: "△" },
@@ -482,6 +483,7 @@
           sound: true,
           latest: null,
           clears: 0,
+          scores: [],
         };
 
         const nodes = [];
@@ -1005,44 +1007,87 @@
           floatText("+200");
         }
 
-        function loadScores() {
-          try {
-            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-            if (!Array.isArray(raw)) return [];
-            return raw
-              .filter((entry) => entry && typeof entry.name === "string" && Number.isFinite(Number(entry.score)))
-              .map((entry) => ({
+        function normalizeScores(raw) {
+          if (!Array.isArray(raw)) return [];
+          const tagged = raw
+            .filter((entry) => entry && typeof entry.name === "string" && Number.isFinite(Number(entry.score)))
+            .map((entry, index) => ({
+              item: {
+                id: entry._id ? String(entry._id) : "",
                 name: String(entry.name).slice(0, 16),
                 score: Number(entry.score) || 0,
                 level: Number(entry.level) || 1,
                 date: String(entry.date || ""),
-              }))
-              .sort((a, b) => b.score - a.score || b.level - a.level)
-              .slice(0, 5);
-          } catch (err) { return []; }
-        }
-        function commitScore(entry) {
-          try {
-            if (entry.score <= 0) return false;
-            const list = loadScores();
-            const lowest = list.length ? list[list.length - 1].score : 0;
-            if (list.length >= 5 && entry.score < lowest) return false;
-            const tagged = list.concat(entry).map((item, index) => ({ item, index }));
-            tagged.sort((a, b) => b.item.score - a.item.score || b.item.level - a.item.level || b.index - a.index);
-            const top = tagged.slice(0, 5).map((row) => ({
-              name: row.item.name,
-              score: row.item.score,
-              level: row.item.level,
-              date: row.item.date,
+              },
+              index,
             }));
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(top));
-            return top.some((row) => row.name === entry.name && row.score === entry.score && row.level === entry.level && row.date === entry.date);
-          } catch (err) { return false; }
+          tagged.sort((a, b) => b.item.score - a.item.score || b.item.level - a.item.level || b.index - a.index);
+          return tagged.map((row) => row.item);
+        }
+        function readCache() {
+          try { return normalizeScores(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")); }
+          catch (err) { return []; }
+        }
+        function writeCache(list) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0, 5).map((row) => ({
+              name: row.name,
+              score: row.score,
+              level: row.level,
+              date: row.date,
+            }))));
+          } catch (err) { /* the server list is the saved board */ }
+        }
+        async function fetchScores() {
+          const response = await fetch(SCORE_URL, { cache: "no-store" });
+          if (!response.ok) throw new Error("scores");
+          const list = normalizeScores(await response.json());
+          writeCache(list);
+          return list;
+        }
+        function keepsRank(list, entry) {
+          if (!entry || entry.score <= 0) return false;
+          const ranked = normalizeScores(list.concat(entry));
+          return ranked.slice(0, 5).some((row) => row.name === entry.name && row.score === entry.score && row.level === entry.level && row.date === entry.date);
+        }
+        async function commitScore(entry) {
+          if (!entry || entry.score <= 0) return false;
+          const current = await fetchScores();
+          state.scores = current;
+          if (!keepsRank(current, entry)) return false;
+          const response = await fetch(SCORE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: entry.name,
+              score: entry.score,
+              level: entry.level,
+              date: entry.date,
+            }),
+          });
+          if (!response.ok) throw new Error("save");
+          let fresh = await fetchScores();
+          const keep = new Set(fresh.slice(0, 5).map((row) => row.id).filter(Boolean));
+          await Promise.all(fresh.filter((row) => row.id && !keep.has(row.id)).map((row) => (
+            fetch(SCORE_URL + "/" + row.id, { method: "DELETE" })
+          )));
+          fresh = await fetchScores();
+          state.scores = fresh.slice(0, 5);
+          writeCache(state.scores);
+          return state.scores.some((row) => row.name === entry.name && row.score === entry.score && row.level === entry.level && row.date === entry.date);
+        }
+        async function refreshScores() {
+          try {
+            state.scores = (await fetchScores()).slice(0, 5);
+          } catch (err) {
+            if (!state.scores.length) state.scores = readCache();
+          }
+          renderLeaderboard();
         }
         function renderLeaderboard() {
           const body = $("lb-body");
           body.replaceChildren();
-          const scores = loadScores();
+          const scores = state.scores.slice(0, 5);
           for (let i = 0; i < 5; i += 1) {
             const entry = scores[i];
             const tr = document.createElement("tr");
@@ -1062,9 +1107,11 @@
           }
           $("over-box").classList.toggle("hidden", !fromOver);
           $("retry-btn").classList.toggle("hidden", !fromOver);
-          $("lb-title").textContent = fromOver ? "🏆 Leaderboard · Top 5" : "🏆 Leaderboard · Top 5";
+          $("lb-title").textContent = "🏆 Leaderboard · Top 5";
+          if (!state.scores.length) state.scores = readCache();
           renderLeaderboard();
           $("leaderboard").classList.remove("hidden");
+          refreshScores();
         }
         function closeLeaderboard() {
           $("leaderboard").classList.add("hidden");
@@ -1075,7 +1122,7 @@
             state.lastTs = 0;
           }
         }
-        function gameOver() {
+        async function gameOver() {
           if (state.over) return;
           state.over = true;
           state.running = false;
@@ -1084,11 +1131,14 @@
           cancelAnimationFrame(rafId);
           const entry = { name: state.name, score: state.score, level: level(), date: todayString() };
           state.latest = entry;
-          const made = commitScore(entry);
+          let made = false;
+          let failed = false;
+          try { made = await commitScore(entry); }
+          catch (err) { failed = true; }
           $("over-name").textContent = entry.name;
           $("over-score").textContent = String(entry.score);
           $("over-level").textContent = "LEVEL " + entry.level + " · 클리어 " + state.clears;
-          $("over-rank").textContent = made ? "🏆 Top 5에 올랐어요!" : entry.score <= 0 ? "점수를 내면 순위표에 올라가요." : "아쉽지만 Top 5는 다음 기회에!";
+          $("over-rank").textContent = failed ? "순위 저장에 실패했어요. 연결을 확인해 주세요." : made ? "🏆 Top 5에 올랐어요!" : entry.score <= 0 ? "점수를 내면 순위표에 올라가요." : "아쉽지만 Top 5는 다음 기회에!";
           renderGrid();
           openLeaderboard(true);
           beep(392, 0.14, "triangle", 0.05);
@@ -1210,8 +1260,10 @@
           if (event.key === "Enter") { event.preventDefault(); checkAnswers(); }
         });
 
+        state.scores = readCache();
         buildGrid();
         renderLeaderboard();
+        refreshScores();
       })();
     </script>
   </body>
