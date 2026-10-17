@@ -577,15 +577,15 @@
         }
         function shapeIcon(id) {
           if (id === "tri") {
-            return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,60 4,60" fill="#3dce6a" stroke="#157a38" stroke-width="5" stroke-linejoin="round"/></svg>`;
+            return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,60 4,60" fill="url(#gold)" stroke="#9a5b08" stroke-width="5" stroke-linejoin="round"/></svg>`;
           }
           if (id === "sq") {
-            return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8" width="48" height="48" rx="8" fill="#5eb0ff" stroke="#1d4ed8" stroke-width="5"/></svg>`;
+            return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8" width="48" height="48" rx="8" fill="url(#robo)" stroke="#065f46" stroke-width="5"/></svg>`;
           }
           if (id === "heart") {
-            return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56 C32 56 8 40 8 24 C8 14 16 8 24 10 C28 11 31 15 32 18 C33 15 36 11 40 10 C48 8 56 14 56 24 C56 40 32 56 32 56Z" fill="#ff4f93" stroke="#9d174d" stroke-width="4"/></svg>`;
+            return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56 C32 56 8 40 8 24 C8 14 16 8 24 10 C28 11 31 15 32 18 C33 15 36 11 40 10 C48 8 56 14 56 24 C56 40 32 56 32 56Z" fill="url(#heartg)" stroke="#9d174d" stroke-width="4"/></svg>`;
           }
-          return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 C32 6 12 24 12 38 C12 48 20 54 30 52 C26 58 24 60 24 60 H40 C40 60 38 58 34 52 C44 54 52 48 52 38 C52 24 32 6 32 6Z" fill="#8b5cf6" stroke="#5b21b6" stroke-width="4" stroke-linejoin="round"/></svg>`;
+          return `<svg class="plain-shape" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 C32 6 12 24 12 38 C12 48 20 54 30 52 C26 58 24 60 24 60 H40 C40 60 38 58 34 52 C44 54 52 48 52 38 C52 24 32 6 32 6Z" fill="url(#spadeg)" stroke="#5b21b6" stroke-width="4" stroke-linejoin="round"/></svg>`;
         }
         function glyphOf(id) {
           const found = SHAPES.find((shape) => shape.id === id);
