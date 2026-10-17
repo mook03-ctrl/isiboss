@@ -240,28 +240,43 @@
       #start-lb { left: 51.3%; width: 41.7%; }
       .story-tabs {
         position: absolute;
-        left: 7.5%;
-        top: 59.4%;
-        width: 85%;
-        height: 4.4%;
+        left: 16%;
+        top: 59.5%;
+        width: 68%;
+        height: 5.2%;
         display: flex;
-        gap: 6px;
+        gap: 0;
         z-index: 3;
       }
-      .story-tab {
-        flex: 1;
-        min-width: 0;
+      .story-tabs::before {
+        content: "";
+        position: absolute;
+        inset: -3px -4px;
+        background: #e7c09a;
         border: 3px solid #6b3a16;
         border-radius: 999px;
-        background: #e8c4a0;
+        z-index: 0;
+      }
+      .story-tab {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        border-radius: 0;
+        background: #e7c09a;
         color: #4a2810;
         font-family: "Noto Sans KR", sans-serif;
         font-weight: 900;
         font-size: clamp(11px, 3vw, 15px);
         line-height: 1;
-        box-shadow: 0 3px 0 #6b3a16;
+        padding: 0 2px;
+        white-space: nowrap;
         cursor: pointer;
       }
+      .story-tab:first-child { border-radius: 999px 0 0 999px; }
+      .story-tab:last-child { border-radius: 0 999px 999px 0; }
+      .story-tab + .story-tab { box-shadow: inset 2px 0 0 #6b3a16; }
       .story-tab.is-on {
         background: linear-gradient(180deg, #ffe7bf, #f39a3c);
         color: #3a2208;
