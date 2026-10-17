@@ -106,13 +106,14 @@
       .hp-track { height: 10px; flex: 1; border-radius: 99px; background: rgba(255,255,255,0.08); border: 1px solid rgba(0,255,204,0.35); overflow: hidden; }
       .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00ffcc, #7af7ff 55%, #ffea00); box-shadow: 0 0 10px #00ffcc; }
       .hp-fill.is-low { background: linear-gradient(90deg, #ff007f, #ff5a36); box-shadow: 0 0 10px #ff007f; }
-      .eq { display: flex; align-items: center; gap: 3px; margin: 0; font-weight: 800; font-size: 13px; min-width: 0; }
-      .token { width: 16px; height: 16px; display: inline-flex; flex: 0 0 auto; }
-      .token svg { width: 16px; height: 16px; display: block; }
-      .eq-sum { color: #ffea00; font-family: Orbitron, sans-serif; }
-      .guess { display: flex; align-items: center; gap: 3px; background: rgba(0,0,0,0.35); border: 1px solid rgba(0,255,204,0.35); border-radius: 8px; padding: 1px 4px; }
+      #eq-list { display: flex; flex-direction: column; gap: 4px; }
+      .eq { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: 800; font-size: 26px; min-width: 0; }
+      .token { width: 34px; height: 34px; display: inline-flex; flex: 0 0 auto; }
+      .token svg { width: 34px; height: 34px; display: block; }
+      .eq-sum { color: #ffea00; font-family: Orbitron, sans-serif; font-size: 28px; text-shadow: 0 0 10px rgba(255, 234, 0, 0.7); }
+      .guess { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.35); border: 1px solid rgba(0,255,204,0.35); border-radius: 8px; padding: 2px 6px; }
       .guess input {
-        width: 36px; background: transparent; color: #fff; border: 0; font-family: Orbitron, sans-serif; font-size: 13px; outline: none;
+        width: 46px; background: transparent; color: #fff; border: 0; font-family: Orbitron, sans-serif; font-size: 20px; outline: none;
       }
       .guess input.good { color: #86efac; }
       .guess input.bad { color: #fda4af; }
@@ -128,7 +129,19 @@
         border: 1px solid rgba(0,255,204,0.7);
         box-shadow: 0 0 18px rgba(0,255,204,0.35);
         animation: cannon-pulse 1.6s ease-in-out infinite;
+        text-align: center;
+        padding: 4px 8px 6px;
       }
+      .target-k { margin: 0; font-size: 11px; letter-spacing: 0.16em; color: #8ef6e4; }
+      #target-problem {
+        font-family: Orbitron, sans-serif;
+        font-size: clamp(56px, 16vw, 76px);
+        font-weight: 800;
+        line-height: 0.95;
+        color: #ffea00;
+        text-shadow: 0 0 18px rgba(255, 234, 0, 0.9);
+      }
+      #live-sum { font-size: 15px; font-weight: 800; }
       .cannon.is-match { border-color: #ffea00; box-shadow: 0 0 18px rgba(255,234,0,0.7); color: #ffea00; }
       .cannon.is-over { border-color: #ff007f; box-shadow: 0 0 18px rgba(255,0,127,0.65); color: #ff8ab8; }
       @keyframes cannon-pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }
@@ -175,16 +188,62 @@
       }
       @keyframes float-up { to { transform: translate(-50%, -28px); opacity: 0; } }
       .modal { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(4, 6, 16, 0.55); }
-      .start-card, .lb-card { width: min(420px, 100%); position: relative; border-radius: 18px; padding: 18px 16px 14px; }
+      #start-modal { padding: 0; background: #07061a; }
+      .start-frame {
+        position: relative;
+        aspect-ratio: 503 / 1024;
+        width: min(100vw, calc(100dvh * 503 / 1024));
+        height: min(100dvh, calc(100vw * 1024 / 503));
+        max-width: 100vw;
+        max-height: 100dvh;
+      }
+      .start-art {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        pointer-events: none;
+        user-select: none;
+      }
+      #start-form { position: absolute; inset: 0; margin: 0; }
+      #player-name {
+        position: absolute;
+        left: 9.9%;
+        top: 50.8%;
+        width: 79.6%;
+        height: 5.7%;
+        margin: 0;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: #3a2412;
+        text-align: center;
+        font-weight: 800;
+        font-size: clamp(1rem, 4.2vw, 1.35rem);
+        outline: none;
+      }
+      #player-name::placeholder { color: transparent; }
+      #player-name:not(:placeholder-shown) { background: #ddd9cd; }
+      .hit-start, #start-lb {
+        position: absolute;
+        top: 88.7%;
+        height: 7.8%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: transparent;
+        cursor: pointer;
+      }
+      .hit-start { left: 6.8%; width: 42.5%; }
+      #start-lb { left: 51.3%; width: 41.7%; }
+      .lb-card { width: min(420px, 100%); position: relative; border-radius: 18px; padding: 18px 16px 14px; }
       .title-glow {
         font-family: Orbitron, sans-serif; font-weight: 800; letter-spacing: 0.04em; line-height: 1.05;
         background: linear-gradient(180deg, #ffffff, #7dfff0 40%, #00ffcc);
         -webkit-background-clip: text; background-clip: text; color: transparent;
         filter: drop-shadow(0 0 8px rgba(0,255,204,0.65));
-      }
-      #player-name {
-        width: 100%; border-radius: 12px; border: 1px solid rgba(0,255,204,0.6); background: rgba(0,0,0,0.45);
-        color: #fff; padding: 10px 12px; font-size: 16px; outline: none;
       }
       .engage {
         border: 0; border-radius: 12px; font-family: Orbitron, "Noto Sans KR", sans-serif; font-weight: 800;
@@ -257,20 +316,14 @@
     </svg>
 
     <div id="start-modal" class="modal">
-      <form id="start-form" class="start-card glass text-center">
-        <p class="hud-k m-0">EARTH DEFENSE</p>
-        <h1 class="title-glow text-[1.55rem] mt-1 mb-1">COSMIC CIPHER</h1>
-        <p class="m-0 text-sm font-bold text-cyan-100">은하수학 비밀결사단: 외계 침공</p>
-        <p class="mt-3 mb-3 text-left text-[13px] leading-snug text-cyan-50/90">
-          큐빅 인베이더의 방패는 도형 암호 주파수로 잠겨 있습니다. 상단 식을 해독하고, 가로 또는 세로로 이어 목표 주파수와 같게 드래그하세요. 명중하면 양자 포가 발사됩니다.
-        </p>
-        <label class="hud-k block text-left mb-1" for="player-name">COMMANDER NAME</label>
-        <input id="player-name" maxlength="16" placeholder="Commander" autocomplete="nickname" aria-label="Commander name" />
-        <div class="mt-3 grid grid-cols-2 gap-2">
-          <button class="engage" type="submit">출격</button>
-          <button id="start-lb" class="rank-btn" type="button">🏆 랭킹</button>
-        </div>
-      </form>
+      <div class="start-frame">
+        <img class="start-art" src="start-screen.jpg" alt="Shape Math" width="503" height="1024" />
+        <form id="start-form">
+          <input id="player-name" maxlength="16" placeholder=" " autocomplete="nickname" aria-label="Player name" />
+          <button class="hit-start" type="submit" aria-label="START"></button>
+          <button id="start-lb" type="button" aria-label="랭킹"></button>
+        </form>
+      </div>
     </div>
 
     <main id="app" class="phone hidden">
@@ -294,14 +347,15 @@
           <h2 class="hud-k m-0">🚨 ALIEN CIPHER DECODED</h2>
           <button type="button" class="decode-btn" id="check-btn">해독</button>
         </div>
-        <div id="eq-list" class="grid grid-cols-2 gap-x-2 gap-y-0.5"></div>
+        <div id="eq-list"></div>
         <div id="guess-list" class="mt-1 flex flex-wrap gap-1"></div>
         <p id="eq-status"></p>
       </section>
 
-      <div class="cannon shrink-0 rounded-xl px-2 py-1 text-center" id="target-banner">
-        <div class="text-[13px] font-extrabold tracking-wide" id="target-problem">🎯 CANNON TARGET: [ — ]</div>
-        <div class="text-[12px] font-extrabold" id="live-sum">🎯 ENERGY: — / —</div>
+      <div class="cannon shrink-0 rounded-xl" id="target-banner">
+        <p class="target-k">CANNON TARGET</p>
+        <div id="target-problem">—</div>
+        <div id="live-sum">ENERGY — / —</div>
       </div>
       <div class="hp-row" aria-label="지구 체력">
         <span class="hud-k">EARTH HP</span>
@@ -717,7 +771,7 @@
           renderMission();
         }
         function renderMission() {
-          $("target-problem").textContent = state.target ? "🎯 CANNON TARGET: [ " + state.target + " ]" : "🎯 CANNON TARGET: [ — ]";
+          $("target-problem").textContent = state.target ? String(state.target) : "—";
         }
         function renderHud() {
           $("hud-name").textContent = state.name;
@@ -733,13 +787,13 @@
           const el = $("live-sum");
           const banner = $("target-banner");
           if (!state.path.length) {
-            el.textContent = "🎯 ENERGY: — / " + (state.target || "—");
-            banner.className = "cannon shrink-0 rounded-xl px-2 py-1 text-center";
+            el.textContent = "ENERGY — / " + (state.target || "—");
+            banner.className = "cannon shrink-0 rounded-xl";
             return;
           }
           const sum = pathSum(state.path);
-          el.textContent = "🎯 ENERGY: " + sum + " / " + state.target;
-          banner.className = "cannon shrink-0 rounded-xl px-2 py-1 text-center" + (sum === state.target ? " is-match" : sum > state.target ? " is-over" : "");
+          el.textContent = "ENERGY " + sum + " / " + state.target;
+          banner.className = "cannon shrink-0 rounded-xl" + (sum === state.target ? " is-match" : sum > state.target ? " is-over" : "");
         }
         function renderGrid() {
           for (let index = 0; index < COLS * ROWS; index += 1) {
