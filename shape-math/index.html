@@ -3,8 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
-    <title>캠프 도형 수학 — 게임하기 2 | angrywork</title>
-    <meta name="description" content="도형 식을 풀고, 블록을 드래그해 목표 합을 맞추는 모바일 퍼즐." />
+    <title>Shape Math | angrywork</title>
+    <meta name="description" content="숫자와 도형의 합을 맞춰 드래그하세요. Drag shapes to match the target sum." />
+    <meta property="og:title" content="Shape Math | angrywork" />
+    <meta property="og:description" content="숫자와 도형의 합을 맞춰 드래그하세요. Drag shapes to match the target sum." />
+    <meta property="og:url" content="https://angrywork.com/shape-math/" />
+    <meta property="og:image" content="https://angrywork.com/shape-math/start-screen.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Shape Math | angrywork" />
+    <meta name="twitter:description" content="숫자와 도형의 합을 맞춰 드래그하세요. Drag shapes to match the target sum." />
+    <meta name="twitter:image" content="https://angrywork.com/shape-math/start-screen.jpg" />
     <link rel="icon" href="camp-night.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -238,226 +246,58 @@
       #start-modal {
         padding: 0;
         background: #07061a;
-        align-items: stretch;
-      }
-      .start-screen {
-        position: relative;
-        z-index: 1;
-        width: min(480px, 100%);
-        height: 100dvh;
-        margin: 0 auto;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 8px;
-        padding:
-          calc(36px + env(safe-area-inset-top))
-          14px
-          calc(12px + env(safe-area-inset-bottom));
-        color: #4a2a12;
-        background:
-          radial-gradient(circle at 18% 8%, rgba(255, 244, 196, 0.95) 0 18px, transparent 19px),
-          radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.9) 0 1.5px, transparent 2px),
-          radial-gradient(circle at 28% 6%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
-          radial-gradient(circle at 46% 14%, rgba(255, 255, 255, 0.85) 0 1.4px, transparent 2px),
-          radial-gradient(circle at 63% 5%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
-          radial-gradient(circle at 78% 16%, rgba(255, 255, 255, 0.9) 0 1.5px, transparent 2px),
-          radial-gradient(circle at 88% 9%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
-          radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
-          linear-gradient(180deg, #24175f 0%, #3d348c 38%, #6d4d9a 62%, #214838 100%);
-      }
-      .woods { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-      .woods i {
-        position: absolute;
-        bottom: 20px;
-        width: 0;
-        height: 0;
-        border-style: solid;
-        border-left: 54px solid transparent;
-        border-right: 54px solid transparent;
-        border-bottom: 190px solid #1b633c;
-      }
-      .woods i:nth-child(1) { left: -28px; bottom: 210px; border-bottom-width: 250px; border-bottom-color: #145232; }
-      .woods i:nth-child(2) { left: 8px; bottom: 60px; border-bottom-color: #1e7044; }
-      .woods i:nth-child(3) { right: -34px; bottom: 180px; border-bottom-width: 280px; border-left-width: 64px; border-right-width: 64px; border-bottom-color: #124a2e; }
-      .woods i:nth-child(4) { right: 6px; bottom: 30px; border-bottom-color: #18663d; }
-      .start-back {
-        position: absolute;
-        top: calc(8px + env(safe-area-inset-top));
-        left: 12px;
-        z-index: 2;
-        color: #fff6d8;
-        font-weight: 900;
-        text-decoration: none;
-      }
-      .logo-block { position: relative; z-index: 1; text-align: center; margin-top: 8px; }
-      .sky-bits, .sky-bits-2 {
-        display: flex;
-        justify-content: center;
         align-items: center;
-        gap: 8px;
-        min-height: 1.4rem;
-        font-weight: 900;
-        font-size: 1.15rem;
-        text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+        justify-content: center;
       }
-      .bit-star { color: #ffe14a; }
-      .bit-tri { color: #ff5a6a; }
-      .bit-sq { color: #3ec6ff; }
-      .bit-dot { color: #c084fc; }
-      .bit-plus { color: #fb7185; font-size: 0.95rem; }
-      .bit-eq { color: #fff; font-size: 0.9rem; }
-      .bit-num { color: #c4b5fd; font-family: "Lilita One", "Jua", sans-serif; font-size: 1.35rem; }
-      .bit-orange { color: #fb923c; }
-      .bit-green { color: #4ade80; }
-      .mini-ufo { font-size: 1.35rem; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
-      .logo {
-        margin: 0;
-        font-family: "Lilita One", "Jua", sans-serif;
-        font-size: clamp(2.7rem, 12vw, 3.7rem);
-        line-height: 0.95;
-        letter-spacing: 0.01em;
-        color: #ffb703;
-        -webkit-text-stroke: 7px #6a3412;
-        paint-order: stroke fill;
-        filter: drop-shadow(0 5px 0 #3a1c08);
-      }
-      .logo span { color: #ff8a1e; -webkit-text-stroke: 6px #6a3412; }
-      .flyer {
+      .start-frame {
         position: relative;
-        z-index: 1;
-        height: 72px;
-        margin: 2px 8px 0;
+        aspect-ratio: 503 / 1024;
+        width: min(100vw, calc(100dvh * 503 / 1024));
+        height: min(100dvh, calc(100vw * 1024 / 503));
+        max-width: 100vw;
+        max-height: 100dvh;
       }
-      .saucer {
-        position: absolute;
-        left: 18%;
-        top: 8px;
-        width: 92px;
-        height: 28px;
-        border-radius: 50%;
-        background: linear-gradient(180deg, #d7dde8, #8b93a7);
-        border: 3px solid #2a3142;
-        box-shadow: 0 4px 0 #1b2130;
-      }
-      .saucer .dome {
-        position: absolute;
-        left: 28px;
-        top: -16px;
-        width: 34px;
-        height: 22px;
-        border-radius: 18px 18px 8px 8px;
-        background: linear-gradient(180deg, #b7fff2, #3ec8ff);
-        border: 3px solid #2a3142;
-      }
-      .saucer .alien {
-        position: absolute;
-        left: 36px;
-        top: -10px;
-        font-size: 0.7rem;
-      }
-      .beam {
-        position: absolute;
-        left: 78px;
-        top: 18px;
-        width: 54px;
-        height: 18px;
-        background: linear-gradient(90deg, rgba(255, 214, 90, 0.1), rgba(255, 236, 140, 0.95));
-        clip-path: polygon(0 35%, 100% 0, 100% 100%, 0 65%);
-        filter: drop-shadow(0 0 6px #ffe66d);
-      }
-      .name-card, .howto {
-        position: relative;
-        z-index: 1;
-        background: #fff6e4;
-        border: 4px solid #5c3418;
-        border-radius: 18px;
-        box-shadow: 0 5px 0 rgba(40, 18, 8, 0.28);
-      }
-      .name-card { margin-top: 8px; padding: 16px 12px 12px; }
-      .pill {
-        position: absolute;
-        left: 50%;
-        top: 0;
-        transform: translate(-50%, -50%);
-        margin: 0;
-        padding: 2px 12px;
-        border-radius: 999px;
-        background: #fff6e4;
-        border: 3px solid #5c3418;
-        color: #4a2a12;
-        font-family: "Lilita One", "Jua", sans-serif;
-        font-size: 0.95rem;
-        font-weight: 400;
-        letter-spacing: 0.02em;
-        white-space: nowrap;
-      }
-      .name-card input {
+      .start-art {
+        display: block;
         width: 100%;
+        height: 100%;
+        object-fit: fill;
+        pointer-events: none;
+        user-select: none;
+      }
+      #start-form { position: absolute; inset: 0; margin: 0; }
+      #player-name {
+        position: absolute;
+        left: 9.9%;
+        top: 50.8%;
+        width: 79.6%;
+        height: 5.7%;
+        margin: 0;
+        padding: 0 8px;
         border: 0;
         border-radius: 12px;
-        background: #efe6d6;
-        color: #8a8174;
+        background: transparent;
+        color: #3a2412;
         text-align: center;
-        font-size: 1.15rem;
         font-weight: 800;
-        padding: 12px 10px;
+        font-size: clamp(1rem, 4.2vw, 1.35rem);
+        outline: none;
       }
-      .name-card input::placeholder { color: #b3aa9e; }
-      .howto { padding: 16px 10px 8px; }
-      .howto ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
-      .howto li { display: flex; align-items: center; gap: 8px; min-width: 0; }
-      .rule-ico {
-        width: 36px;
-        height: 36px;
-        flex: 0 0 36px;
-        display: grid;
-        place-items: center;
-        font-size: 1.35rem;
-        line-height: 1;
-      }
-      .rule-ico.shapes {
-        grid-template-columns: 1fr 1fr;
-        place-items: center;
-        font-size: 0.78rem;
-        font-weight: 900;
-        line-height: 1;
-      }
-      .howto strong, .howto small { display: block; }
-      .howto strong { font-size: 0.76rem; line-height: 1.25; color: #3a2412; }
-      .howto small { font-size: 0.66rem; font-weight: 800; color: #8a6240; line-height: 1.2; }
-      .start-actions { position: relative; z-index: 1; display: flex; gap: 8px; }
-      #start-form { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 14px; }
-      .start-btn, .rank-btn {
-        border: 4px solid #5c3418;
-        border-radius: 16px;
-        font-family: "Lilita One", "Jua", sans-serif;
-        letter-spacing: 0.04em;
+      #player-name::placeholder { color: transparent; }
+      #player-name:not(:placeholder-shown) { background: #ddd9cd; }
+      .hit-start, #start-lb {
+        position: absolute;
+        top: 88.7%;
+        height: 7.8%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: transparent;
         cursor: pointer;
-        box-shadow: 0 4px 0 #3a1c08;
       }
-      .start-btn {
-        flex: 1.35;
-        background: linear-gradient(180deg, #ffe14a, #ff8a00);
-        color: #fff;
-        font-size: 1.7rem;
-        padding: 8px 10px 10px;
-        -webkit-text-stroke: 4px #7a3e0a;
-        paint-order: stroke fill;
-      }
-      .rank-btn {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        background: linear-gradient(180deg, #f7f4ee, #c9c2b4);
-        color: #4a2a12;
-        font-size: 1.25rem;
-        padding: 8px 10px;
-      }
-      .start-btn:active, .rank-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #3a1c08; }
+      .hit-start { left: 6.8%; width: 42.5%; }
+      #start-lb { left: 51.3%; width: 41.7%; }
       .card {
         width: min(440px, 100%);
         max-height: min(92dvh, 760px);
@@ -516,83 +356,12 @@
     <div id="toast" class="toast hidden" role="status"></div>
 
     <div id="start-modal" class="modal">
-      <div class="start-screen">
-        <a class="start-back" href="../">←</a>
-        <div class="woods" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div class="logo-block">
-          <div class="sky-bits" aria-hidden="true">
-            <span class="bit-plus">+</span>
-            <span class="bit-star">★</span>
-            <span class="bit-tri">▲</span>
-            <span class="bit-eq">=</span>
-            <span class="bit-sq">■</span>
-            <span class="bit-dot">●</span>
-            <span class="bit-star">★</span>
-            <span class="mini-ufo">🛸</span>
-            <span class="bit-num">5</span>
-          </div>
-          <h1 class="logo"><span>(</span> Shape Math <span>)</span></h1>
-          <div class="sky-bits-2 sky-bits" aria-hidden="true">
-            <span class="bit-star">★</span>
-            <span class="bit-orange">■</span>
-            <span class="bit-plus">+</span>
-            <span class="bit-eq">=</span>
-            <span class="bit-num">5</span>
-            <span class="bit-dot">●</span>
-            <span class="bit-green">■</span>
-            <span class="bit-plus">+</span>
-            <span class="bit-num">3</span>
-          </div>
-        </div>
-        <div class="flyer" aria-hidden="true">
-          <div class="saucer">
-            <div class="dome"></div>
-            <span class="alien">👽</span>
-            <div class="beam"></div>
-          </div>
-        </div>
+      <div class="start-frame">
+        <img class="start-art" src="start-screen.jpg" alt="Shape Math" width="503" height="1024" />
         <form id="start-form">
-          <label class="name-card">
-            <span class="pill">Player Name</span>
-            <input id="player-name" maxlength="16" placeholder="Player name" autocomplete="nickname" />
-          </label>
-          <section class="howto" aria-label="How to Play">
-            <h2 class="pill">How to Play</h2>
-            <ul>
-              <li>
-                <span class="rule-ico shapes" aria-hidden="true"><i class="bit-plus">+</i><i class="bit-tri">▲</i><i class="bit-sq">■</i><i class="bit-orange">■</i></span>
-                <span>
-                  <strong>숫자와 도형의 합을 맞춰 드래그하세요!</strong>
-                  <small>Drag shapes to match the target sum!</small>
-                </span>
-              </li>
-              <li>
-                <span class="rule-ico" aria-hidden="true">💥</span>
-                <span>
-                  <strong>일치하면 팡! 터집니다.</strong>
-                  <small>Match the sum to pop!</small>
-                </span>
-              </li>
-              <li>
-                <span class="rule-ico" aria-hidden="true">⏳</span>
-                <span>
-                  <strong>시간이 다 되면 Game Over!</strong>
-                  <small>Time up = Game Over!</small>
-                </span>
-              </li>
-              <li>
-                <span class="rule-ico" aria-hidden="true">⬆️</span>
-                <span>
-                  <strong>500점마다 LEVEL UP!</strong>
-                  <small>Level UP every 500 points!</small>
-                </span>
-              </li>
-            </ul>
-          </section>
-          <div class="start-actions">
-            <button class="start-btn" type="submit">START</button>
-            <button class="rank-btn" id="start-lb" type="button">🏆 랭킹</button>
-          </div>
+          <input id="player-name" maxlength="16" placeholder=" " autocomplete="nickname" aria-label="Player name" />
+          <button class="hit-start" type="submit" aria-label="START"></button>
+          <button id="start-lb" type="button" aria-label="랭킹"></button>
         </form>
       </div>
     </div>
