@@ -67,9 +67,13 @@
       }
       .back {
         color: #fff6d8;
+        font: inherit;
         font-weight: 900;
         text-decoration: none;
         padding: 0 4px;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
       }
       .stat { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
       .stat .k { font-size: 10px; letter-spacing: 0.06em; color: #f6e2b8; }
@@ -368,7 +372,7 @@
 
     <main id="app" class="phone hidden">
       <header class="hud">
-        <a class="back" href="../" aria-label="사무실로">←</a>
+        <button type="button" class="back" id="back-start" aria-label="첫 화면">←</button>
         <div class="stat">
           <span class="k">PLAYER</span>
           <strong id="hud-name">MathExplorer</strong>
@@ -1244,7 +1248,18 @@
           }
         });
 
+        function backToStart() {
+          state.running = false;
+          state.dragging = false;
+          state.path = [];
+          state.paused = true;
+          cancelAnimationFrame(rafId);
+          $("leaderboard").classList.add("hidden");
+          $("app").classList.add("hidden");
+          $("start-modal").classList.remove("hidden");
+        }
         $("start-form").addEventListener("submit", (event) => { event.preventDefault(); startGame(); });
+        $("back-start").addEventListener("click", backToStart);
         $("start-lb").addEventListener("click", () => openLeaderboard(false));
         $("hud-lb").addEventListener("click", () => openLeaderboard(false));
         $("lb-close").addEventListener("click", closeLeaderboard);
