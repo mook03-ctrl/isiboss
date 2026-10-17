@@ -238,6 +238,56 @@
       }
       .hit-start { left: 6.8%; width: 42.5%; }
       #start-lb { left: 51.3%; width: 41.7%; }
+      .story-tabs {
+        position: absolute;
+        left: 7.5%;
+        top: 59.4%;
+        width: 85%;
+        height: 4.4%;
+        display: flex;
+        gap: 6px;
+        z-index: 3;
+      }
+      .story-tab {
+        flex: 1;
+        min-width: 0;
+        border: 3px solid #6b3a16;
+        border-radius: 999px;
+        background: #e8c4a0;
+        color: #4a2810;
+        font-family: "Noto Sans KR", sans-serif;
+        font-weight: 900;
+        font-size: clamp(11px, 3vw, 15px);
+        line-height: 1;
+        box-shadow: 0 3px 0 #6b3a16;
+        cursor: pointer;
+      }
+      .story-tab.is-on {
+        background: linear-gradient(180deg, #ffe7bf, #f39a3c);
+        color: #3a2208;
+      }
+      .story-panel {
+        position: absolute;
+        left: 9.4%;
+        top: 64.2%;
+        width: 81.2%;
+        height: 23%;
+        box-sizing: border-box;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        background: #f7ead7;
+        border: 3px solid #8a5a32;
+        border-radius: 18px;
+        color: #3d2914;
+        padding: 8px 10px 12px;
+        z-index: 3;
+        font-size: clamp(12px, 3.15vw, 15px);
+        line-height: 1.45;
+        font-weight: 800;
+      }
+      .story-panel h2 { margin: 0 0 6px; font-size: 1.02em; line-height: 1.35; }
+      .story-panel p { margin: 0 0 8px; }
       .lb-card { width: min(420px, 100%); position: relative; border-radius: 18px; padding: 18px 16px 14px; }
       .title-glow {
         font-family: Orbitron, sans-serif; font-weight: 800; letter-spacing: 0.04em; line-height: 1.05;
@@ -320,6 +370,16 @@
         <img class="start-art" src="start-screen.jpg" alt="Shape Math" width="503" height="1024" />
         <form id="start-form">
           <input id="player-name" maxlength="16" placeholder=" " autocomplete="nickname" aria-label="Player name" />
+          <div class="story-tabs" role="tablist">
+            <button type="button" class="story-tab is-on" id="tab-how" role="tab" aria-selected="true">How to Play</button>
+            <button type="button" class="story-tab" id="tab-story" role="tab" aria-selected="false">👽 Game Story</button>
+          </div>
+          <div id="story-panel" class="story-panel hidden" role="tabpanel" aria-labelledby="tab-story">
+            <h2>외계 침공! 은하수학 비밀결사단 (Cosmic Cipher: Alien Defense)</h2>
+            <p>2026년, 우주에서 날아온 ‘외계 군단’이 지구의 에너지를 빼앗기 위해 하늘을 뒤덮었습니다! 이 외계인들은 특수한 ‘수학 보호막’을 두르고 있어, 일반적인 무기로는 타격을 줄 수 없습니다.</p>
+            <p>다행히 Jaden과 친구들이 외계인들이 보내는 암호(도형 공식)를 해독해 냈습니다! 외계인들의 몸에 새겨진 ‘도형 문양’은 각각 그들의 보호막(숫자)을 의미합니다. 우리가 이 보호막의 합을 정확히 계산하여 '보호막 수의 합'과 일치시키는 '양자 광선'을 쏘면, 외계인들의 보호막을 해체하고 그들을 원래 우주로 되돌려 보낼 수 있습니다!</p>
+            <p>비밀 요원이 되어, 외계인의 암호를 풀고 지구를 구하세요!</p>
+          </div>
           <button class="hit-start" type="submit" aria-label="START"></button>
           <button id="start-lb" type="button" aria-label="랭킹"></button>
         </form>
@@ -1350,6 +1410,15 @@
           $("app").classList.add("hidden");
           $("start-modal").classList.remove("hidden");
         }
+        function showStory(open) {
+          $("story-panel").classList.toggle("hidden", !open);
+          $("tab-story").classList.toggle("is-on", open);
+          $("tab-how").classList.toggle("is-on", !open);
+          $("tab-story").setAttribute("aria-selected", open ? "true" : "false");
+          $("tab-how").setAttribute("aria-selected", open ? "false" : "true");
+        }
+        $("tab-how").addEventListener("click", () => showStory(false));
+        $("tab-story").addEventListener("click", () => showStory(true));
         $("start-form").addEventListener("submit", (event) => { event.preventDefault(); startGame(); });
         $("back-start").addEventListener("click", backToStart);
         $("start-lb").addEventListener("click", () => openLeaderboard(false));
