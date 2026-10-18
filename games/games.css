@@ -23,20 +23,6 @@ html, body {
     var(--paper);
 }
 
-.back {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 8px;
-  padding: 4px 10px;
-  color: var(--ink);
-  text-decoration: none;
-  font-size: 22px;
-  background: #fff;
-  border: 3px solid var(--ink);
-  border-radius: 14px 18px 12px 16px;
-  box-shadow: 2px 2px 0 var(--ink);
-}
-
 h1 {
   margin: 8px 0 0;
   font-family: "Jua", "Nanum Pen Script", sans-serif;
