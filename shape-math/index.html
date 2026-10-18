@@ -479,7 +479,17 @@
         const COLS = 6;
         const ROWS = 6;
         const STORAGE_KEY = "math_puzzle_high_scores";
-        const SCORE_URL = "https://crudcrud.com/api/1fb6a4cd9b9a4ec0aca9ac68221f4cea/scores";
+        const BOARD_INDEX_KEY = "math_puzzle_board_index";
+        const SCORE_BOARDS = [
+          "https://crudcrud.com/api/0702d77b7991465ba2d2a58353d4e1cc/board/6ad42a8e28f90803e8ffbfa3",
+          "https://crudcrud.com/api/5c6cf8cf027b4088afc5fc9f6e72ad9d/board/6ad4573b28f90803e8ffbfc3",
+          "https://crudcrud.com/api/9d0e2a0bf2cc448b89c33b0c826b84ff/board/6ad4573c28f90803e8ffbfc4",
+          "https://crudcrud.com/api/f96d6cc847b14b57befc2da3e15430c4/board/6ad4573c28f90803e8ffbfc5",
+          "https://crudcrud.com/api/5e5593203e6c4d7ba1da9b9f26c887fd/board/6ad4573d28f90803e8ffbfc6",
+          "https://crudcrud.com/api/b2d0741228c44042b106f31906c9dfce/board/6ad4573d28f90803e8ffbfc7",
+          "https://crudcrud.com/api/d15829682fed470ba4385852dc0fad78/board/6ad4573e28f90803e8ffbfc8",
+          "https://crudcrud.com/api/28c0a18bdbfb425f9b8d8f7e92674359/board/6ad4573e28f90803e8ffbfc9",
+        ];
         const TIME_MAX = 60;
         const SHAPES = [
           { id: "tri", glyph: "△" },
@@ -1154,12 +1164,74 @@
             }))));
           } catch (err) { /* the server list is the saved board */ }
         }
+        function boardIndex() {
+          try {
+            const n = Number(localStorage.getItem(BOARD_INDEX_KEY));
+            if (Number.isInteger(n) && n >= 0 && n < SCORE_BOARDS.length) return n;
+          } catch (err) { /* start at the first board */ }
+          return 0;
+        }
+        function rememberBoard(index) {
+          try { localStorage.setItem(BOARD_INDEX_KEY, String(index)); } catch (err) { /* hint only */ }
+        }
+        function scoreRows(doc) {
+          if (Array.isArray(doc)) return doc;
+          if (doc && Array.isArray(doc.scores)) return doc.scores;
+          return [];
+        }
+        function plainScores(list) {
+          return list.slice(0, 5).map((row) => ({
+            name: row.name,
+            score: row.score,
+            level: row.level,
+            date: row.date,
+          }));
+        }
+        async function readBoard(index) {
+          const response = await fetch(SCORE_BOARDS[index], { cache: "no-store" });
+          if (!response.ok) {
+            const text = await response.text();
+            const err = new Error("scores");
+            if (response.status === 400 && /exceeded/i.test(text)) err.code = "exceeded";
+            throw err;
+          }
+          return normalizeScores(scoreRows(await response.json()));
+        }
+        async function writeBoard(index, list) {
+          const response = await fetch(SCORE_BOARDS[index], {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ scores: plainScores(list) }),
+          });
+          if (!response.ok) {
+            const text = await response.text();
+            const err = new Error("save");
+            if (response.status === 400 && /exceeded/i.test(text)) err.code = "exceeded";
+            throw err;
+          }
+        }
         async function fetchScores() {
-          const response = await fetch(SCORE_URL, { cache: "no-store" });
-          if (!response.ok) throw new Error("scores");
-          const list = normalizeScores(await response.json());
-          writeCache(list);
-          return list;
+          const start = boardIndex();
+          for (let step = 0; step < SCORE_BOARDS.length; step += 1) {
+            const index = (start + step) % SCORE_BOARDS.length;
+            try {
+              let list = await readBoard(index);
+              if (!list.length) {
+                const cached = readCache();
+                if (cached.length) {
+                  await writeBoard(index, cached);
+                  list = cached.slice(0, 5);
+                }
+              }
+              rememberBoard(index);
+              writeCache(list);
+              return list.slice(0, 5);
+            } catch (err) {
+              if (err && err.code === "exceeded") continue;
+              throw err;
+            }
+          }
+          throw new Error("scores");
         }
         function keepsRank(list, entry) {
           if (!entry || entry.score <= 0) return false;
@@ -1168,29 +1240,33 @@
         }
         async function commitScore(entry) {
           if (!entry || entry.score <= 0) return false;
-          const current = await fetchScores();
-          state.scores = current;
-          if (!keepsRank(current, entry)) return false;
-          const response = await fetch(SCORE_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: entry.name,
-              score: entry.score,
-              level: entry.level,
-              date: entry.date,
-            }),
-          });
-          if (!response.ok) throw new Error("save");
-          let fresh = await fetchScores();
-          const keep = new Set(fresh.slice(0, 5).map((row) => row.id).filter(Boolean));
-          await Promise.all(fresh.filter((row) => row.id && !keep.has(row.id)).map((row) => (
-            fetch(SCORE_URL + "/" + row.id, { method: "DELETE" })
-          )));
-          fresh = await fetchScores();
-          state.scores = fresh.slice(0, 5);
-          writeCache(state.scores);
-          return state.scores.some((row) => row.name === entry.name && row.score === entry.score && row.level === entry.level && row.date === entry.date);
+          const start = boardIndex();
+          for (let step = 0; step < SCORE_BOARDS.length; step += 1) {
+            const index = (start + step) % SCORE_BOARDS.length;
+            try {
+              let current = await readBoard(index);
+              if (!current.length) {
+                const cached = readCache();
+                if (cached.length) current = cached;
+              }
+              if (!keepsRank(current, entry)) {
+                state.scores = current.slice(0, 5);
+                rememberBoard(index);
+                writeCache(state.scores);
+                return false;
+              }
+              const next = normalizeScores(current.concat(entry)).slice(0, 5);
+              await writeBoard(index, next);
+              rememberBoard(index);
+              state.scores = next;
+              writeCache(next);
+              return next.some((row) => row.name === entry.name && row.score === entry.score && row.level === entry.level && row.date === entry.date);
+            } catch (err) {
+              if (err && err.code === "exceeded") continue;
+              throw err;
+            }
+          }
+          throw new Error("save");
         }
         async function refreshScores() {
           try {
@@ -1460,7 +1536,6 @@
         state.scores = readCache();
         buildGrid();
         renderLeaderboard();
-        refreshScores();
       })();
     </script>
   </body>
