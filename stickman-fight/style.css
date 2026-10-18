@@ -315,11 +315,39 @@ button:focus-visible {
   top: calc(8px + var(--sat));
   right: 8px;
   z-index: 8;
-  width: 62px;
-  height: 42px;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 78px;
+  height: 44px;
+  padding: 0 8px;
   font-size: 15px;
-  background: #fff;
+  color: #2a1c12;
+  border: 3px solid #3a2616;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf8 0%, #ffe7b0 48%, #e7b45a 100%);
+  box-shadow:
+    0 4px 0 #6a4318,
+    0 8px 14px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.pause-bars {
+  display: inline-block;
+  width: 11px;
+  height: 13px;
+  background:
+    linear-gradient(#2a1c12, #2a1c12) left center / 3.5px 100% no-repeat,
+    linear-gradient(#2a1c12, #2a1c12) right center / 3.5px 100% no-repeat;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.45));
+}
+
+#btn-pause:active {
+  transform: translateY(3px) scale(0.95);
+  box-shadow:
+    0 1px 0 #6a4318,
+    inset 0 3px 6px rgba(70, 40, 10, 0.28);
 }
 
 #controls {
@@ -333,41 +361,115 @@ button:focus-visible {
   align-items: center;
   gap: 6px;
   padding: 10px 8px calc(10px + var(--sab));
-  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.45));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(16, 10, 8, 0.18) 28%, rgba(12, 8, 6, 0.62) 100%);
 }
 
 #controls button {
+  position: relative;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
   min-width: 0;
   height: 64px;
   padding: 0 2px;
-  font-size: 16px;
+  overflow: hidden;
+  font-size: 15px;
+  color: #2a1c12;
+  border: 3px solid #2c1c12;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffef9 0%, #f3ddb4 46%, #d7b072 100%);
+  box-shadow:
+    0 5px 0 #5c3b16,
+    0 8px 12px rgba(0, 0, 0, 0.28),
+    inset 0 2px 0 rgba(255, 255, 255, 0.85);
+  transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.06s ease;
 }
+
+#controls button::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 4px;
+  height: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+#controls button:active {
+  transform: translateY(4px) scale(0.95);
+  box-shadow:
+    0 1px 0 #5c3b16,
+    inset 0 4px 8px rgba(40, 24, 8, 0.28);
+  filter: brightness(1.08);
+}
+
+#btn-mine::before,
+#btn-skill::before,
+#btn-attack::before {
+  font-size: 16px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.2));
+}
+
+#btn-mine::before { content: "⛏"; }
+#btn-skill::before { content: "✦"; }
+#btn-attack::before { content: "⚔"; }
 
 #controls button.primary {
   flex: 1.35;
-  background: #ff4d4d;
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
+  border-color: #6e1212;
+  background: linear-gradient(180deg, #ff8a7a 0%, #ff3d3d 46%, #c41414 100%);
+  box-shadow:
+    0 5px 0 #6a1010,
+    0 8px 14px rgba(120, 16, 16, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+
+#controls button.primary:active {
+  box-shadow:
+    0 1px 0 #6a1010,
+    inset 0 4px 8px rgba(80, 0, 0, 0.35);
 }
 
 #controls button.primary.hot {
-  background: #3ec2ff;
-  color: #082033;
+  color: #062033;
+  border-color: #0d4e78;
+  background: linear-gradient(180deg, #d9f7ff 0%, #3ec8ff 42%, #1288d0 100%);
+  box-shadow:
+    0 5px 0 #0c4f86,
+    0 0 16px rgba(80, 200, 255, 0.65),
+    inset 0 2px 0 rgba(255, 255, 255, 0.7);
 }
 
 #controls button.mine {
-  background: #c4843a;
   color: #fff;
+  border-color: #5a3410;
+  background: linear-gradient(180deg, #f0c27a 0%, #c4843a 48%, #8a4e16 100%);
+  box-shadow:
+    0 5px 0 #5a3010,
+    0 8px 12px rgba(0, 0, 0, 0.28),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4);
 }
 
 #controls button.mine.ready {
-  background: #ffb703;
-  color: var(--ink);
+  color: #2a1c12;
+  border-color: #8a5a10;
+  background: linear-gradient(180deg, #fff4c4 0%, #ffb703 48%, #e09000 100%);
+  box-shadow:
+    0 5px 0 #8a5208,
+    0 0 14px rgba(255, 183, 3, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.7);
   animation: pulse 0.8s ease-in-out infinite;
 }
 
-#btn-skill.cooldown { filter: saturate(0.4); }
+#btn-skill.cooldown { filter: saturate(0.45) brightness(0.92); }
 
 @media (max-height: 560px) {
   #controls { height: 86px; }
