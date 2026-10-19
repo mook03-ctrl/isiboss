@@ -1,0 +1,615 @@
+const QD_W = 720;
+const QD_H = 960;
+const QD_BOT = 760;
+const QD_TOP = 612;
+const QD_FH = 48;
+const QD_CUBE = 92;
+
+window.GameScene = class GameScene extends Phaser.Scene {
+  constructor() { super("game"); }
+
+  create() {
+    this.name = window.QuizDash.playerName || "Player";
+    this.quiz = new window.QuizManager(1);
+    this.score = 0;
+    this.combo = 0;
+    this.bestCombo = 0;
+    this.multiplier = 1;
+    this.gatesDone = 0;
+    this.flow = "cruise";
+    this.phase = "cruise";
+    this.cursor = 0;
+    this.pathY = QD_BOT;
+    this.pathKind = "cruise";
+    this.pathEnd = 0;
+    this.nextGateX = 860;
+    this.beat = 0;
+    this.dead = false;
+    this.paused = false;
+    this.gate = null;
+    this.hintOn = true;
+    this.speedCurrent = 250;
+    this.jumpBuffer = 0;
+    this.coyote = 0;
+    this.padLock = 0;
+    this.landSquash = 0;
+    this.wasAir = false;
+    this.scoreAcc = 0;
+    this.hudAcc = 0;
+    this.shakeAcc = 0;
+    this.decor = [];
+    this.reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    this.physics.world.setBounds(0, -400, 2000000, 1600);
+    this.cameras.main.setBackgroundColor("#07041a");
+    this.cameras.main.setBounds(0, 0, 2000000, QD_H);
+
+    this.add.tileSprite(0, 0, QD_W, QD_H, "sky").setOrigin(0).setScrollFactor(0).setDepth(0);
+    this.stars = this.add.tileSprite(0, 0, QD_W, QD_H, "stars").setOrigin(0).setScrollFactor(0).setDepth(1);
+    this.sun = this.add.image(250, 455, "sun").setScrollFactor(0).setDepth(2).setScale(0.62).setAlpha(0.9);
+    this.mount = this.add.tileSprite(0, 470, QD_W, 200, "mount").setOrigin(0).setScrollFactor(0).setDepth(3).setAlpha(0.95);
+    this.grid = this.add.tileSprite(0, 560, QD_W, 400, "grid").setOrigin(0).setScrollFactor(0).setDepth(4).setAlpha(0.4);
+    this.wash = this.add.rectangle(QD_W / 2, QD_H / 2, QD_W, QD_H, 0x000000, 0).setScrollFactor(0).setDepth(46);
+
+    this.floors = this.physics.add.staticGroup();
+    this.hazards = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.pickups = this.physics.add.group({ allowGravity: false, immovable: true });
+
+    this.addFloor(0, 520, QD_BOT, "cruise");
+    this.cursor = 520;
+
+    this.player = this.physics.add.image(250, QD_BOT - 120, "cube");
+    this.player.setDepth(22);
+    this.player.setScale(QD_CUBE / 64);
+    this.player.body.setSize(56, 56, true);
+    this.player.setMaxVelocity(2200, 1700);
+    try { if (this.player.preFX) this.glow = this.player.preFX.addGlow(0x7efbff, 4, 0, false, 0.12, 10); } catch (err) { /* optional */ }
+
+    this.physics.add.collider(this.player, this.floors, null, (player, floor) => {
+      return player.body.velocity.y >= 0 && player.body.bottom <= floor.body.top + 16;
+    });
+    this.physics.add.overlap(this.player, this.hazards, () => this.die());
+    this.physics.add.overlap(this.player, this.pickups, (_p, item) => this.touchItem(item));
+
+    this.fx = new window.FXManager(this, this.player);
+    this.speedCurrent = this.targetSpeed();
+    this.ensure();
+
+    this.input.on("pointerdown", () => this.requestJump());
+    this.keys = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.UP,
+      w: Phaser.Input.Keyboard.KeyCodes.W,
+      space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+    });
+    this.input.keyboard.on("keydown-SPACE", () => this.requestJump());
+    this.input.keyboard.on("keydown-UP", () => this.requestJump());
+    this.input.keyboard.on("keydown-W", () => this.requestJump());
+
+    window.QuizDash.emit("hud", this.hud());
+    window.QuizDash.emit("chapter", Object.assign({ intro: true }, this.quiz.meta()));
+    window.QuizDash.emit("hint", true);
+  }
+
+  requestJump() {
+    if (this.dead || this.paused) return;
+    this.jumpBuffer = 110;
+    if (window.QuizDashSfx) window.QuizDashSfx.ensure();
+  }
+
+  targetSpeed() {
+    const tier = this.quiz ? this.quiz.tier : 1;
+    const chapter = this.quiz ? this.quiz.chapter : 1;
+    const base = Math.min(400, 228 + (tier - 1) * 26 + (chapter - 1) * 4);
+    if (this.flow === "wrong") return base * 1.5;
+    if (this.flow === "right") return base * 1.04;
+    return base;
+  }
+
+  pathLength() {
+    return 3000 + Math.min(8, this.quiz.chapter) * 70;
+  }
+
+  hud() {
+    let gate = this.gatesDone;
+    if (this.phase === "wait") gate += 1;
+    return {
+      score: Math.floor(this.score),
+      chapter: this.quiz.chapter,
+      subject: this.quiz.subject.ko,
+      gate: Math.min(5, Math.max(1, gate)),
+      combo: this.combo,
+      multiplier: this.multiplier,
+      name: this.name,
+      flow: this.flow,
+    };
+  }
+
+  ensure() {
+    const horizon = this.player.x + 1500;
+    let guard = 0;
+    while (this.cursor < horizon && guard < 24) {
+      guard += 1;
+      if (this.phase === "wait") return;
+      if (this.phase === "cruise") {
+        if (this.cursor >= this.nextGateX - 1) {
+          this.buildGate();
+          return;
+        }
+        const len = Math.max(24, Math.min(320, this.nextGateX - this.cursor));
+        this.addFloor(this.cursor, len, QD_BOT, "cruise");
+        if (len > 140 && Math.random() < 0.55) this.addCoin(this.cursor + len * 0.5, QD_BOT - 78);
+        this.cursor += len;
+      } else if (this.phase === "path") {
+        if (this.cursor >= this.pathEnd) this.beginMerge();
+        else this.addBeat();
+      } else if (this.phase === "merge") {
+        this.stepMerge();
+      }
+    }
+  }
+
+  buildGate() {
+    const q = this.quiz.next();
+    const lead = Math.max(760, this.targetSpeed() * 2.4);
+    this.addFloor(this.cursor, lead, QD_BOT, "cruise");
+    this.cursor += lead;
+    const fork = 560;
+    this.addFloor(this.cursor, fork, QD_BOT, "cruise");
+    const topX = this.cursor + 150;
+    const topW = 360;
+    this.addFloor(topX, topW, QD_TOP, "cruise");
+    this.addPortal(topX + 170, QD_TOP, "A", q.A);
+    this.addPortal(this.cursor + 230, QD_BOT, "B", q.B);
+    this.gate = {
+      open: true,
+      topX,
+      topW,
+      lockX: this.cursor + fork - 30,
+      q,
+    };
+    this.cursor += fork;
+    this.phase = "wait";
+    window.QuizDash.emit("question", q);
+  }
+
+  addBeat() {
+    if (this.safeUntil && this.cursor < this.safeUntil) {
+      const len = Math.min(280, this.safeUntil - this.cursor);
+      this.addFloor(this.cursor, len, this.pathY, this.pathKind);
+      if (this.pathKind === "right") this.addCoin(this.cursor + len * 0.5, this.pathY - 110);
+      this.cursor += len;
+      return;
+    }
+    const y = this.pathY;
+    const spd = Math.max(220, this.speedCurrent);
+    const hard = this.pathKind === "wrong";
+    const fierce = hard && this.quiz.tier >= 2;
+    const n = this.beat % (hard ? 5 : 4);
+    this.beat += 1;
+    if (!hard) {
+      if (n === 0) this.beatCoins(y, spd);
+      else if (n === 1) this.beatGap(y, spd, 0.28, 0.72);
+      else if (n === 2) this.beatSpikes(y, spd, 1, hard);
+      else this.beatPad(y, spd, false);
+      return;
+    }
+    if (n === 0) this.beatSpikes(y, spd, fierce ? 2 : 1, true);
+    else if (n === 1) this.beatGap(y, spd, fierce ? 0.4 : 0.33, fierce ? 0.46 : 0.58);
+    else if (n === 2) this.beatPit(y, spd);
+    else if (n === 3 && fierce) this.beatCeiling(y, spd);
+    else this.beatSpikes(y, spd, fierce ? 3 : 2, true);
+  }
+
+  beatCoins(y, spd) {
+    const len = Math.max(280, spd * 0.9);
+    this.addFloor(this.cursor, len, y, this.pathKind);
+    for (let i = 0; i < 4; i += 1) {
+      const arch = Math.sin((i / 3) * Math.PI) * 78;
+      this.addCoin(this.cursor + 50 + i * ((len - 90) / 4), y - 64 - arch);
+    }
+    this.cursor += len;
+  }
+
+  beatGap(y, spd, gapFactor, platFactor) {
+    const gap = Math.max(78, spd * gapFactor);
+    const plat = Math.max(140, spd * platFactor);
+    this.cursor += gap;
+    this.addFloor(this.cursor, plat, y, this.pathKind);
+    this.addCoin(this.cursor + plat * 0.5, y - 96);
+    this.cursor += plat;
+  }
+
+  beatSpikes(y, spd, count, hard) {
+    const tight = hard ? (this.quiz.tier >= 2 ? 0.78 : 0.92) : 1.05;
+    const spacing = Math.max(230, spd * tight);
+    const len = spacing * count + 90;
+    this.addFloor(this.cursor, len, y, this.pathKind);
+    for (let i = 0; i < count; i += 1) {
+      const x = this.cursor + 130 + i * spacing;
+      if (hard && i % 2 === 1) this.addSaw(x, y - 22, true);
+      else this.addSpike(x, y);
+    }
+    this.cursor += len;
+  }
+
+  beatPit(y, spd) {
+    const pre = Math.max(160, spd * 0.42);
+    const gap = Math.max(100, spd * (this.quiz.tier >= 2 ? 0.4 : 0.34));
+    const plat = Math.max(160, spd * 0.5);
+    this.addFloor(this.cursor, pre, y, this.pathKind);
+    const pit = this.cursor + pre;
+    this.addSaw(pit + gap * 0.5, y + 46, true);
+    this.cursor = pit + gap;
+    this.addFloor(this.cursor, plat, y, this.pathKind);
+    this.cursor += plat;
+  }
+
+  beatPad(y, spd, required) {
+    const pre = Math.max(170, spd * 0.42);
+    this.addFloor(this.cursor, pre, y, this.pathKind);
+    this.addPad(this.cursor + pre - 40, y);
+    this.cursor += pre;
+    const gap = Math.max(110, spd * (required ? 0.56 : 0.3));
+    this.cursor += gap;
+    const plat = Math.max(170, spd * 0.55);
+    this.addFloor(this.cursor, plat, y, this.pathKind);
+    this.addCoin(this.cursor + plat * 0.4, y - 168);
+    this.addCoin(this.cursor + plat * 0.62, y - 120);
+    this.cursor += plat;
+  }
+
+  beatCeiling(y, spd) {
+    const spikeAt = spd * 0.3;
+    const barAt = spikeAt + spd * 0.8;
+    const len = Math.max(barAt + 180, spd * 1.25);
+    this.addFloor(this.cursor, len, y, this.pathKind);
+    this.addSpike(this.cursor + spikeAt, y);
+    this.addBar(this.cursor + barAt, y - 78);
+    this.cursor += len;
+  }
+
+  beginMerge() {
+    this.rewardPath();
+    if (Math.abs(this.pathY - QD_BOT) < 6) {
+      this.finishMerge();
+      return;
+    }
+    this.phase = "merge";
+    this.mergeY = this.pathY;
+  }
+
+  stepMerge() {
+    if (this.mergeY >= QD_BOT - 4) {
+      this.addFloor(this.cursor, 240, QD_BOT, "cruise");
+      this.cursor += 240;
+      this.finishMerge();
+      return;
+    }
+    this.addFloor(this.cursor, 210, this.mergeY, "cruise");
+    this.cursor += 176;
+    this.mergeY = Math.min(QD_BOT, this.mergeY + 88);
+  }
+
+  finishMerge() {
+    this.phase = "cruise";
+    this.pathY = QD_BOT;
+    this.flow = "cruise";
+    this.fx.setFlow("cruise");
+    window.QuizDash.emit("status", { flow: "cruise" });
+    let bridge = 1020;
+    if (this.gatesDone >= 5) {
+      this.gatesDone = 0;
+      this.quiz.setChapter(this.quiz.chapter + 1);
+      bridge = 1680;
+      this.fx.chapter();
+      window.QuizDash.emit("chapter", this.quiz.meta());
+    }
+    this.nextGateX = this.cursor + bridge;
+  }
+
+  rewardPath() {
+    if (this.pathRewarded) return;
+    this.pathRewarded = true;
+    if (this.flow === "wrong" && !this.dead) {
+      const bonus = 160 + this.quiz.chapter * 30;
+      this.score += bonus;
+      this.float("+" + bonus + " SURVIVE", "#ffb4c8");
+    }
+  }
+
+  lockChoice(which) {
+    if (!this.gate || !this.gate.open || this.dead) return;
+    this.gate.open = false;
+    this.hintOn = false;
+    window.QuizDash.emit("hint", false);
+    const correct = which === this.gate.q.answer;
+    this.flow = correct ? "right" : "wrong";
+    this.pathKind = this.flow;
+    this.pathRewarded = false;
+    this.gatesDone += 1;
+    if (which === "A") {
+      this.cursor = this.gate.topX + this.gate.topW;
+      this.pathY = QD_TOP;
+    } else {
+      this.pathY = QD_BOT;
+    }
+    this.pathEnd = this.cursor + this.pathLength();
+    this.phase = "path";
+    this.beat = 0;
+    this.safeUntil = this.cursor + Math.max(520, this.targetSpeed() * 1.2);
+    if (correct) {
+      this.combo += 1;
+      this.bestCombo = Math.max(this.bestCombo, this.combo);
+      this.multiplier = 2;
+      const bonus = 200 * this.combo;
+      this.score += bonus;
+      this.float("+" + bonus + "  x" + this.combo, "#b8ffe9");
+      this.fx.correct();
+      if (!this.reduce) this.cameras.main.flash(160, 80, 255, 190, true);
+    } else {
+      this.combo = 0;
+      this.multiplier = 1;
+      this.float("WRONG PATH", "#ff8aa0");
+      this.fx.wrong();
+      if (!this.reduce) {
+        this.cameras.main.shake(420, 0.012);
+        this.cameras.main.flash(140, 255, 40, 60, true);
+      }
+    }
+    this.fx.setFlow(this.flow);
+    this.fx.explode(this.player.x, this.player.y, correct);
+    window.QuizDash.emit("question-hide");
+    window.QuizDash.emit("status", { flow: this.flow, combo: this.combo, multiplier: this.multiplier });
+    this.ensure();
+  }
+
+  resolveChoice() {
+    const g = this.gate;
+    if (!g || !g.open) return;
+    const onTop = this.player.y < (QD_TOP + QD_BOT) / 2 && this.player.x > g.topX + 16;
+    if (onTop) this.lockChoice("A");
+    else if (this.player.x > g.lockX) this.lockChoice("B");
+  }
+
+  addFloor(x, len, surfaceY, kind) {
+    if (len < 8) return null;
+    const cx = x + len / 2;
+    const cy = surfaceY + QD_FH / 2;
+    const tile = this.floors.create(cx, cy, "ground");
+    tile.setDisplaySize(len + 2, QD_FH);
+    tile.refreshBody();
+    const tint = kind === "wrong" ? 0xff3355 : kind === "right" ? 0x3dffc8 : 0x3de4ff;
+    tile.setTint(tint);
+    tile.setDepth(8);
+    return tile;
+  }
+
+  addSpike(x, surfaceY) {
+    const s = this.hazards.create(x, surfaceY - 20, "spike");
+    s.setDisplaySize(34, 40);
+    s.body.setAllowGravity(false);
+    s.body.setImmovable(true);
+    s.body.setSize(16, 22, true);
+    s.setDepth(12);
+    s.setTint(this.pathKind === "wrong" ? 0xff2a55 : 0xff4d6a);
+    return s;
+  }
+
+  addSaw(x, y, floorSaw) {
+    const s = this.hazards.create(x, y, "saw");
+    s.setDisplaySize(floorSaw ? 46 : 52, floorSaw ? 46 : 52);
+    s.body.setAllowGravity(false);
+    s.body.setImmovable(true);
+    s.body.setSize(24, 24, true);
+    s.setDepth(13);
+    s.spin = true;
+    s.setTint(0xff2bd6);
+    return s;
+  }
+
+  addBar(x, y) {
+    const s = this.hazards.create(x, y, "bar");
+    s.setDisplaySize(128, 18);
+    s.body.setAllowGravity(false);
+    s.body.setImmovable(true);
+    s.body.setSize(120, 14, true);
+    s.setDepth(13);
+    s.setTint(0xc86bff);
+    return s;
+  }
+
+  addCoin(x, y) {
+    const c = this.pickups.create(x, y, "coin");
+    c.setDisplaySize(26, 26);
+    c.body.setAllowGravity(false);
+    c.body.setImmovable(true);
+    c.body.setSize(20, 20, true);
+    c.kind = "coin";
+    c.setDepth(11);
+    return c;
+  }
+
+  addPad(x, surfaceY) {
+    const p = this.pickups.create(x, surfaceY - 8, "pad");
+    p.setDisplaySize(54, 20);
+    p.body.setAllowGravity(false);
+    p.body.setImmovable(true);
+    p.body.setSize(48, 16, true);
+    p.kind = "pad";
+    p.setDepth(11);
+    return p;
+  }
+
+  addPortal(x, surfaceY, label, caption) {
+    const p = this.add.image(x, surfaceY - 78, "portal").setDepth(14);
+    p.setDisplaySize(68, 118);
+    p.setTint(label === "A" ? 0x35f2ff : 0xff3df0);
+    p.setBlendMode(Phaser.BlendModes.ADD);
+    try {
+      if (p.preFX) p.preFX.addGlow(label === "A" ? 0x35f2ff : 0xff3df0, 2, 0, false, 0.1, 6);
+    } catch (err) { /* optional */ }
+    this.tweens.add({ targets: p, alpha: 0.45, yoyo: true, repeat: -1, duration: 320 });
+    const style = { fontFamily: "Orbitron, sans-serif", fontSize: "26px", color: "#ffffff", stroke: "#041018", strokeThickness: 4 };
+    const letter = this.add.text(x, surfaceY - 84, label, style).setOrigin(0.5).setDepth(15);
+    const cap = this.add.text(x, surfaceY - 128, caption, {
+      fontFamily: '"Noto Sans KR", sans-serif',
+      fontSize: "15px",
+      color: "#f3fdff",
+      align: "center",
+      wordWrap: { width: 130 },
+      stroke: "#120818",
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(15);
+    const lane = this.add.text(x, surfaceY - 36, label === "A" ? "위 길" : "아래 길", {
+      fontFamily: '"Noto Sans KR", sans-serif',
+      fontSize: "13px",
+      color: label === "A" ? "#9dfff8" : "#ffb3f6",
+    }).setOrigin(0.5).setDepth(15);
+    this.decor.push(p, letter, cap, lane);
+  }
+
+  touchItem(item) {
+    if (!item.active || this.dead) return;
+    if (item.kind === "pad") {
+      if (this.padLock > 0) return;
+      this.padLock = 220;
+      this.player.setVelocityY(-1180);
+      this.landSquash = 0;
+      this.fx.pad();
+      return;
+    }
+    item.disableBody(true, true);
+    this.score += 20 * this.multiplier;
+    this.fx.coin();
+    this.float("+" + (20 * this.multiplier), "#ffe38a");
+  }
+
+  float(text, color) {
+    const label = this.add.text(this.player.x, this.player.y - 36, text, {
+      fontFamily: "Orbitron, sans-serif",
+      fontSize: "18px",
+      color: color || "#ffffff",
+    }).setOrigin(0.5).setDepth(40);
+    this.tweens.add({
+      targets: label,
+      y: label.y - 48,
+      alpha: 0,
+      duration: 700,
+      onComplete: () => label.destroy(),
+    });
+  }
+
+  die() {
+    if (this.dead) return;
+    this.dead = true;
+    this.player.setTint(0xff3355);
+    this.player.setVelocity(0, -380);
+    this.fx.setFlow("cruise");
+    this.fx.die();
+    this.fx.explode(this.player.x, this.player.y, false);
+    if (!this.reduce) this.cameras.main.shake(360, 0.02);
+    window.QuizDash.emit("hint", false);
+    window.QuizDash.emit("question-hide");
+    this.time.delayedCall(720, () => {
+      if (!this.sys.isActive()) return;
+      window.QuizDash.emit("over", {
+        name: this.name,
+        score: Math.floor(this.score),
+        chapter: this.quiz.chapter,
+        subject: this.quiz.subject.ko,
+        combo: this.bestCombo,
+        gates: this.gatesDone,
+        ts: Date.now(),
+      });
+    });
+  }
+
+  update(time, dt) {
+    dt = Math.min(34, dt);
+    if (this.paused) return;
+    const sx = this.cameras.main.scrollX;
+    this.stars.tilePositionX = sx * 0.08;
+    this.mount.tilePositionX = sx * 0.28;
+    this.grid.tilePositionX = sx * 0.55;
+    this.sun.x = 520 + Math.sin(time / 1800) * 16;
+
+    if (!this.dead) {
+      const goal = this.targetSpeed();
+      this.speedCurrent += (goal - this.speedCurrent) * (this.flow === "wrong" ? 0.08 : 0.045);
+      this.player.setVelocityX(this.speedCurrent);
+      this.ensure();
+      this.resolveChoice();
+      this.jumpBuffer -= dt;
+      this.padLock -= dt;
+      const grounded = this.player.body.blocked.down || this.player.body.touching.down;
+      if (grounded) this.coyote = 90;
+      else this.coyote -= dt;
+      if (this.jumpBuffer > 0 && (grounded || this.coyote > 0)) {
+        this.player.setVelocityY(-1040);
+        this.jumpBuffer = 0;
+        this.coyote = 0;
+        this.fx.jump();
+      }
+      if (grounded && this.wasAir) this.landSquash = 100;
+      this.wasAir = !grounded;
+      let sxScale = 1;
+      let syScale = 1;
+      if (!this.reduce) {
+        if (!grounded && this.player.body.velocity.y < -40) { sxScale = 0.84; syScale = 1.2; }
+        else if (!grounded) { sxScale = 0.92; syScale = 1.08; }
+        else if (this.landSquash > 0) { sxScale = 1.24; syScale = 0.76; this.landSquash -= dt; }
+        if (!grounded) this.player.angle += (dt / 1000) * 560;
+        else this.player.angle = Math.round(this.player.angle / 90) * 90;
+      }
+      this.player.setScale((QD_CUBE / 64) * sxScale, (QD_CUBE / 64) * syScale);
+
+      this.scoreAcc += this.speedCurrent * (dt / 1000);
+      const mult = this.multiplier;
+      while (this.scoreAcc >= 48) {
+        this.scoreAcc -= 48;
+        this.score += mult;
+      }
+      if (this.player.y > QD_BOT + 280) this.die();
+      if (this.flow === "wrong") {
+        this.wash.setFillStyle(0xff1848, 0.1 + Math.sin(time / 70) * 0.04);
+        this.shakeAcc += dt;
+        if (!this.reduce && this.shakeAcc > 360) {
+          this.shakeAcc = 0;
+          this.cameras.main.shake(140, 0.0035);
+        }
+      } else if (this.flow === "right") {
+        this.wash.setFillStyle(0x14ffb0, 0.06);
+      } else {
+        this.wash.setFillStyle(0x000000, 0);
+      }
+    }
+
+    this.cameras.main.scrollX = Math.max(0, this.player.x - 230);
+    this.hazards.getChildren().forEach((h) => { if (h.spin) h.angle += dt * 0.45; });
+    this.fx.update(time, dt, this.speedCurrent);
+    this.cleanup();
+    this.hudAcc += dt;
+    if (this.hudAcc > 120) {
+      this.hudAcc = 0;
+      window.QuizDash.emit("hud", this.hud());
+    }
+  }
+
+  cleanup() {
+    const left = this.cameras.main.scrollX - 360;
+    [this.floors, this.hazards, this.pickups].forEach((group) => {
+      group.getChildren().forEach((obj) => {
+        const width = obj.displayWidth || 0;
+        if (obj.x + width < left) obj.destroy();
+      });
+    });
+    this.decor = this.decor.filter((obj) => {
+      if (!obj.active && obj.scene == null) return false;
+      if (obj.x < left) {
+        obj.destroy();
+        return false;
+      }
+      return true;
+    });
+  }
+};

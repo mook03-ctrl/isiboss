@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07041a">
+  <title>Quiz Dash | angrywork</title>
+  <meta name="description" content="퀴즈를 풀며 달리는 네온 러닝 게임 Quiz Dash. 수학, 영어, 상식 관문을 통과하세요.">
+  <link rel="canonical" href="https://angrywork.com/quiz-dash/">
+  <meta property="og:title" content="Quiz Dash | angrywork">
+  <meta property="og:url" content="https://angrywork.com/quiz-dash/">
+  <meta property="og:image" content="https://angrywork.com/quiz-dash/start-screen.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="game-root"></div>
+    <div id="ui">
+      <section id="screen-start" class="screen">
+        <a class="back" href="../games/">← 게임 목록</a>
+        <div class="brand">
+          <p class="kicker">NEON QUIZ RUNNER</p>
+          <h1>QUIZ DASH</h1>
+          <p class="tag">정답을 고르고, 불꽃을 남겨라</p>
+        </div>
+        <form id="start-form" class="glass">
+          <label for="player-name">Player name</label>
+          <input id="player-name" maxlength="16" placeholder="이름을 입력" autocomplete="nickname" aria-label="Player name">
+          <div class="row">
+            <button id="btn-start" type="submit">START</button>
+            <button id="btn-rank" type="button">랭킹</button>
+          </div>
+          <p id="best-line" class="best">BEST  0</p>
+        </form>
+        <section class="glass board-preview" aria-label="랭킹 현황">
+          <h2>랭킹 현황</h2>
+          <ol id="preview-list"></ol>
+        </section>
+        <section class="glass how">
+          <h2>HOW TO PLAY</h2>
+          <p>자동으로 달립니다. 화면을 탭하거나 스페이스로 점프하세요.</p>
+          <p>관문에서 위 길은 A, 아래 길은 B입니다.</p>
+          <p>정답은 초록 불꽃과 2배 점수. 오답은 붉은 가속, 살아남으면 생존 점수.</p>
+          <p>수학은 두 자리 곱셈·나눗셈, 영어는 미국 3학년 단어의 뜻을 보고 고릅니다.</p>
+          <p>챕터 5관문을 깨면 수학 → 영어 → 상식 순으로 이어집니다.</p>
+        </section>
+        <p id="boot-error" class="hidden">게임을 불러오지 못했습니다. 새로고침해 주세요.</p>
+      </section>
+
+      <div id="hud" class="hidden">
+        <div class="hud-top">
+          <button id="btn-back" type="button" aria-label="처음으로">←</button>
+          <div>
+            <div id="hud-chapter">CH 1 · 수학 · 1/5</div>
+            <div id="hud-name">Player</div>
+          </div>
+          <div>
+            <div id="hud-score">0</div>
+            <small id="hud-mult">x1</small>
+          </div>
+          <button id="btn-sound" type="button" aria-label="소리">🔊</button>
+          <button id="btn-hud-rank" type="button" aria-label="랭킹">🏆</button>
+        </div>
+        <div id="hud-combo"></div>
+        <div id="q-card" class="hidden">
+          <div id="q-prompt"></div>
+          <div class="q-options">
+            <div class="opt opt-a"><b>A</b><span id="q-a"></span><em>위 길</em></div>
+            <div class="opt opt-b"><b>B</b><span id="q-b"></span><em>아래 길</em></div>
+          </div>
+        </div>
+        <div id="status-banner" class="hidden"></div>
+        <div id="hint" class="hidden">탭해서 점프 · 위 A · 아래 B</div>
+      </div>
+
+      <div id="chapter-card" class="hidden">
+        <p id="ch-kicker" class="kicker">READY</p>
+        <h2 id="ch-title">CHAPTER 1</h2>
+        <p id="ch-sub">MATH · 수학</p>
+      </div>
+
+      <section id="screen-over" class="screen hidden">
+        <div class="glass modal-card">
+          <p class="kicker">RUN OVER</p>
+          <h2>충돌</h2>
+          <p id="over-name"></p>
+          <p id="over-score">0</p>
+          <p id="over-meta"></p>
+          <p id="over-rank"></p>
+          <div class="actions">
+            <button id="over-retry" type="button">다시 달리기</button>
+            <button id="over-rank-btn" type="button">랭킹 현황</button>
+            <button id="over-title" class="ghost" type="button">처음으로</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-rank" class="screen hidden" role="dialog" aria-modal="true" aria-labelledby="rank-title">
+        <div class="glass modal-card">
+          <h2 id="rank-title">랭킹 현황 · TOP 10</h2>
+          <p id="rank-note"></p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>이름</th>
+                  <th>점수</th>
+                  <th>챕터</th>
+                  <th>콤보</th>
+                  <th>날짜</th>
+                </tr>
+              </thead>
+              <tbody id="rank-body"></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button id="rank-close" type="button">닫기</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.min.js"></script>
+  <script src="src/managers/QuizManager.js"></script>
+  <script src="src/managers/FXManager.js"></script>
+  <script src="src/scenes/BootScene.js"></script>
+  <script src="src/scenes/MenuScene.js"></script>
+  <script src="src/scenes/GameScene.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
