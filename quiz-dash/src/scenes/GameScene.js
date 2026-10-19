@@ -4,6 +4,8 @@ const QD_BOT = 760;
 const QD_TOP = 612;
 const QD_FH = 48;
 const QD_CUBE = 92;
+const QD_GRAVITY = 1700;
+const QD_JUMP = -860;
 
 window.GameScene = class GameScene extends Phaser.Scene {
   constructor() { super("game"); }
@@ -42,11 +44,12 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, -400, 2000000, 1600);
     this.cameras.main.setBackgroundColor("#07041a");
-    this.cameras.main.roundPixels = true;
+    this.cameras.main.roundPixels = false;
     this.cameras.main.setBounds(0, 0, 2000000, QD_H);
-    this.holdY = null;
-    this.airMs = 0;
-    this.missGround = 0;
+    this.physics.world.gravity.y = 0;
+    this.vy = 0;
+    this.grounded = true;
+    this.jumpArmed = false;
 
     this.add.tileSprite(0, 0, QD_W, QD_H, "sky").setOrigin(0).setScrollFactor(0).setDepth(0);
     this.stars = this.add.tileSprite(0, 0, QD_W, QD_H, "stars").setOrigin(0).setScrollFactor(0).setDepth(1);
@@ -62,16 +65,14 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.addFloor(0, 520, QD_BOT, "cruise");
     this.cursor = 520;
 
-    this.player = this.physics.add.image(250, QD_BOT - 120, "cube");
+    this.player = this.physics.add.image(250, QD_BOT - 46, "cube");
     this.player.setDepth(22);
     this.player.setScale(QD_CUBE / 64);
+    this.player.body.setAllowGravity(false);
     this.player.body.setSize(56, 56, true);
-    this.player.setMaxVelocity(2200, 1700);
+    this.player.body.reset(250, QD_BOT - this.player.body.halfHeight);
     try { if (this.player.preFX) this.glow = this.player.preFX.addGlow(0x7efbff, 4, 0, false, 0.12, 10); } catch (err) { /* optional */ }
 
-    this.physics.add.collider(this.player, this.floors, null, (player, floor) => {
-      return player.body.velocity.y >= 0 && player.body.bottom <= floor.body.top + 16;
-    });
     this.physics.add.overlap(this.player, this.hazards, () => this.die());
     this.physics.add.overlap(this.player, this.pickups, (_p, item) => this.touchItem(item));
 
@@ -79,7 +80,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.speedCurrent = this.targetSpeed();
     this.ensure();
 
-    this.input.on("pointerdown", () => this.requestJump());
+    this.input.on("pointerdown", () => {
+      if (!this.jumpArmed) return;
+      this.requestJump();
+    });
+    this.time.delayedCall(220, () => { this.jumpArmed = true; });
     this.keys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.UP,
       w: Phaser.Input.Keyboard.KeyCodes.W,
@@ -96,7 +101,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
   requestJump() {
     if (this.dead || this.paused) return;
-    this.jumpBuffer = 110;
+    this.jumpBuffer = 180;
     if (window.QuizDashSfx) window.QuizDashSfx.ensure();
   }
 
@@ -480,7 +485,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
     if (item.kind === "pad") {
       if (this.padLock > 0) return;
       this.padLock = 220;
-      this.player.setVelocityY(-1180);
+      this.vy = -1080;
+      this.grounded = false;
       this.landSquash = 0;
       this.fx.pad();
       return;
@@ -510,8 +516,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
     if (this.dead) return;
     this.dead = true;
     this.player.setTint(0xff3355);
-    this.holdY = null;
-    this.player.setVelocity(0, -380);
+    this.vy = -420;
+    this.grounded = false;
     this.fx.setFlow("cruise");
     this.fx.die();
     this.fx.explode(this.player.x, this.player.y, false);
@@ -532,6 +538,67 @@ window.GameScene = class GameScene extends Phaser.Scene {
     });
   }
 
+  surfaceUnder(x, prevFeet, feet) {
+    let best = null;
+    const reach = Math.max(36, Math.abs(this.vy) * 0.04 + 24);
+    this.floors.getChildren().forEach((floor) => {
+      const b = floor.body;
+      if (!b) return;
+      if (x < b.left + 8 || x > b.right - 8) return;
+      const surface = b.top;
+      if (prevFeet <= surface + 18 && feet + 8 >= surface && feet - surface <= reach) {
+        if (best == null || surface < best) best = surface;
+      }
+    });
+    return best;
+  }
+
+  stepRunner(dt) {
+    const step = dt / 1000;
+    const half = this.player.body.halfHeight || 28;
+    this.player.x += this.speedCurrent * step;
+    this.jumpBuffer -= dt;
+    this.padLock -= dt;
+    if (this.jumpBuffer > 0 && (this.grounded || this.coyote > 0)) {
+      this.vy = QD_JUMP;
+      this.grounded = false;
+      this.jumpBuffer = 0;
+      this.coyote = 0;
+      this.fx.jump();
+    }
+    const prevFeet = this.player.y + half;
+    if (this.grounded) {
+      const stay = this.surfaceUnder(this.player.x, prevFeet, prevFeet);
+      if (stay != null) {
+        this.player.y = stay - half;
+        this.vy = 0;
+        this.coyote = 140;
+      } else {
+        this.grounded = false;
+        this.vy = 40;
+      }
+    }
+    if (!this.grounded) {
+      this.coyote -= dt;
+      let g = QD_GRAVITY;
+      if (Math.abs(this.vy) < 80) g *= 0.45;
+      this.vy += g * step;
+      const nextY = this.player.y + this.vy * step;
+      const surface = this.vy >= 0 ? this.surfaceUnder(this.player.x, prevFeet, nextY + half) : null;
+      if (surface != null) {
+        if (this.wasAir) this.landSquash = 80;
+        this.player.y = surface - half;
+        this.vy = 0;
+        this.grounded = true;
+        this.coyote = 140;
+      } else {
+        this.player.y = nextY;
+      }
+    }
+    this.wasAir = !this.grounded;
+    this.player.body.reset(this.player.x, this.player.y);
+  }
+
   update(time, dt) {
     dt = Math.min(34, dt);
     if (this.paused) return;
@@ -543,50 +610,29 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
     if (!this.dead) {
       const goal = this.targetSpeed();
-      this.speedCurrent += (goal - this.speedCurrent) * (this.flow === "wrong" ? 0.08 : 0.045);
-      this.player.setVelocityX(this.speedCurrent);
+      this.speedCurrent += (goal - this.speedCurrent) * (this.flow === "wrong" ? 0.06 : 0.035);
       this.ensure();
       this.resolveChoice();
-      this.jumpBuffer -= dt;
-      this.padLock -= dt;
-      const body = this.player.body;
-      const grounded = body.blocked.down || body.touching.down;
-      if (grounded) {
-        this.coyote = 90;
-        this.airMs = 0;
-        this.missGround = 0;
-        if (body.velocity.y > 0) body.setVelocityY(0);
-        if (this.holdY == null || Math.abs(this.player.y - this.holdY) > 8) this.holdY = Math.round(this.player.y);
-      } else {
-        this.coyote -= dt;
-        this.airMs += dt;
-        this.missGround += dt;
-        if (body.velocity.y < -80 || body.velocity.y > 80 || this.missGround > 48) this.holdY = null;
-      }
-      if (this.jumpBuffer > 0 && (grounded || this.coyote > 0)) {
-        this.player.setVelocityY(-1040);
-        this.jumpBuffer = 0;
-        this.coyote = 0;
-        this.holdY = null;
-        this.airMs = 80;
-        this.fx.jump();
-      }
-      const onGround = this.holdY != null && body.velocity.y >= -40;
-      if (grounded && this.wasAir) this.landSquash = 100;
-      this.wasAir = !onGround;
+      this.stepRunner(dt);
       let sxScale = 1;
       let syScale = 1;
       if (!this.reduce) {
-        if (!onGround && body.velocity.y < -40) { sxScale = 0.84; syScale = 1.2; }
-        else if (!onGround) { sxScale = 0.92; syScale = 1.08; }
-        else if (this.landSquash > 0) { sxScale = 1.24; syScale = 0.76; this.landSquash -= dt; }
-        if (!onGround && this.airMs > 50) this.player.angle += (dt / 1000) * 560;
+        if (!this.grounded && this.vy < -40) { sxScale = 0.94; syScale = 1.08; }
+        else if (!this.grounded) { sxScale = 0.97; syScale = 1.04; }
+        else if (this.landSquash > 0) { sxScale = 1.06; syScale = 0.94; this.landSquash -= dt; }
+        if (!this.grounded) this.player.angle += (dt / 1000) * 120;
         else this.player.angle = Math.round(this.player.angle / 90) * 90;
       }
       const nextSX = (QD_CUBE / 64) * sxScale;
       const nextSY = (QD_CUBE / 64) * syScale;
       if (Math.abs(this.player.scaleX - nextSX) > 0.001 || Math.abs(this.player.scaleY - nextSY) > 0.001) {
+        const lockedX = this.player.x;
+        const lockedY = this.player.y;
         this.player.setScale(nextSX, nextSY);
+        this.player.body.setSize(56, 56, true);
+        this.player.body.halfWidth = 28;
+        this.player.body.halfHeight = 28;
+        this.player.body.reset(lockedX, lockedY);
       }
 
       this.scoreAcc += this.speedCurrent * (dt / 1000);
@@ -596,25 +642,16 @@ window.GameScene = class GameScene extends Phaser.Scene {
         this.score += mult;
       }
       if (this.player.y > QD_BOT + 280) this.die();
-      if (this.flow === "wrong") {
-        this.wash.setFillStyle(0xff1848, 0.1 + Math.sin(time / 70) * 0.04);
-        this.shakeAcc += dt;
-        if (!this.reduce && this.shakeAcc > 360) {
-          this.shakeAcc = 0;
-          this.cameras.main.shake(140, 0.0035);
-        }
-      } else if (this.flow === "right") {
-        this.wash.setFillStyle(0x14ffb0, 0.06);
-      } else {
-        this.wash.setFillStyle(0x000000, 0);
-      }
+      if (this.flow === "wrong") this.wash.setFillStyle(0xff1848, 0.08);
+      else if (this.flow === "right") this.wash.setFillStyle(0x14ffb0, 0.06);
+      else this.wash.setFillStyle(0x000000, 0);
+    } else {
+      this.vy += QD_GRAVITY * (dt / 1000);
+      this.player.y += this.vy * (dt / 1000);
+      this.player.body.reset(this.player.x, this.player.y);
     }
 
-    const px = Math.round(this.player.x);
-    this.player.x = px;
-    if (!this.dead && this.holdY != null) this.player.y = this.holdY;
-    else this.player.y = Math.round(this.player.y);
-    this.cameras.main.scrollX = Math.max(0, px - 230);
+    this.cameras.main.scrollX = Math.max(0, this.player.x - 230);
     this.hazards.getChildren().forEach((h) => { if (h.spin) h.angle += dt * 0.45; });
     this.fx.update(time, dt, this.speedCurrent);
     this.cleanup();

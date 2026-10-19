@@ -312,7 +312,7 @@ function boot() {
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     fps: { target: 60, smoothStep: true },
     audio: { noAudio: true },
-    render: { antialias: true, roundPixels: true, powerPreference: "high-performance" },
+    render: { antialias: true, roundPixels: false, powerPreference: "high-performance" },
     scene: [window.BootScene, window.MenuScene, window.GameScene],
     input: { activePointers: 2 },
     banner: false,
