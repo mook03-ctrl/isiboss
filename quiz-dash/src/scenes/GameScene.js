@@ -42,7 +42,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, -400, 2000000, 1600);
     this.cameras.main.setBackgroundColor("#07041a");
+    this.cameras.main.roundPixels = true;
     this.cameras.main.setBounds(0, 0, 2000000, QD_H);
+    this.holdY = null;
+    this.airMs = 0;
+    this.missGround = 0;
 
     this.add.tileSprite(0, 0, QD_W, QD_H, "sky").setOrigin(0).setScrollFactor(0).setDepth(0);
     this.stars = this.add.tileSprite(0, 0, QD_W, QD_H, "stars").setOrigin(0).setScrollFactor(0).setDepth(1);
@@ -378,6 +382,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
     const tile = this.floors.create(cx, cy, "ground");
     tile.setDisplaySize(len + 2, QD_FH);
     tile.refreshBody();
+    tile.body.checkCollision.left = false;
+    tile.body.checkCollision.right = false;
+    tile.body.checkCollision.down = false;
     const tint = kind === "wrong" ? 0xff3355 : kind === "right" ? 0x3dffc8 : 0x3de4ff;
     tile.setTint(tint);
     tile.setDepth(8);
@@ -503,6 +510,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     if (this.dead) return;
     this.dead = true;
     this.player.setTint(0xff3355);
+    this.holdY = null;
     this.player.setVelocity(0, -380);
     this.fx.setFlow("cruise");
     this.fx.die();
@@ -541,27 +549,45 @@ window.GameScene = class GameScene extends Phaser.Scene {
       this.resolveChoice();
       this.jumpBuffer -= dt;
       this.padLock -= dt;
-      const grounded = this.player.body.blocked.down || this.player.body.touching.down;
-      if (grounded) this.coyote = 90;
-      else this.coyote -= dt;
+      const body = this.player.body;
+      const grounded = body.blocked.down || body.touching.down;
+      if (grounded) {
+        this.coyote = 90;
+        this.airMs = 0;
+        this.missGround = 0;
+        if (body.velocity.y > 0) body.setVelocityY(0);
+        if (this.holdY == null || Math.abs(this.player.y - this.holdY) > 8) this.holdY = Math.round(this.player.y);
+      } else {
+        this.coyote -= dt;
+        this.airMs += dt;
+        this.missGround += dt;
+        if (body.velocity.y < -80 || body.velocity.y > 80 || this.missGround > 48) this.holdY = null;
+      }
       if (this.jumpBuffer > 0 && (grounded || this.coyote > 0)) {
         this.player.setVelocityY(-1040);
         this.jumpBuffer = 0;
         this.coyote = 0;
+        this.holdY = null;
+        this.airMs = 80;
         this.fx.jump();
       }
+      const onGround = this.holdY != null && body.velocity.y >= -40;
       if (grounded && this.wasAir) this.landSquash = 100;
-      this.wasAir = !grounded;
+      this.wasAir = !onGround;
       let sxScale = 1;
       let syScale = 1;
       if (!this.reduce) {
-        if (!grounded && this.player.body.velocity.y < -40) { sxScale = 0.84; syScale = 1.2; }
-        else if (!grounded) { sxScale = 0.92; syScale = 1.08; }
+        if (!onGround && body.velocity.y < -40) { sxScale = 0.84; syScale = 1.2; }
+        else if (!onGround) { sxScale = 0.92; syScale = 1.08; }
         else if (this.landSquash > 0) { sxScale = 1.24; syScale = 0.76; this.landSquash -= dt; }
-        if (!grounded) this.player.angle += (dt / 1000) * 560;
+        if (!onGround && this.airMs > 50) this.player.angle += (dt / 1000) * 560;
         else this.player.angle = Math.round(this.player.angle / 90) * 90;
       }
-      this.player.setScale((QD_CUBE / 64) * sxScale, (QD_CUBE / 64) * syScale);
+      const nextSX = (QD_CUBE / 64) * sxScale;
+      const nextSY = (QD_CUBE / 64) * syScale;
+      if (Math.abs(this.player.scaleX - nextSX) > 0.001 || Math.abs(this.player.scaleY - nextSY) > 0.001) {
+        this.player.setScale(nextSX, nextSY);
+      }
 
       this.scoreAcc += this.speedCurrent * (dt / 1000);
       const mult = this.multiplier;
@@ -584,7 +610,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
       }
     }
 
-    this.cameras.main.scrollX = Math.max(0, this.player.x - 230);
+    const px = Math.round(this.player.x);
+    this.player.x = px;
+    if (!this.dead && this.holdY != null) this.player.y = this.holdY;
+    else this.player.y = Math.round(this.player.y);
+    this.cameras.main.scrollX = Math.max(0, px - 230);
     this.hazards.getChildren().forEach((h) => { if (h.spin) h.angle += dt * 0.45; });
     this.fx.update(time, dt, this.speedCurrent);
     this.cleanup();
