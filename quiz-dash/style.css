@@ -123,7 +123,7 @@ input {
 
 input:focus { box-shadow: 0 0 0 3px rgba(57, 255, 240, 0.25); }
 
-.row { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 8px; margin-top: 10px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 
 button {
   border: 0;
