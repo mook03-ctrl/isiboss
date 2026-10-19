@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a0a38"/>
+      <stop offset="0.55" stop-color="#090616"/>
+      <stop offset="1" stop-color="#05030c"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#7dfff6"/>
+      <stop offset="1" stop-color="#ff3df2"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff3a8"/>
+      <stop offset="0.45" stop-color="#ff7ad9"/>
+      <stop offset="1" stop-color="#ff7ad900"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#sky)"/>
+  <g stroke="#2de2ff" stroke-width="1" opacity="0.35" fill="none">
+    <path d="M0 620 H600 M0 660 H600 M0 700 H600"/>
+    <path d="M40 560 L300 760 L560 560"/>
+    <path d="M80 800 L220 560 M180 800 L320 520 M300 800 L390 540 M420 800 L470 560"/>
+  </g>
+  <circle cx="430" cy="210" r="90" fill="url(#sun)"/>
+  <path d="M0 470 L80 390 L150 440 L250 300 L340 420 L430 340 L520 410 L600 360 V520 H0 Z" fill="#2a1466"/>
+  <path d="M250 300 L278 360 H222 Z" fill="#ff4ad8" opacity="0.7"/>
+  <g>
+    <rect x="70" y="560" width="460" height="36" rx="8" fill="#062033" stroke="#39fff0" stroke-width="4"/>
+    <rect x="150" y="470" width="220" height="28" rx="8" fill="#102018" stroke="#3dffc0" stroke-width="4"/>
+    <rect x="250" y="430" width="28" height="28" rx="4" fill="#071820" stroke="#c8fff8" stroke-width="3"/>
+    <path d="M250 500 L262 470 L274 500" fill="none" stroke="#39fff0" stroke-width="3"/>
+    <path d="M300 596 L312 566 L324 596" fill="none" stroke="#ff3df2" stroke-width="3"/>
+    <ellipse cx="250" cy="500" rx="18" ry="34" fill="none" stroke="#35f2ff" stroke-width="4"/>
+    <ellipse cx="330" cy="578" rx="18" ry="34" fill="none" stroke="#ff3df2" stroke-width="4"/>
+    <polygon points="430,596 444,560 458,596" fill="#ff3355"/>
+    <polygon points="480,596 494,552 508,596" fill="#ff3355"/>
+  </g>
+  <text x="300" y="118" text-anchor="middle" fill="#39fff0" font-family="Arial, sans-serif" font-size="18" letter-spacing="6">NEON QUIZ RUNNER</text>
+  <text x="300" y="190" text-anchor="middle" fill="url(#title)" font-family="Arial Black, Arial, sans-serif" font-size="68">QUIZ</text>
+  <text x="300" y="262" text-anchor="middle" fill="url(#title)" font-family="Arial Black, Arial, sans-serif" font-size="68">DASH</text>
+  <text x="300" y="700" text-anchor="middle" fill="#e9fbff" font-family="Arial, sans-serif" font-size="28" font-weight="700">TOP A / BOTTOM B</text>
+  <text x="300" y="746" text-anchor="middle" fill="#ffe56a" font-family="Arial, sans-serif" font-size="22">Player name / RANK</text>
+</svg>
