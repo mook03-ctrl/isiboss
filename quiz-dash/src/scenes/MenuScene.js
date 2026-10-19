@@ -9,6 +9,11 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
     this.grid = this.add.tileSprite(360, 720, 720, 520, "grid").setDepth(4).setAlpha(0.4);
     this.floor = this.add.rectangle(360, 824, 760, 48, 0x123048).setDepth(5);
     this.physics.add.existing(this.floor, true);
+    this.floor.body.checkCollision.left = false;
+    this.floor.body.checkCollision.right = false;
+    this.floor.body.checkCollision.down = false;
+    this.cubeHold = null;
+    this.menuAir = 0;
     this.cube = this.physics.add.image(360, 680, "cube").setDepth(6);
     this.cube.setDisplaySize(78, 78);
     this.cube.body.setSize(52, 52, true);
@@ -29,7 +34,16 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
     this.grid.tilePositionX += dt * 0.05;
     this.mount.tilePositionX += dt * 0.02;
     const down = this.cube.body.blocked.down || this.cube.body.touching.down;
-    if (!down) this.cube.angle += dt * 0.45;
-    else this.cube.angle *= 0.6;
+    if (down) {
+      this.menuAir = 0;
+      this.cube.angle = 0;
+      if (this.cube.body.velocity.y > 0) this.cube.setVelocityY(0);
+      if (this.cubeHold == null) this.cubeHold = Math.round(this.cube.y);
+      this.cube.y = this.cubeHold;
+    } else {
+      this.menuAir += dt;
+      if (this.cube.body.velocity.y < -40) this.cubeHold = null;
+      if (this.menuAir > 40) this.cube.angle += dt * 0.45;
+    }
   }
 };
