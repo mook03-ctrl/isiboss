@@ -145,7 +145,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
         const len = Math.max(24, Math.min(320, this.nextGateX - this.cursor));
         this.addFloor(this.cursor, len, QD_BOT, "cruise");
         if (len > 140 && Math.random() < 0.55) this.addCoin(this.cursor + len * 0.5, QD_BOT - 78);
-        if (len > 280 && (this.gatesDone > 0 || this.quiz.chapter > 1) && Math.random() < 0.22) {
+        if (len > 280 && (this.gatesDone > 0 || this.quiz.chapter > 1) && this.cursor - (this.lastAirX || 0) > 1400) {
           this.addBomb(this.cursor + len * 0.7, 250);
         }
         this.cursor += len;
@@ -223,8 +223,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatGap(y, spd, gapFactor, platFactor) {
-    const gap = Math.max(78, spd * gapFactor);
-    const plat = Math.max(140, spd * platFactor);
+    const lead = Math.max(320, spd * 1.05);
+    this.addFloor(this.cursor, lead, y, this.pathKind);
+    this.cursor += lead;
+    const gap = Math.max(72, spd * gapFactor * 0.82);
+    const plat = Math.max(220, spd * platFactor);
     this.cursor += gap;
     this.addFloor(this.cursor, plat, y, this.pathKind);
     this.addCoin(this.cursor + plat * 0.5, y - 96);
@@ -232,12 +235,15 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatSpikes(y, spd, count, hard) {
-    const tight = hard ? (this.quiz.tier >= 2 ? 0.78 : 0.92) : 1.05;
-    const spacing = Math.max(230, spd * tight);
-    const len = spacing * count + 90;
+    const breathe = Math.max(340, spd * 1.15);
+    this.addFloor(this.cursor, breathe, y, this.pathKind);
+    this.cursor += breathe;
+    const tight = hard ? (this.quiz.tier >= 2 ? 1.65 : 1.85) : 2.15;
+    const spacing = Math.max(460, spd * tight);
+    const len = spacing * count + 300;
     this.addFloor(this.cursor, len, y, this.pathKind);
     for (let i = 0; i < count; i += 1) {
-      const x = this.cursor + 130 + i * spacing;
+      const x = this.cursor + 240 + i * spacing;
       if (hard && i % 2 === 1) this.addSaw(x, y - 22, true);
       else this.addSpike(x, y);
     }
@@ -245,9 +251,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatPit(y, spd) {
-    const pre = Math.max(160, spd * 0.42);
-    const gap = Math.max(100, spd * (this.quiz.tier >= 2 ? 0.4 : 0.34));
-    const plat = Math.max(160, spd * 0.5);
+    const pre = Math.max(360, spd * 1.15);
+    const gap = Math.max(88, spd * (this.quiz.tier >= 2 ? 0.32 : 0.26));
+    const plat = Math.max(260, spd * 0.85);
     this.addFloor(this.cursor, pre, y, this.pathKind);
     const pit = this.cursor + pre;
     this.addSaw(pit + gap * 0.5, y + 46, true);
@@ -257,11 +263,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatPad(y, spd, required) {
-    const pre = Math.max(170, spd * 0.42);
+    const pre = Math.max(380, spd * 1.2);
     this.addFloor(this.cursor, pre, y, this.pathKind);
     this.addPad(this.cursor + pre - 40, y);
     this.cursor += pre;
-    const gap = Math.max(110, spd * (required ? 0.56 : 0.3));
+    const gap = Math.max(96, spd * (required ? 0.42 : 0.24));
     this.cursor += gap;
     const plat = Math.max(170, spd * 0.55);
     this.addFloor(this.cursor, plat, y, this.pathKind);
@@ -271,19 +277,22 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatAirBombs(y, spd) {
-    const len = Math.max(720, spd * 2.8);
+    const len = Math.max(1100, spd * 4.2);
     this.addFloor(this.cursor, len, y, this.pathKind);
-    this.addBomb(this.cursor + len * 0.5, 240);
+    this.addBomb(this.cursor + len * 0.55, 240);
     this.cursor += len;
   }
 
   beatCeiling(y, spd) {
-    const spikeAt = spd * 0.3;
-    const barAt = spikeAt + spd * 0.8;
-    const len = Math.max(barAt + 180, spd * 1.25);
+    const breathe = Math.max(340, spd * 1.1);
+    this.addFloor(this.cursor, breathe, y, this.pathKind);
+    this.cursor += breathe;
+    const spikeAt = spd * 0.7;
+    const barAt = spikeAt + spd * 1.6;
+    const len = Math.max(barAt + spd * 0.9, spd * 3.2);
     this.addFloor(this.cursor, len, y, this.pathKind);
     this.addSpike(this.cursor + spikeAt, y);
-    this.addBar(this.cursor + barAt, y - 78);
+    this.addBar(this.cursor + barAt, y - 220);
     this.cursor += len;
   }
 
@@ -438,6 +447,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     s.setDepth(13);
     s.spin = true;
     s.spinRate = 0.16;
+    this.lastAirX = x;
     return s;
   }
 
