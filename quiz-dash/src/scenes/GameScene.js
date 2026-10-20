@@ -145,8 +145,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
         const len = Math.max(24, Math.min(320, this.nextGateX - this.cursor));
         this.addFloor(this.cursor, len, QD_BOT, "cruise");
         if (len > 140 && Math.random() < 0.55) this.addCoin(this.cursor + len * 0.5, QD_BOT - 78);
-        if (len > 260 && (this.gatesDone > 0 || this.quiz.chapter > 1)) {
-          this.addBomb(this.cursor + len * 0.72, QD_BOT - (200 + Math.random() * 180));
+        if (len > 280 && (this.gatesDone > 0 || this.quiz.chapter > 1) && Math.random() < 0.22) {
+          this.addBomb(this.cursor + len * 0.7, 250);
         }
         this.cursor += len;
       } else if (this.phase === "path") {
@@ -209,7 +209,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     else if (n === 2) this.beatGap(y, spd, fierce ? 0.4 : 0.33, fierce ? 0.46 : 0.58);
     else if (n === 3) this.beatPit(y, spd);
     else if (fierce) this.beatCeiling(y, spd);
-    else this.beatAirBombs(y, spd);
+    else this.beatSpikes(y, spd, 2, true);
   }
 
   beatCoins(y, spd) {
@@ -240,7 +240,6 @@ window.GameScene = class GameScene extends Phaser.Scene {
       const x = this.cursor + 130 + i * spacing;
       if (hard && i % 2 === 1) this.addSaw(x, y - 22, true);
       else this.addSpike(x, y);
-      if (i === 0) this.addBomb(x + 70, y - 250);
     }
     this.cursor += len;
   }
@@ -272,10 +271,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatAirBombs(y, spd) {
-    const len = Math.max(560, spd * 2.2);
+    const len = Math.max(720, spd * 2.8);
     this.addFloor(this.cursor, len, y, this.pathKind);
-    this.addBomb(this.cursor + 150, y - 150);
-    this.addBomb(this.cursor + len * 0.58, y - 330);
+    this.addBomb(this.cursor + len * 0.5, 240);
     this.cursor += len;
   }
 
