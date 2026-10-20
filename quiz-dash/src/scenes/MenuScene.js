@@ -4,7 +4,6 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
   create() {
     this.add.tileSprite(360, 480, 720, 960, "sky").setDepth(0);
     this.stars = this.add.tileSprite(360, 480, 720, 960, "stars").setDepth(1).setAlpha(0.9);
-    this.add.image(500, 210, "sun").setDepth(2).setScale(0.9);
     this.mount = this.add.tileSprite(360, 560, 720, 260, "mount").setDepth(3);
     this.grid = this.add.tileSprite(360, 720, 720, 520, "grid").setDepth(4).setAlpha(0.4);
     this.floor = this.add.rectangle(360, 824, 760, 48, 0x123048).setDepth(5);

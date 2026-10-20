@@ -54,7 +54,6 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
     this.add.tileSprite(0, 0, QD_W, QD_H, "sky").setOrigin(0).setScrollFactor(0).setDepth(0);
     this.stars = this.add.tileSprite(0, 0, QD_W, QD_H, "stars").setOrigin(0).setScrollFactor(0).setDepth(1);
-    this.sun = this.add.image(250, 455, "sun").setScrollFactor(0).setDepth(2).setScale(0.62).setAlpha(0.9);
     this.mount = this.add.tileSprite(0, 470, QD_W, 200, "mount").setOrigin(0).setScrollFactor(0).setDepth(3).setAlpha(0.95);
     this.grid = this.add.tileSprite(0, 560, QD_W, 400, "grid").setOrigin(0).setScrollFactor(0).setDepth(4).setAlpha(0.4);
     this.wash = this.add.rectangle(QD_W / 2, QD_H / 2, QD_W, QD_H, 0x000000, 0).setScrollFactor(0).setDepth(46);
@@ -146,6 +145,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
         const len = Math.max(24, Math.min(320, this.nextGateX - this.cursor));
         this.addFloor(this.cursor, len, QD_BOT, "cruise");
         if (len > 140 && Math.random() < 0.55) this.addCoin(this.cursor + len * 0.5, QD_BOT - 78);
+        if (len > 260 && (this.gatesDone > 0 || this.quiz.chapter > 1)) {
+          this.addBomb(this.cursor + len * 0.72, QD_BOT - (200 + Math.random() * 180));
+        }
         this.cursor += len;
       } else if (this.phase === "path") {
         if (this.cursor >= this.pathEnd) this.beginMerge();
@@ -192,20 +194,22 @@ window.GameScene = class GameScene extends Phaser.Scene {
     const spd = Math.max(220, this.speedCurrent);
     const hard = this.pathKind === "wrong";
     const fierce = hard && this.quiz.tier >= 2;
-    const n = this.beat % (hard ? 5 : 4);
+    const n = this.beat % 5;
     this.beat += 1;
     if (!hard) {
       if (n === 0) this.beatCoins(y, spd);
       else if (n === 1) this.beatGap(y, spd, 0.28, 0.72);
       else if (n === 2) this.beatSpikes(y, spd, 1, hard);
+      else if (n === 3) this.beatAirBombs(y, spd);
       else this.beatPad(y, spd, false);
       return;
     }
     if (n === 0) this.beatSpikes(y, spd, fierce ? 2 : 1, true);
-    else if (n === 1) this.beatGap(y, spd, fierce ? 0.4 : 0.33, fierce ? 0.46 : 0.58);
-    else if (n === 2) this.beatPit(y, spd);
-    else if (n === 3 && fierce) this.beatCeiling(y, spd);
-    else this.beatSpikes(y, spd, fierce ? 3 : 2, true);
+    else if (n === 1) this.beatAirBombs(y, spd);
+    else if (n === 2) this.beatGap(y, spd, fierce ? 0.4 : 0.33, fierce ? 0.46 : 0.58);
+    else if (n === 3) this.beatPit(y, spd);
+    else if (fierce) this.beatCeiling(y, spd);
+    else this.beatAirBombs(y, spd);
   }
 
   beatCoins(y, spd) {
@@ -236,6 +240,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
       const x = this.cursor + 130 + i * spacing;
       if (hard && i % 2 === 1) this.addSaw(x, y - 22, true);
       else this.addSpike(x, y);
+      if (i === 0) this.addBomb(x + 70, y - 250);
     }
     this.cursor += len;
   }
@@ -264,6 +269,14 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.addCoin(this.cursor + plat * 0.4, y - 168);
     this.addCoin(this.cursor + plat * 0.62, y - 120);
     this.cursor += plat;
+  }
+
+  beatAirBombs(y, spd) {
+    const len = Math.max(560, spd * 2.2);
+    this.addFloor(this.cursor, len, y, this.pathKind);
+    this.addBomb(this.cursor + 150, y - 150);
+    this.addBomb(this.cursor + len * 0.58, y - 330);
+    this.cursor += len;
   }
 
   beatCeiling(y, spd) {
@@ -415,6 +428,18 @@ window.GameScene = class GameScene extends Phaser.Scene {
     s.setDepth(13);
     s.spin = true;
     s.setTint(0xff2bd6);
+    return s;
+  }
+
+  addBomb(x, y) {
+    const s = this.hazards.create(x, y, "bomb");
+    s.setDisplaySize(72, 72);
+    s.body.setAllowGravity(false);
+    s.body.setImmovable(true);
+    s.body.setSize(36, 36, true);
+    s.setDepth(13);
+    s.spin = true;
+    s.spinRate = 0.16;
     return s;
   }
 
@@ -580,7 +605,6 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.stars.tilePositionX = sx * 0.08;
     this.mount.tilePositionX = sx * 0.28;
     this.grid.tilePositionX = sx * 0.55;
-    this.sun.x = 520 + Math.sin(time / 1800) * 16;
 
     if (!this.dead) {
       const goal = this.targetSpeed();
@@ -610,7 +634,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     }
 
     this.cameras.main.scrollX = Math.max(0, this.player.x - 230);
-    this.hazards.getChildren().forEach((h) => { if (h.spin) h.angle += dt * 0.45; });
+    this.hazards.getChildren().forEach((h) => { if (h.spin) h.angle += dt * (h.spinRate || 0.45); });
     this.fx.update(time, dt, this.speedCurrent);
     this.cleanup();
     this.hudAcc += dt;
