@@ -223,11 +223,12 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatGap(y, spd, gapFactor, platFactor) {
-    const lead = Math.max(320, spd * 1.05);
+    const hard = this.pathKind === "wrong";
+    const lead = hard ? Math.max(150, spd * 0.38) : Math.max(320, spd * 1.05);
     this.addFloor(this.cursor, lead, y, this.pathKind);
     this.cursor += lead;
-    const gap = Math.max(72, spd * gapFactor * 0.82);
-    const plat = Math.max(220, spd * platFactor);
+    const gap = hard ? Math.max(100, spd * gapFactor) : Math.max(72, spd * gapFactor * 0.82);
+    const plat = hard ? Math.max(130, spd * 0.4) : Math.max(220, spd * platFactor);
     this.cursor += gap;
     this.addFloor(this.cursor, plat, y, this.pathKind);
     this.addCoin(this.cursor + plat * 0.5, y - 96);
@@ -235,15 +236,15 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatSpikes(y, spd, count, hard) {
-    const breathe = Math.max(340, spd * 1.15);
+    const breathe = hard ? Math.max(120, spd * 0.28) : Math.max(340, spd * 1.15);
     this.addFloor(this.cursor, breathe, y, this.pathKind);
     this.cursor += breathe;
-    const tight = hard ? (this.quiz.tier >= 2 ? 1.65 : 1.85) : 2.15;
-    const spacing = Math.max(460, spd * tight);
-    const len = spacing * count + 300;
+    const tight = hard ? (this.quiz.tier >= 2 ? 0.62 : 0.74) : 2.15;
+    const spacing = hard ? Math.max(200, spd * tight) : Math.max(460, spd * tight);
+    const len = spacing * count + (hard ? 110 : 300);
     this.addFloor(this.cursor, len, y, this.pathKind);
     for (let i = 0; i < count; i += 1) {
-      const x = this.cursor + 240 + i * spacing;
+      const x = this.cursor + (hard ? 80 : 240) + i * spacing;
       if (hard && i % 2 === 1) this.addSaw(x, y - 22, true);
       else this.addSpike(x, y);
     }
@@ -251,9 +252,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatPit(y, spd) {
-    const pre = Math.max(360, spd * 1.15);
-    const gap = Math.max(88, spd * (this.quiz.tier >= 2 ? 0.32 : 0.26));
-    const plat = Math.max(260, spd * 0.85);
+    const pre = Math.max(150, spd * 0.36);
+    const gap = Math.max(120, spd * (this.quiz.tier >= 2 ? 0.46 : 0.38));
+    const plat = Math.max(140, spd * 0.38);
     this.addFloor(this.cursor, pre, y, this.pathKind);
     const pit = this.cursor + pre;
     this.addSaw(pit + gap * 0.5, y + 46, true);
@@ -277,19 +278,25 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   beatAirBombs(y, spd) {
-    const len = Math.max(1100, spd * 4.2);
+    const hard = this.pathKind === "wrong";
+    const len = hard ? Math.max(520, spd * 1.55) : Math.max(1100, spd * 4.2);
     this.addFloor(this.cursor, len, y, this.pathKind);
-    this.addBomb(this.cursor + len * 0.55, 240);
+    if (hard) {
+      this.addBomb(this.cursor + len * 0.3, 220);
+      this.addBomb(this.cursor + len * 0.72, 300);
+    } else {
+      this.addBomb(this.cursor + len * 0.55, 240);
+    }
     this.cursor += len;
   }
 
   beatCeiling(y, spd) {
-    const breathe = Math.max(340, spd * 1.1);
+    const breathe = Math.max(110, spd * 0.26);
     this.addFloor(this.cursor, breathe, y, this.pathKind);
     this.cursor += breathe;
-    const spikeAt = spd * 0.7;
-    const barAt = spikeAt + spd * 1.6;
-    const len = Math.max(barAt + spd * 0.9, spd * 3.2);
+    const spikeAt = spd * 0.32;
+    const barAt = spikeAt + spd * 0.72;
+    const len = Math.max(barAt + spd * 0.45, spd * 1.7);
     this.addFloor(this.cursor, len, y, this.pathKind);
     this.addSpike(this.cursor + spikeAt, y);
     this.addBar(this.cursor + barAt, y - 220);
@@ -364,7 +371,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.pathEnd = this.cursor + this.pathLength();
     this.phase = "path";
     this.beat = 0;
-    this.safeUntil = this.cursor + Math.max(520, this.targetSpeed() * 1.2);
+    const runway = this.flow === "wrong" ? 0.55 : 1.2;
+    this.safeUntil = this.cursor + Math.max(this.flow === "wrong" ? 280 : 520, this.targetSpeed() * runway);
     if (correct) {
       this.combo += 1;
       this.bestCombo = Math.max(this.bestCombo, this.combo);

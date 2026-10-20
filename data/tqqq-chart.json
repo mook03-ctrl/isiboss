@@ -1,5 +1,5 @@
 {
-  "savedAt": 1792508350469,
+  "savedAt": 1792508903616,
   "source": "yahoo",
   "closes": [
     37.525001525878906,
@@ -502,7 +502,7 @@
     73.81999969482422,
     68.20999908447266,
     70.63999938964844,
-    71.79
+    71.59
   ],
   "highs": [
     37.709999084472656,
@@ -1511,8 +1511,8 @@
     1792503000
   ],
   "meta": {
-    "regularMarketPrice": 71.79,
-    "regularMarketTime": 1792508349,
+    "regularMarketPrice": 71.59,
+    "regularMarketTime": 1792508901,
     "regularMarketDayHigh": 71.925
   }
 }
