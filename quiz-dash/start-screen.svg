@@ -10,11 +10,6 @@
       <stop offset="0.45" stop-color="#7dfff6"/>
       <stop offset="1" stop-color="#ff3df2"/>
     </linearGradient>
-    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#fff3a8"/>
-      <stop offset="0.45" stop-color="#ff7ad9"/>
-      <stop offset="1" stop-color="#ff7ad900"/>
-    </radialGradient>
   </defs>
   <rect width="600" height="800" fill="url(#sky)"/>
   <g stroke="#2de2ff" stroke-width="1" opacity="0.35" fill="none">
@@ -22,7 +17,6 @@
     <path d="M40 560 L300 760 L560 560"/>
     <path d="M80 800 L220 560 M180 800 L320 520 M300 800 L390 540 M420 800 L470 560"/>
   </g>
-  <circle cx="430" cy="210" r="90" fill="url(#sun)"/>
   <path d="M0 470 L80 390 L150 440 L250 300 L340 420 L430 340 L520 410 L600 360 V520 H0 Z" fill="#2a1466"/>
   <path d="M250 300 L278 360 H222 Z" fill="#ff4ad8" opacity="0.7"/>
   <g>

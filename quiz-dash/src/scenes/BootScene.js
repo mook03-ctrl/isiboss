@@ -51,18 +51,6 @@ window.BootScene = class BootScene extends Phaser.Scene {
       g.fillStyle(0xff2bd6, 0.35);
       g.fillTriangle(150, 40, 168, 78, 132, 78);
     });
-    this.tex("sun", 220, 220, (g) => {
-      g.fillStyle(0xffe14a, 0.18);
-      g.fillCircle(110, 110, 108);
-      g.fillStyle(0xff7ad9, 0.35);
-      g.fillCircle(110, 110, 78);
-      g.fillStyle(0xfff3a0, 1);
-      g.fillCircle(110, 110, 48);
-      g.lineStyle(3, 0xfff6c4, 0.8);
-      for (let i = 0; i < 14; i += 1) {
-        g.strokeCircle(110, 110, 56 + i * 4);
-      }
-    });
     this.tex("ground", 64, 64, (g) => {
       g.fillStyle(0xffffff, 0.16);
       g.fillRect(0, 8, 64, 56);
@@ -82,6 +70,37 @@ window.BootScene = class BootScene extends Phaser.Scene {
       g.fillRoundedRect(16, 16, 16, 16, 3);
       g.fillStyle(0xffffff, 0.9);
       g.fillCircle(22, 20, 3);
+    });
+    this.tex("bomb", 72, 72, (g) => {
+      const cx = 36;
+      const cy = 38;
+      g.fillStyle(0xff2a3c, 1);
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (Math.PI * 2 * i) / 8;
+        const tip = angle;
+        const left = angle - 0.34;
+        const right = angle + 0.34;
+        g.fillTriangle(
+          cx + Math.cos(left) * 15,
+          cy + Math.sin(left) * 15,
+          cx + Math.cos(right) * 15,
+          cy + Math.sin(right) * 15,
+          cx + Math.cos(tip) * 34,
+          cy + Math.sin(tip) * 34
+        );
+      }
+      g.fillStyle(0x140810, 1);
+      g.fillCircle(cx, cy, 16);
+      g.fillStyle(0x2a0c14, 1);
+      g.fillCircle(cx, cy, 13);
+      g.lineStyle(3, 0xff3355, 1);
+      g.strokeCircle(cx, cy, 13);
+      g.fillStyle(0xfff1c4, 0.95);
+      g.fillCircle(cx - 4, cy - 4, 3);
+      g.fillStyle(0x6a3a16, 1);
+      g.fillRect(cx - 2, 6, 4, 12);
+      g.fillStyle(0xffe14a, 1);
+      g.fillCircle(cx, 5, 3.5);
     });
     this.tex("spike", 48, 48, (g) => {
       g.fillStyle(0xffffff, 0.25);
