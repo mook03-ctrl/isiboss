@@ -319,6 +319,16 @@ function boot() {
   });
   window.QuizDash.game = game;
 
+  document.addEventListener("pointerdown", (event) => {
+    if (!playing || over) return;
+    if (!$("screen-rank").classList.contains("hidden")) return;
+    if (!$("screen-start").classList.contains("hidden")) return;
+    const el = event.target;
+    if (el && el.closest && el.closest("button, a, input, textarea")) return;
+    const scene = game.scene.getScene("game");
+    if (scene && scene.sys.isActive()) scene.requestJump();
+  });
+
   QuizDash.on("hud", paintHud);
   QuizDash.on("question", showQuestion);
   QuizDash.on("question-hide", () => $("q-card").classList.add("hidden"));

@@ -8,38 +8,33 @@ window.QuizManager = class QuizManager {
   setChapter(chapter) {
     this.chapter = chapter;
     this.tier = Math.floor((chapter - 1) / 3) + 1;
-    const subjects = [
-      { id: "math", ko: "수학", en: "MATH" },
-      { id: "english", ko: "영어", en: "ENGLISH" },
-      { id: "trivia", ko: "상식", en: "TRIVIA" },
-    ];
-    this.subject = subjects[(chapter - 1) % 3];
     this.used.clear();
+    const extra = ["math", "english", "trivia"];
+    this.gateSubjects = shuffle(["math", "english", "trivia", extra[rand(0, 2)], extra[rand(0, 2)]]);
+    this.subject = { id: "mix", ko: "퀴즈", en: "QUIZ" };
   }
 
   meta() {
     return {
       chapter: this.chapter,
       tier: this.tier,
-      subject: this.subject.ko,
-      subjectEn: this.subject.en,
+      subject: "수학 · 영어 · 상식",
+      subjectEn: "QUIZ",
     };
   }
 
   next() {
+    const id = this.gateSubjects.length ? this.gateSubjects.pop() : ["math", "english", "trivia"][rand(0, 2)];
+    this.subject = SUBJECTS[id];
     for (let i = 0; i < 12; i += 1) {
-      const made = this.subject.id === "math"
-        ? this.math()
-        : this.subject.id === "english"
-          ? this.english()
-          : this.trivia();
+      const made = id === "math" ? this.math() : id === "english" ? this.english() : this.trivia();
       const key = made.prompt + "|" + made.correct;
       if (this.used.has(key)) continue;
       this.used.add(key);
       return this.pack(made);
     }
     this.used.clear();
-    const fallback = this.subject.id === "math" ? this.math() : this.subject.id === "english" ? this.english() : this.trivia();
+    const fallback = id === "math" ? this.math() : id === "english" ? this.english() : this.trivia();
     return this.pack(fallback);
   }
 
@@ -108,68 +103,46 @@ function distract(answer) {
   return answer + 10;
 }
 
-function two(tier) {
-  if (tier <= 1) return rand(10, 24);
-  if (tier === 2) return rand(12, 40);
-  return rand(15, 60);
+const SUBJECTS = {
+  math: { id: "math", ko: "수학", en: "MATH" },
+  english: { id: "english", ko: "영어", en: "ENGLISH" },
+  trivia: { id: "trivia", ko: "상식", en: "TRIVIA" },
+};
+
+function tens(tier) {
+  if (tier <= 1) return rand(10, 20);
+  if (tier === 2) return rand(12, 32);
+  return rand(14, 48);
+}
+
+function one(tier) {
+  if (tier <= 1) return rand(2, 5);
+  if (tier === 2) return rand(2, 8);
+  return rand(3, 9);
 }
 
 function mulDivProblem(tier) {
-  const forms = [productForm, quotientForm, divThenMulForm, mulThenDivForm, squareForm];
-  if (tier >= 2) forms.push(chainForm);
-  return forms[rand(0, forms.length - 1)](tier);
+  return Math.random() < 0.5 ? productForm(tier) : quotientForm(tier);
 }
 
 function productForm(tier) {
-  const a = two(tier);
-  const b = two(tier);
+  const a = tens(tier);
+  const b = one(tier);
   const prompt = Math.random() < 0.5 ? a + " × " + b + " = ?" : b + " × " + a + " = ?";
   return { prompt, answer: a * b };
 }
 
 function quotientForm(tier) {
-  const divisor = two(tier);
-  const quotient = rand(10, tier <= 1 ? 18 : tier === 2 ? 24 : 32);
-  return { prompt: (divisor * quotient) + " ÷ " + divisor + " = ?", answer: quotient };
-}
-
-function divThenMulForm(tier) {
-  const divisor = two(tier);
-  const quotient = rand(2, tier <= 1 ? 8 : 12);
-  const extra = two(tier);
-  const dividend = divisor * quotient;
-  const shapes = [
-    dividend + " ÷ " + divisor + " × " + extra,
-    "(" + dividend + " ÷ " + divisor + ") × " + extra,
-    extra + " × (" + dividend + " ÷ " + divisor + ")",
-  ];
-  return { prompt: shapes[rand(0, shapes.length - 1)] + " = ?", answer: quotient * extra };
-}
-
-function mulThenDivForm(tier) {
-  const divisor = two(tier);
-  const quotient = rand(2, tier <= 1 ? 6 : 9);
-  const extra = two(tier);
-  const left = divisor * quotient;
-  const shapes = [
-    left + " × " + extra + " ÷ " + divisor,
-    "(" + left + " × " + extra + ") ÷ " + divisor,
-    extra + " × " + left + " ÷ " + divisor,
-  ];
-  return { prompt: shapes[rand(0, shapes.length - 1)] + " = ?", answer: quotient * extra };
-}
-
-function squareForm(tier) {
-  const a = two(tier);
-  return { prompt: a + " × " + a + " = ?", answer: a * a };
-}
-
-function chainForm(tier) {
-  const divisor = rand(10, tier === 2 ? 16 : 24);
-  const times = rand(2, 4);
-  const extra = rand(10, tier === 2 ? 16 : 20);
-  const left = divisor * times;
-  return { prompt: left + " × " + extra + " × " + times + " ÷ " + divisor + " = ?", answer: times * extra * times };
+  const divisor = one(tier);
+  const high = tier <= 1 ? 9 : 12;
+  for (let i = 0; i < 24; i += 1) {
+    const answer = rand(2, high);
+    const dividend = divisor * answer;
+    if (dividend >= 10 && dividend <= 99) {
+      return { prompt: dividend + " ÷ " + divisor + " = ?", answer: answer };
+    }
+  }
+  return { prompt: "24 ÷ 3 = ?", answer: 8 };
 }
 
 const EN_ASK = [
