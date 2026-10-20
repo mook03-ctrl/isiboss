@@ -4,8 +4,9 @@ const QD_BOT = 760;
 const QD_TOP = 612;
 const QD_FH = 48;
 const QD_CUBE = 92;
-const QD_GRAVITY = 1700;
-const QD_JUMP = -860;
+const QD_FLOAT_G = 280;
+const QD_LIFT = -340;
+const QD_SINK = 210;
 
 window.GameScene = class GameScene extends Phaser.Scene {
   constructor() { super("game"); }
@@ -65,12 +66,14 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.addFloor(0, 520, QD_BOT, "cruise");
     this.cursor = 520;
 
-    this.player = this.physics.add.image(250, QD_BOT - 46, "cube");
+    this.player = this.physics.add.image(250, 500, "cube");
     this.player.setDepth(22);
     this.player.setScale(QD_CUBE / 64);
     this.player.body.setAllowGravity(false);
     this.player.body.setSize(56, 56, true);
-    this.player.body.reset(250, QD_BOT - this.player.body.halfHeight);
+    this.player.body.reset(250, 500);
+    this.vy = 60;
+    this.grounded = false;
     try { if (this.player.preFX) this.glow = this.player.preFX.addGlow(0x7efbff, 4, 0, false, 0.12, 10); } catch (err) { /* optional */ }
 
     this.physics.add.overlap(this.player, this.hazards, () => this.die());
@@ -80,11 +83,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.speedCurrent = this.targetSpeed();
     this.ensure();
 
-    this.input.on("pointerdown", () => {
-      if (!this.jumpArmed) return;
-      this.requestJump();
-    });
-    this.time.delayedCall(220, () => { this.jumpArmed = true; });
+    this.time.delayedCall(180, () => { this.jumpArmed = true; });
     this.keys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.UP,
       w: Phaser.Input.Keyboard.KeyCodes.W,
@@ -100,8 +99,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   requestJump() {
-    if (this.dead || this.paused) return;
-    this.jumpBuffer = 180;
+    if (this.dead || this.paused || !this.jumpArmed) return;
+    this.jumpBuffer = 160;
     if (window.QuizDashSfx) window.QuizDashSfx.ensure();
   }
 
@@ -485,7 +484,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     if (item.kind === "pad") {
       if (this.padLock > 0) return;
       this.padLock = 220;
-      this.vy = -1080;
+      this.vy = -480;
       this.grounded = false;
       this.landSquash = 0;
       this.fx.pad();
@@ -555,47 +554,22 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
   stepRunner(dt) {
     const step = dt / 1000;
-    const half = this.player.body.halfHeight || 28;
     this.player.x += this.speedCurrent * step;
-    this.jumpBuffer -= dt;
     this.padLock -= dt;
-    if (this.jumpBuffer > 0 && (this.grounded || this.coyote > 0)) {
-      this.vy = QD_JUMP;
-      this.grounded = false;
+    if (this.jumpBuffer > 0) {
+      this.vy = QD_LIFT;
       this.jumpBuffer = 0;
-      this.coyote = 0;
       this.fx.jump();
     }
-    const prevFeet = this.player.y + half;
-    if (this.grounded) {
-      const stay = this.surfaceUnder(this.player.x, prevFeet, prevFeet);
-      if (stay != null) {
-        this.player.y = stay - half;
-        this.vy = 0;
-        this.coyote = 140;
-      } else {
-        this.grounded = false;
-        this.vy = 40;
-      }
+    this.vy += QD_FLOAT_G * step;
+    if (this.vy > QD_SINK) this.vy = QD_SINK;
+    let nextY = this.player.y + this.vy * step;
+    if (nextY < 168) {
+      nextY = 168;
+      if (this.vy < 0) this.vy = 0;
     }
-    if (!this.grounded) {
-      this.coyote -= dt;
-      let g = QD_GRAVITY;
-      if (Math.abs(this.vy) < 80) g *= 0.45;
-      this.vy += g * step;
-      const nextY = this.player.y + this.vy * step;
-      const surface = this.vy >= 0 ? this.surfaceUnder(this.player.x, prevFeet, nextY + half) : null;
-      if (surface != null) {
-        if (this.wasAir) this.landSquash = 80;
-        this.player.y = surface - half;
-        this.vy = 0;
-        this.grounded = true;
-        this.coyote = 140;
-      } else {
-        this.player.y = nextY;
-      }
-    }
-    this.wasAir = !this.grounded;
+    this.player.y = nextY;
+    this.grounded = false;
     this.player.body.reset(this.player.x, this.player.y);
   }
 
@@ -614,25 +588,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
       this.ensure();
       this.resolveChoice();
       this.stepRunner(dt);
-      let sxScale = 1;
-      let syScale = 1;
       if (!this.reduce) {
-        if (!this.grounded && this.vy < -40) { sxScale = 0.94; syScale = 1.08; }
-        else if (!this.grounded) { sxScale = 0.97; syScale = 1.04; }
-        else if (this.landSquash > 0) { sxScale = 1.06; syScale = 0.94; this.landSquash -= dt; }
-        if (!this.grounded) this.player.angle += (dt / 1000) * 120;
-        else this.player.angle = Math.round(this.player.angle / 90) * 90;
-      }
-      const nextSX = (QD_CUBE / 64) * sxScale;
-      const nextSY = (QD_CUBE / 64) * syScale;
-      if (Math.abs(this.player.scaleX - nextSX) > 0.001 || Math.abs(this.player.scaleY - nextSY) > 0.001) {
-        const lockedX = this.player.x;
-        const lockedY = this.player.y;
-        this.player.setScale(nextSX, nextSY);
-        this.player.body.setSize(56, 56, true);
-        this.player.body.halfWidth = 28;
-        this.player.body.halfHeight = 28;
-        this.player.body.reset(lockedX, lockedY);
+        const tilt = Math.max(-16, Math.min(16, this.vy / 26));
+        this.player.angle += (tilt - this.player.angle) * 0.12;
       }
 
       this.scoreAcc += this.speedCurrent * (dt / 1000);
@@ -646,7 +604,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
       else if (this.flow === "right") this.wash.setFillStyle(0x14ffb0, 0.06);
       else this.wash.setFillStyle(0x000000, 0);
     } else {
-      this.vy += QD_GRAVITY * (dt / 1000);
+      this.vy += QD_FLOAT_G * (dt / 1000);
       this.player.y += this.vy * (dt / 1000);
       this.player.body.reset(this.player.x, this.player.y);
     }
