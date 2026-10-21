@@ -1,14 +1,14 @@
 const QD_W = 720;
 const QD_H = 960;
-const QD_A_TOP = 150;
-const QD_A_BOT = 430;
-const QD_B_TOP = 560;
-const QD_B_BOT = 870;
-const QD_SPLIT = 495;
+const QD_A_TOP = 90;
+const QD_A_BOT = 470;
+const QD_B_TOP = 490;
+const QD_B_BOT = 880;
+const QD_SPLIT = 480;
 const QD_TOP = (QD_A_TOP + QD_A_BOT) / 2;
 const QD_BOT = (QD_B_TOP + QD_B_BOT) / 2;
 const QD_FH = 48;
-const QD_CUBE = 92;
+const QD_CUBE = 64;
 const QD_FLOAT_G = 280;
 const QD_LIFT = -340;
 const QD_SINK = 210;
@@ -73,7 +73,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.player.setDepth(22);
     this.player.setScale(QD_CUBE / 64);
     this.player.body.setAllowGravity(false);
-    this.player.body.setSize(56, 56, true);
+    this.player.body.setSize(39, 39, true);
     this.player.body.reset(250, 490);
     this.vy = 60;
     this.grounded = false;
@@ -408,10 +408,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
   resolveChoice() {
     const g = this.gate;
     if (!g || !g.open || this.player.x < g.decideX) return;
-    const edge = this.forkEdges(this.player.x);
-    if (!edge) return;
-    if (this.player.y <= edge.aBot) this.lockChoice("A");
-    else if (this.player.y >= edge.bTop) this.lockChoice("B");
+    this.lockChoice(this.player.y < g.splitY ? "A" : "B");
   }
 
   addFloor(x, len, surfaceY, kind) {
@@ -502,25 +499,25 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
   addPortal(x, centerY, label, caption) {
     const p = this.add.image(x, centerY, "portal").setDepth(14);
-    p.setDisplaySize(168, 250);
+    p.setDisplaySize(96, 140);
     p.setTint(label === "A" ? 0x35f2ff : 0xff3df0);
     p.setBlendMode(Phaser.BlendModes.ADD);
     try {
       if (p.preFX) p.preFX.addGlow(label === "A" ? 0x35f2ff : 0xff3df0, 3, 0, false, 0.14, 8);
     } catch (err) { /* optional */ }
     this.tweens.add({ targets: p, alpha: 0.5, yoyo: true, repeat: -1, duration: 420 });
-    const style = { fontFamily: "Orbitron, sans-serif", fontSize: "42px", color: "#ffffff", stroke: "#041018", strokeThickness: 6 };
-    const letter = this.add.text(x, centerY - 8, label, style).setOrigin(0.5).setDepth(15);
-    const cap = this.add.text(x, centerY - 108, caption, {
+    const style = { fontFamily: "Orbitron, sans-serif", fontSize: "28px", color: "#ffffff", stroke: "#041018", strokeThickness: 5 };
+    const letter = this.add.text(x, centerY - 4, label, style).setOrigin(0.5).setDepth(15);
+    const cap = this.add.text(x, label === "A" ? centerY - 78 : centerY + 78, caption, {
       fontFamily: '"Noto Sans KR", sans-serif',
-      fontSize: "18px",
+      fontSize: "16px",
       color: "#f3fdff",
       align: "center",
-      wordWrap: { width: 200 },
+      wordWrap: { width: 180 },
       stroke: "#120818",
       strokeThickness: 4,
     }).setOrigin(0.5).setDepth(15);
-    const lane = this.add.text(x, centerY + 78, label === "A" ? "위 길" : "아래 길", {
+    const lane = this.add.text(x, label === "A" ? centerY + 52 : centerY - 52, label === "A" ? "위 길" : "아래 길", {
       fontFamily: '"Noto Sans KR", sans-serif',
       fontSize: "18px",
       color: label === "A" ? "#9dfff8" : "#ffb3f6",
@@ -529,38 +526,16 @@ window.GameScene = class GameScene extends Phaser.Scene {
   }
 
   ceilingAt(x) {
-    const fork = this.forkEdges(x);
-    if (fork) return fork.aTop;
-    return 178 + Math.sin(x / 220) * 46 + Math.sin(x / 74 + 0.5) * 20;
+    return 62 + Math.sin(x / 220) * 14 + Math.sin(x / 74 + 0.5) * 6;
   }
 
   floorAt(x) {
-    const fork = this.forkEdges(x);
-    if (fork) return fork.bBot;
-    return 812 + Math.sin(x / 186 + 1.3) * 36 + Math.cos(x / 92) * 16;
-  }
-
-  forkEdges(x) {
-    const g = this.gate;
-    if (!g || x < g.mouthX || x > g.endX) return null;
-    const wobble = Math.sin(x / 108) * 18;
-    return {
-      aTop: g.aTop + Math.sin(x / 150) * 12,
-      aBot: g.aBot + wobble,
-      bTop: g.bTop + wobble,
-      bBot: g.bBot + Math.sin(x / 132 + 0.7) * 14,
-    };
+    return 904 + Math.sin(x / 186 + 1.3) * 12 + Math.cos(x / 92) * 6;
   }
 
   hitsWall() {
-    const half = 34;
+    const half = this.player.body.halfHeight || 20;
     const y = this.player.y;
-    const edge = this.forkEdges(this.player.x);
-    if (edge) {
-      if (y <= edge.aBot) return y - half < edge.aTop || y + half > edge.aBot;
-      if (y >= edge.bTop) return y - half < edge.bTop || y + half > edge.bBot;
-      return true;
-    }
     return y - half < this.ceilingAt(this.player.x) || y + half > this.floorAt(this.player.x);
   }
 
@@ -603,25 +578,6 @@ window.GameScene = class GameScene extends Phaser.Scene {
     g.fillRect(tintLeft, QD_A_TOP, Math.max(0, tintRight - tintLeft), QD_A_BOT - QD_A_TOP);
     g.fillStyle(0xff3df2, 0.12);
     g.fillRect(tintLeft, QD_B_TOP, Math.max(0, tintRight - tintLeft), QD_B_BOT - QD_B_TOP);
-    const left = Math.max(gate.mouthX, x0);
-    const right = Math.min(gate.endX, x1);
-    if (right <= left) return;
-    g.fillStyle(0x24124a, 1);
-    g.beginPath();
-    g.moveTo(left, this.forkEdges(left).aBot);
-    for (let x = left; x <= right; x += step) g.lineTo(x, this.forkEdges(x).aBot);
-    for (let x = right; x >= left; x -= step) g.lineTo(x, this.forkEdges(x).bTop);
-    g.closePath();
-    g.fillPath();
-    g.lineStyle(4, 0xc9b6ff, 0.9);
-    g.beginPath();
-    g.moveTo(left, this.forkEdges(left).aBot);
-    for (let x = left; x <= right; x += step) g.lineTo(x, this.forkEdges(x).aBot);
-    g.strokePath();
-    g.beginPath();
-    g.moveTo(left, this.forkEdges(left).bTop);
-    for (let x = left; x <= right; x += step) g.lineTo(x, this.forkEdges(x).bTop);
-    g.strokePath();
   }
 
   touchItem(item) {

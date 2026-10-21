@@ -169,6 +169,7 @@ button {
   left: 10px;
   right: 10px;
   top: calc(8px + env(safe-area-inset-top));
+  bottom: calc(8px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -200,6 +201,13 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+#q-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 8px;
+}
 #q-card, #status-banner, #hint {
   pointer-events: none;
   text-align: center;
@@ -209,7 +217,8 @@ button {
   border: 1px solid rgba(157, 255, 248, 0.4);
   box-shadow: 0 0 18px rgba(57, 255, 240, 0.16);
 }
-#q-prompt { font-weight: 900; font-size: 16px; margin-bottom: 6px; }
+#q-card { background: rgba(6, 10, 24, 0.78); padding: 4px 8px; }
+#q-prompt { font-weight: 900; font-size: 14px; margin-bottom: 2px; }
 .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .opt {
   border-radius: 12px;
