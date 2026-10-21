@@ -1,7 +1,12 @@
 const QD_W = 720;
 const QD_H = 960;
-const QD_BOT = 760;
-const QD_TOP = 612;
+const QD_A_TOP = 150;
+const QD_A_BOT = 430;
+const QD_B_TOP = 560;
+const QD_B_BOT = 870;
+const QD_SPLIT = 495;
+const QD_TOP = (QD_A_TOP + QD_A_BOT) / 2;
+const QD_BOT = (QD_B_TOP + QD_B_BOT) / 2;
 const QD_FH = 48;
 const QD_CUBE = 92;
 const QD_FLOAT_G = 280;
@@ -54,8 +59,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
     this.add.tileSprite(0, 0, QD_W, QD_H, "sky").setOrigin(0).setScrollFactor(0).setDepth(0);
     this.stars = this.add.tileSprite(0, 0, QD_W, QD_H, "stars").setOrigin(0).setScrollFactor(0).setDepth(1);
-    this.mount = this.add.tileSprite(0, 470, QD_W, 200, "mount").setOrigin(0).setScrollFactor(0).setDepth(3).setAlpha(0.95);
-    this.grid = this.add.tileSprite(0, 560, QD_W, 400, "grid").setOrigin(0).setScrollFactor(0).setDepth(4).setAlpha(0.4);
+    this.wallGfx = this.add.graphics().setDepth(5);
     this.wash = this.add.rectangle(QD_W / 2, QD_H / 2, QD_W, QD_H, 0x000000, 0).setScrollFactor(0).setDepth(46);
 
     this.floors = this.physics.add.staticGroup();
@@ -65,12 +69,12 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.addFloor(0, 520, QD_BOT, "cruise");
     this.cursor = 520;
 
-    this.player = this.physics.add.image(250, 500, "cube");
+    this.player = this.physics.add.image(250, 490, "cube");
     this.player.setDepth(22);
     this.player.setScale(QD_CUBE / 64);
     this.player.body.setAllowGravity(false);
     this.player.body.setSize(56, 56, true);
-    this.player.body.reset(250, 500);
+    this.player.body.reset(250, 490);
     this.vy = 60;
     this.grounded = false;
     try { if (this.player.preFX) this.glow = this.player.preFX.addGlow(0x7efbff, 4, 0, false, 0.12, 10); } catch (err) { /* optional */ }
@@ -163,18 +167,25 @@ window.GameScene = class GameScene extends Phaser.Scene {
     const lead = Math.max(760, this.targetSpeed() * 2.4);
     this.addFloor(this.cursor, lead, QD_BOT, "cruise");
     this.cursor += lead;
-    const fork = 560;
-    this.addFloor(this.cursor, fork, QD_BOT, "cruise");
-    const topX = this.cursor + 150;
-    const topW = 360;
-    this.addFloor(topX, topW, QD_TOP, "cruise");
-    this.addPortal(topX + 170, QD_TOP, "A", q.A);
-    this.addPortal(this.cursor + 230, QD_BOT, "B", q.B);
+    const fork = 1100;
+    const startX = this.cursor;
+    this.addFloor(startX, fork, QD_BOT, "cruise");
+    const portalX = startX + 520;
+    this.addPortal(portalX, QD_TOP, "A", q.A);
+    this.addPortal(portalX, QD_BOT, "B", q.B);
     this.gate = {
       open: true,
-      topX,
-      topW,
-      lockX: this.cursor + fork - 30,
+      startX,
+      endX: startX + fork,
+      mouthX: startX + 260,
+      decideX: portalX,
+      splitY: QD_SPLIT,
+      aTop: QD_A_TOP,
+      aBot: QD_A_BOT,
+      bTop: QD_B_TOP,
+      bBot: QD_B_BOT,
+      topX: startX,
+      topW: fork,
       q,
     };
     this.cursor += fork;
@@ -362,12 +373,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     this.pathKind = this.flow;
     this.pathRewarded = false;
     this.gatesDone += 1;
-    if (which === "A") {
-      this.cursor = this.gate.topX + this.gate.topW;
-      this.pathY = QD_TOP;
-    } else {
-      this.pathY = QD_BOT;
-    }
+    this.pathY = which === "A" ? QD_TOP : QD_BOT;
     this.pathEnd = this.cursor + this.pathLength();
     this.phase = "path";
     this.beat = 0;
@@ -401,10 +407,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
   resolveChoice() {
     const g = this.gate;
-    if (!g || !g.open) return;
-    const onTop = this.player.y < (QD_TOP + QD_BOT) / 2 && this.player.x > g.topX + 16;
-    if (onTop) this.lockChoice("A");
-    else if (this.player.x > g.lockX) this.lockChoice("B");
+    if (!g || !g.open || this.player.x < g.decideX) return;
+    const edge = this.forkEdges(this.player.x);
+    if (!edge) return;
+    if (this.player.y <= edge.aBot) this.lockChoice("A");
+    else if (this.player.y >= edge.bTop) this.lockChoice("B");
   }
 
   addFloor(x, len, surfaceY, kind) {
@@ -419,6 +426,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     tile.body.checkCollision.down = false;
     const tint = kind === "wrong" ? 0xff3355 : kind === "right" ? 0x3dffc8 : 0x3de4ff;
     tile.setTint(tint);
+    tile.setVisible(false);
     tile.setDepth(8);
     return tile;
   }
@@ -492,32 +500,128 @@ window.GameScene = class GameScene extends Phaser.Scene {
     return p;
   }
 
-  addPortal(x, surfaceY, label, caption) {
-    const p = this.add.image(x, surfaceY - 78, "portal").setDepth(14);
-    p.setDisplaySize(68, 118);
+  addPortal(x, centerY, label, caption) {
+    const p = this.add.image(x, centerY, "portal").setDepth(14);
+    p.setDisplaySize(168, 250);
     p.setTint(label === "A" ? 0x35f2ff : 0xff3df0);
     p.setBlendMode(Phaser.BlendModes.ADD);
     try {
-      if (p.preFX) p.preFX.addGlow(label === "A" ? 0x35f2ff : 0xff3df0, 2, 0, false, 0.1, 6);
+      if (p.preFX) p.preFX.addGlow(label === "A" ? 0x35f2ff : 0xff3df0, 3, 0, false, 0.14, 8);
     } catch (err) { /* optional */ }
-    this.tweens.add({ targets: p, alpha: 0.45, yoyo: true, repeat: -1, duration: 320 });
-    const style = { fontFamily: "Orbitron, sans-serif", fontSize: "26px", color: "#ffffff", stroke: "#041018", strokeThickness: 4 };
-    const letter = this.add.text(x, surfaceY - 84, label, style).setOrigin(0.5).setDepth(15);
-    const cap = this.add.text(x, surfaceY - 128, caption, {
+    this.tweens.add({ targets: p, alpha: 0.5, yoyo: true, repeat: -1, duration: 420 });
+    const style = { fontFamily: "Orbitron, sans-serif", fontSize: "42px", color: "#ffffff", stroke: "#041018", strokeThickness: 6 };
+    const letter = this.add.text(x, centerY - 8, label, style).setOrigin(0.5).setDepth(15);
+    const cap = this.add.text(x, centerY - 108, caption, {
       fontFamily: '"Noto Sans KR", sans-serif',
-      fontSize: "15px",
+      fontSize: "18px",
       color: "#f3fdff",
       align: "center",
-      wordWrap: { width: 130 },
+      wordWrap: { width: 200 },
       stroke: "#120818",
-      strokeThickness: 3,
+      strokeThickness: 4,
     }).setOrigin(0.5).setDepth(15);
-    const lane = this.add.text(x, surfaceY - 36, label === "A" ? "위 길" : "아래 길", {
+    const lane = this.add.text(x, centerY + 78, label === "A" ? "위 길" : "아래 길", {
       fontFamily: '"Noto Sans KR", sans-serif',
-      fontSize: "13px",
+      fontSize: "18px",
       color: label === "A" ? "#9dfff8" : "#ffb3f6",
     }).setOrigin(0.5).setDepth(15);
     this.decor.push(p, letter, cap, lane);
+  }
+
+  ceilingAt(x) {
+    const fork = this.forkEdges(x);
+    if (fork) return fork.aTop;
+    return 178 + Math.sin(x / 220) * 46 + Math.sin(x / 74 + 0.5) * 20;
+  }
+
+  floorAt(x) {
+    const fork = this.forkEdges(x);
+    if (fork) return fork.bBot;
+    return 812 + Math.sin(x / 186 + 1.3) * 36 + Math.cos(x / 92) * 16;
+  }
+
+  forkEdges(x) {
+    const g = this.gate;
+    if (!g || x < g.mouthX || x > g.endX) return null;
+    const wobble = Math.sin(x / 108) * 18;
+    return {
+      aTop: g.aTop + Math.sin(x / 150) * 12,
+      aBot: g.aBot + wobble,
+      bTop: g.bTop + wobble,
+      bBot: g.bBot + Math.sin(x / 132 + 0.7) * 14,
+    };
+  }
+
+  hitsWall() {
+    const half = 34;
+    const y = this.player.y;
+    const edge = this.forkEdges(this.player.x);
+    if (edge) {
+      if (y <= edge.aBot) return y - half < edge.aTop || y + half > edge.aBot;
+      if (y >= edge.bTop) return y - half < edge.bTop || y + half > edge.bBot;
+      return true;
+    }
+    return y - half < this.ceilingAt(this.player.x) || y + half > this.floorAt(this.player.x);
+  }
+
+  drawWalls() {
+    const g = this.wallGfx;
+    if (!g) return;
+    g.clear();
+    const x0 = this.cameras.main.scrollX - 30;
+    const x1 = x0 + QD_W + 60;
+    const step = 26;
+    g.fillStyle(0x10284a, 1);
+    g.beginPath();
+    g.moveTo(x0, -20);
+    for (let x = x0; x <= x1; x += step) g.lineTo(x, this.ceilingAt(x));
+    g.lineTo(x1, -20);
+    g.closePath();
+    g.fillPath();
+    g.fillStyle(0x1a0c32, 1);
+    g.beginPath();
+    g.moveTo(x0, QD_H + 20);
+    for (let x = x0; x <= x1; x += step) g.lineTo(x, this.floorAt(x));
+    g.lineTo(x1, QD_H + 20);
+    g.closePath();
+    g.fillPath();
+    g.lineStyle(5, 0x39fff0, 0.9);
+    g.beginPath();
+    g.moveTo(x0, this.ceilingAt(x0));
+    for (let x = x0; x <= x1; x += step) g.lineTo(x, this.ceilingAt(x));
+    g.strokePath();
+    g.lineStyle(5, 0xff3df2, 0.85);
+    g.beginPath();
+    g.moveTo(x0, this.floorAt(x0));
+    for (let x = x0; x <= x1; x += step) g.lineTo(x, this.floorAt(x));
+    g.strokePath();
+    const gate = this.gate;
+    if (!gate || gate.endX < x0 || gate.startX > x1) return;
+    const tintLeft = Math.max(gate.startX, x0);
+    const tintRight = Math.min(gate.endX, x1);
+    g.fillStyle(0x35f2ff, 0.12);
+    g.fillRect(tintLeft, QD_A_TOP, Math.max(0, tintRight - tintLeft), QD_A_BOT - QD_A_TOP);
+    g.fillStyle(0xff3df2, 0.12);
+    g.fillRect(tintLeft, QD_B_TOP, Math.max(0, tintRight - tintLeft), QD_B_BOT - QD_B_TOP);
+    const left = Math.max(gate.mouthX, x0);
+    const right = Math.min(gate.endX, x1);
+    if (right <= left) return;
+    g.fillStyle(0x24124a, 1);
+    g.beginPath();
+    g.moveTo(left, this.forkEdges(left).aBot);
+    for (let x = left; x <= right; x += step) g.lineTo(x, this.forkEdges(x).aBot);
+    for (let x = right; x >= left; x -= step) g.lineTo(x, this.forkEdges(x).bTop);
+    g.closePath();
+    g.fillPath();
+    g.lineStyle(4, 0xc9b6ff, 0.9);
+    g.beginPath();
+    g.moveTo(left, this.forkEdges(left).aBot);
+    for (let x = left; x <= right; x += step) g.lineTo(x, this.forkEdges(x).aBot);
+    g.strokePath();
+    g.beginPath();
+    g.moveTo(left, this.forkEdges(left).bTop);
+    for (let x = left; x <= right; x += step) g.lineTo(x, this.forkEdges(x).bTop);
+    g.strokePath();
   }
 
   touchItem(item) {
@@ -604,12 +708,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     }
     this.vy += QD_FLOAT_G * step;
     if (this.vy > QD_SINK) this.vy = QD_SINK;
-    let nextY = this.player.y + this.vy * step;
-    if (nextY < 168) {
-      nextY = 168;
-      if (this.vy < 0) this.vy = 0;
-    }
-    this.player.y = nextY;
+    this.player.y += this.vy * step;
     this.grounded = false;
     this.player.body.reset(this.player.x, this.player.y);
   }
@@ -617,17 +716,15 @@ window.GameScene = class GameScene extends Phaser.Scene {
   update(time, dt) {
     dt = Math.min(34, dt);
     if (this.paused) return;
-    const sx = this.cameras.main.scrollX;
-    this.stars.tilePositionX = sx * 0.08;
-    this.mount.tilePositionX = sx * 0.28;
-    this.grid.tilePositionX = sx * 0.55;
+    this.stars.tilePositionX = this.cameras.main.scrollX * 0.08;
 
     if (!this.dead) {
       const goal = this.targetSpeed();
       this.speedCurrent += (goal - this.speedCurrent) * (this.flow === "wrong" ? 0.06 : 0.035);
       this.ensure();
-      this.resolveChoice();
       this.stepRunner(dt);
+      if (this.hitsWall()) this.die();
+      else this.resolveChoice();
       if (!this.reduce) {
         const tilt = Math.max(-16, Math.min(16, this.vy / 26));
         this.player.angle += (tilt - this.player.angle) * 0.12;
@@ -650,6 +747,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     }
 
     this.cameras.main.scrollX = Math.max(0, this.player.x - 230);
+    this.drawWalls();
     this.hazards.getChildren().forEach((h) => { if (h.spin) h.angle += dt * (h.spinRate || 0.45); });
     this.fx.update(time, dt, this.speedCurrent);
     this.cleanup();
