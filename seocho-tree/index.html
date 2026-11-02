@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>서초동 나무 괴물 — angrywork.com</title>
+  <link rel="canonical" href="https://angrywork.com/seocho-tree/">
+  <meta property="og:title" content="서초동 나무 괴물">
+  <meta property="og:url" content="https://angrywork.com/seocho-tree/">
+  <meta property="og:image" content="https://angrywork.com/seocho-tree/plant.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#24170f; --paper:#f6efe2; --leaf:#2f7d3a; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; height:100%; background:#1b2430; color:var(--ink); font-family:"Jua", "Apple SD Gothic Neo", sans-serif; }
+    button, input { font-family: inherit; }
+    #app { min-height:100%; }
+    .screen { min-height:100vh; display:none; position:relative; }
+    .screen.on { display:block; }
+    .title {
+      background:#14202b center/cover no-repeat;
+      overflow:hidden;
+    }
+    .title-art {
+      display:grid; grid-template-columns:1.1fr .9fr; min-height:100vh;
+    }
+    .title-art img { width:100%; height:100vh; object-fit:cover; display:block; }
+    .title-panel {
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      width:min(440px, 92vw); background:rgba(246,239,226,.94);
+      border:4px solid #24170f; border-radius:22px; padding:22px 22px 16px;
+      box-shadow:0 16px 40px rgba(0,0,0,.35); text-align:center;
+    }
+    h1 { margin:0 0 6px; font-size:42px; letter-spacing:-1px; }
+    .sub { margin:0 0 14px; color:#5c4634; }
+    .rank { text-align:left; background:#fff8ec; border:3px solid #24170f; border-radius:14px; padding:10px 12px; margin:12px 0; }
+    .rank h2 { margin:0 0 6px; font-size:18px; }
+    .rank ol { margin:0; padding-left:22px; }
+    .rank li { margin:2px 0; }
+    .row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    button.primary, button.ghost, button.choice {
+      border:3px solid #24170f; background:#ffd15c; color:#24170f; border-radius:14px;
+      padding:10px 16px; font-size:20px; cursor:pointer;
+    }
+    button.ghost { background:#fff; }
+    button.choice { background:#fff; min-width:140px; }
+    button.choice.pick { background:#b7f0a8; }
+    button:active { transform:translateY(1px); }
+    input[type=text] {
+      width:100%; border:3px solid #24170f; border-radius:12px; padding:10px 12px; font-size:20px;
+    }
+    .select { background:#d7ecff center/cover no-repeat; min-height:100vh; display:none; }
+    .select.on { display:grid; place-items:center; padding:24px; }
+    .select-card {
+      width:min(920px, 96vw); background:rgba(255,250,242,.95); border:4px solid #24170f; border-radius:22px;
+      padding:18px; display:grid; grid-template-columns:1.1fr .9fr; gap:16px;
+    }
+    .select-card img { width:100%; border-radius:16px; border:3px solid #24170f; }
+    .who { display:flex; flex-direction:column; gap:10px; justify-content:center; }
+    #play { position:relative; height:100vh; background:#87c6ef; }
+    #play.on { display:block; }
+    canvas { width:100%; height:100%; display:block; background:#87c6ef; touch-action:none; }
+    .hud {
+      position:absolute; left:12px; right:12px; top:10px; display:flex; justify-content:space-between; gap:8px;
+      pointer-events:none; color:#fff; text-shadow:0 2px 0 #24170f;
+    }
+    .hud b { background:rgba(20,16,12,.55); border-radius:12px; padding:6px 10px; }
+    .pad {
+      position:absolute; left:0; right:0; bottom:10px; display:flex; justify-content:space-between;
+      padding:0 12px; gap:8px; pointer-events:none;
+    }
+    .pad button {
+      pointer-events:auto; width:64px; height:64px; border-radius:50%; border:3px solid #24170f;
+      background:rgba(255,255,255,.88); font-size:18px;
+    }
+    .modal {
+      position:absolute; inset:0; background:rgba(20,16,12,.45); display:none; place-items:center; padding:16px;
+    }
+    .modal.on { display:grid; }
+    .box {
+      width:min(460px, 94vw); background:#fff8ec; border:4px solid #24170f; border-radius:20px; padding:18px; text-align:center;
+    }
+    .box h2 { margin:0 0 8px; font-size:32px; }
+    .q { font-size:40px; margin:8px 0 14px; }
+    @media (max-width: 800px) {
+      .title-art { grid-template-columns:1fr; }
+      .title-art img { height:46vh; }
+      .title-panel { top:auto; bottom:16px; transform:translate(-50%,0); }
+      .select-card { grid-template-columns:1fr; }
+      h1 { font-size:32px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <section class="screen title on" id="title">
+      <div class="title-art">
+        <img src="plant.jpg" alt="제이드와 효가 빛나는 씨앗을 심는 뒷모습">
+        <img src="monster.jpg" alt="아파트 정원을 덮친 괴물 나무">
+      </div>
+      <div class="title-panel">
+        <h1>서초동 나무 괴물</h1>
+        <p class="sub">씨앗을 심었더니 괴물 나무가 되었다. 지하 5층, 뿌리를 파고 씨앗을 부수자.</p>
+        <div class="rank">
+          <h2>랭킹 TOP 5</h2>
+          <ol id="rankList"></ol>
+        </div>
+        <button class="primary" id="startBtn" type="button">시작하기</button>
+      </div>
+    </section>
+
+    <section class="screen" id="nameScreen">
+      <div class="title-art">
+        <img src="plant.jpg" alt="">
+        <img src="monster.jpg" alt="">
+      </div>
+      <div class="title-panel">
+        <h1>플레이어 이름</h1>
+        <p class="sub">랭킹에 올라갈 이름을 입력해 주세요.</p>
+        <input id="nameInput" type="text" maxlength="12" placeholder="이름" autocomplete="nickname">
+        <div class="row" style="margin-top:12px">
+          <button class="ghost" id="nameBack" type="button">뒤로</button>
+          <button class="primary" id="nameNext" type="button">다음</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen select" id="selectScreen">
+      <div class="select-card">
+        <img src="heroes.jpg" alt="제이드와 효">
+        <div class="who">
+          <h1>누구로 싸울까?</h1>
+          <button class="choice pick" id="pickJaden" type="button">Jaden · 나무 칼과 시계</button>
+          <button class="choice" id="pickHyo" type="button">Hyo · 햄스터 소환</button>
+          <p class="sub" id="whoBlurb">제이드는 룬이 새겨진 나무 칼로 베고, 시계로 엄마 등짝 스매싱을 부른다.</p>
+          <div class="row">
+            <button class="ghost" id="selectBack" type="button">뒤로</button>
+            <button class="primary" id="selectGo" type="button">정원으로</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="play">
+      <canvas id="cv" width="960" height="540"></canvas>
+      <div class="hud">
+        <b id="hudFloor">지상</b>
+        <b id="hudHp">HP 100</b>
+        <b id="hudScore">점수 0</b>
+        <b id="hudBuff">각성 준비</b>
+      </div>
+      <div class="pad">
+        <div>
+          <button type="button" id="btnLeft">◀</button>
+          <button type="button" id="btnRight">▶</button>
+          <button type="button" id="btnJump">점프</button>
+        </div>
+        <div>
+          <button type="button" id="btnAtk">공격</button>
+          <button type="button" id="btnUlt">필살</button>
+        </div>
+      </div>
+      <div class="modal" id="quizModal">
+        <div class="box">
+          <h2>초록 블록의 각성</h2>
+          <p>초등 3학년 문제. 맞히면 10초 동안 공격과 채굴이 두 배가 된다.</p>
+          <div class="q" id="quizQ">4 × 3</div>
+          <div class="row">
+            <button class="choice" id="ansA" type="button">A</button>
+            <button class="choice" id="ansB" type="button">B</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal" id="endModal">
+        <div class="box">
+          <h2 id="endTitle">지상으로</h2>
+          <p id="endText"></p>
+          <p id="endScore"></p>
+          <button class="primary" id="endBtn" type="button">지상에서 다시 시작</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+const TILE = 32;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const keys = new Set();
+const hold = { left:false, right:false, jump:false, atk:false, ult:false };
+const images = { plant:new Image(), monster:new Image(), heroes:new Image() };
+images.plant.src = 'plant.jpg';
+images.monster.src = 'monster.jpg';
+images.heroes.src = 'heroes.jpg';
+
+const FLOORS = [
+  { name:'지하 1층', foe:'두더지 괴물', kind:'mole' },
+  { name:'지하 2층', foe:'개미 괴물', kind:'ant' },
+  { name:'지하 3층', foe:'지네 괴물', kind:'centipede' },
+  { name:'지하 4층', foe:'땅거미 괴물', kind:'spider' },
+  { name:'지하 5층', foe:'고구마 괴물', kind:'potato' }
+];
+
+const state = {
+  mode:'title',
+  name:'',
+  who:'jaden',
+  floor:0,
+  surface:true,
+  tiles:[],
+  cols:0,
+  rows:0,
+  spawn:{x:80,y:80},
+  player:null,
+  enemies:[],
+  shots:[],
+  balls:[],
+  falls:[],
+  parts:[],
+  texts:[],
+  blockHp:{},
+  kills:0,
+  mined:0,
+  quizOk:0,
+  pathOpen:false,
+  seed:null,
+  shake:0,
+  camX:0,
+  camY:0,
+  quiz:null,
+  ended:false,
+  msg:'',
+  attackLatch:false,
+  ultLatch:false
+};
+
+function blank(w,h){
+  return Array.from({length:h}, (_,y)=>Array.from({length:w}, (_,x)=>(x===0||y===0||x===w-1||y===h-1)?'#':'.'));
+}
+function rect(g,x,y,w,h,t){
+  for(let j=0;j<h;j++) for(let i=0;i<w;i++){
+    const yy=y+j, xx=x+i;
+    if(yy>0 && xx>0 && yy<g.length-1 && xx<g[0].length-1) g[yy][xx]=t;
+  }
+}
+function put(g,x,y,t){ if(y>0&&x>0&&y<g.length-1&&x<g[0].length-1) g[y][x]=t; }
+
+function buildSurface(){
+  const g = blank(30, 14);
+  for(let x=1;x<29;x++) g[11][x]='#';
+  for(let x=11;x<=18;x++) g[10][x]='B';
+  for(let y=11;y<=13;y++) for(let x=13;x<=16;x++) g[y][x]='.';
+  return { tiles:g, spawn:{x:3*TILE, y:8*TILE}, enemies:[], seed:null };
+}
+
+function buildFloor(index){
+  const g = blank(42, 18);
+  rect(g,1,6,14,1,'B');
+  rect(g,18,6,10,1,'B');
+  rect(g,31,6,10,1,'B');
+  rect(g,15,8,3,1,'L');
+  rect(g,29,8,2,1,'L');
+  rect(g,4,9,8,4,'B');
+  rect(g,6,10,4,2,'G');
+  rect(g,14,7,1,7,'#');
+  rect(g,16,11,16,1,'B');
+  rect(g,20,11,4,1,'O');
+  rect(g,26,12,6,3,'B');
+  rect(g,22,8,8,2,'#');
+  rect(g,33,9,6,5,'#');
+  rect(g,34,10,4,2,'.');
+  rect(g,34,9,6,4,'.');
+  rect(g,8,13,20,1,'B');
+  rect(g,10,13,3,1,'O');
+  rect(g,18,14,8,2,'B');
+  rect(g,30,14,8,2,'D');
+  g[15][38]='E';
+  rect(g,36,14,3,1,'B');
+  if(index>=1){ rect(g,20,6,3,1,'G'); rect(g,5,6,2,1,'O'); }
+  if(index>=2){ rect(g,24,12,3,1,'L'); rect(g,8,11,4,1,'#'); }
+  if(index>=3){ rect(g,16,12,3,1,'G'); rect(g,32,6,2,1,'O'); }
+  if(index>=4){ rect(g,12,14,4,1,'G'); rect(g,27,15,3,1,'O'); }
+  const monsters = [{ x:35*TILE, y:10*TILE, kind: FLOORS[index].kind, opens:true }];
+  let seed = null;
+  if(index===4){
+    monsters.push({ x:16*TILE, y:9*TILE, kind:'potato', opens:true });
+    monsters[0].kind = 'root';
+    monsters[0].opens = true;
+    seed = { x:37*TILE, y:13*TILE, hp:30, open:false };
+  }
+  return { tiles:g, spawn:{x:2*TILE, y:4*TILE}, enemies:monsters, seed };
+}
+
+function loadArea(surface, floor, keep){
+  const prev = state.player;
+  const built = surface ? buildSurface() : buildFloor(floor);
+  state.surface = surface;
+  state.floor = floor;
+  state.tiles = built.tiles;
+  state.rows = built.tiles.length;
+  state.cols = built.tiles[0].length;
+  state.spawn = built.spawn;
+  state.blockHp = {};
+  state.pathOpen = surface;
+  state.enemies = built.enemies.map(spawnEnemy);
+  state.seed = built.seed;
+  state.shots = []; state.balls = []; state.falls = []; state.parts = []; state.texts = [];
+  state.player = makePlayer(built.spawn.x, built.spawn.y);
+  if(keep && prev){
+    state.player.hp = prev.hp;
+    state.player.awaken = prev.awaken;
+    state.player.ultCd = prev.ultCd;
+  }
+  state.msg = surface ? '갈색 흙을 파고 구멍으로 떨어지자' : FLOORS[floor].name + ' · ' + FLOORS[floor].foe;
+}
+
+function makePlayer(x,y){
+  return { x, y, w:22, h:30, vx:0, vy:0, facing:1, hp:100, maxHp:100, onGround:false, atkCd:0, ultCd:0, awaken:0, hurt:0, mineCd:0 };
+}
+
+function spawnEnemy(spec){
+  const floor = state.floor + 1;
+  const base = { mole:46, ant:58, centipede:78, spider:96, potato:84, root:240 }[spec.kind];
+  return {
+    x:spec.x, y:spec.y, kind:spec.kind, opens:!!spec.opens,
+    hp: base + floor * 8, maxHp: base + floor * 8,
+    vx: spec.kind==='ant' ? 1.6 : 1.1,
+    facing: -1, w: spec.kind==='root'?54: spec.kind==='centipede'?46:28,
+    h: spec.kind==='root'?48: spec.kind==='spider'?26:28,
+    hurt:0, hop:0, alive:true
+  };
+}
+
+function tileAt(tx,ty){
+  if(ty<0||tx<0||ty>=state.rows||tx>=state.cols) return '#';
+  return state.tiles[ty][tx];
+}
+function solidType(t){ return t==='#'||t==='B'||t==='O'||t==='G'||t==='D'; }
+function hits(box){
+  const x0=Math.floor(box.x/TILE), x1=Math.floor((box.x+box.w-0.01)/TILE);
+  const y0=Math.floor(box.y/TILE), y1=Math.floor((box.y+box.h-0.01)/TILE);
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(solidType(tileAt(x,y))) return true;
+  return false;
+}
+function moveBody(ent){
+  const sx=Math.sign(ent.vx); let n=Math.abs(ent.vx);
+  while(n>0){ ent.x+=sx; if(hits(ent)){ ent.x-=sx; ent.vx=0; break;} n-=1; }
+  ent.onGround=false;
+  const sy=Math.sign(ent.vy); n=Math.abs(ent.vy);
+  while(n>0){ ent.y+=sy; if(hits(ent)){ ent.y-=sy; if(sy>0) ent.onGround=true; ent.vy=0; break;} n-=1; }
+}
+function overlaps(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y; }
+function scoreNow(){
+  const hp = state.player ? Math.max(0, state.player.hp) : 0;
+  return state.kills*100 + state.mined*10 + state.quizOk*500 + hp*50;
+}
+function burst(x,y,color,n){
+  for(let i=0;i<n;i++) state.parts.push({ x,y, vx:(Math.random()-0.5)*4, vy:(Math.random()-1.2)*3, life:24+Math.random()*16, color });
+}
+function floatText(x,y,text,color){ state.texts.push({x,y,text,color,life:46}); }
+
+function makeQuiz(floor){
+  const f = Math.min(5, Math.max(1, floor));
+  const mul = Math.random() < (f>=4 ? 0.35 : 0.6);
+  let q, ans;
+  if(mul){
+    const a = 2 + Math.floor(Math.random()*([4,6,8,8,8][f-1]));
+    const b = 2 + Math.floor(Math.random()*([4,5,7,8,8][f-1]));
+    q = a + ' × ' + b; ans = a*b;
+  } else {
+    const d = 2 + Math.floor(Math.random()*([3,4,6,7,8][f-1]));
+    const k = 2 + Math.floor(Math.random()*([4,6,8,10,12][f-1]));
+    q = (d*k) + ' ÷ ' + d; ans = k;
+  }
+  let wrong = ans + (Math.random()<0.5 ? 2+Math.floor(Math.random()*5) : -(1+Math.floor(Math.random()*3)));
+  if(wrong===ans || wrong<=0) wrong = ans+4;
+  const flip = Math.random()<0.5;
+  return { q, A: flip?wrong:ans, B: flip?ans:wrong, correct: flip?'B':'A' };
+}
+
+function openQuiz(){
+  state.quiz = makeQuiz((state.floor||0)+1);
+  document.getElementById('quizQ').textContent = state.quiz.q;
+  document.getElementById('ansA').textContent = 'A. ' + state.quiz.A;
+  document.getElementById('ansB').textContent = 'B. ' + state.quiz.B;
+  document.getElementById('quizModal').classList.add('on');
+}
+function closeQuiz(){ state.quiz=null; document.getElementById('quizModal').classList.remove('on'); }
+function answerQuiz(letter){
+  if(!state.quiz) return;
+  const ok = letter===state.quiz.correct;
+  closeQuiz();
+  if(ok){
+    state.quizOk++;
+    state.player.awaken = 600;
+    floatText(state.player.x, state.player.y-20, '각성! 공격·채굴 2배', '#ffe14a');
+    burst(state.player.x, state.player.y, '#ffe14a', 16);
+  } else {
+    floatText(state.player.x, state.player.y-20, '틀렸어', '#ff8d7a');
+    state.shake = 6;
+  }
+}
+
+function breakTile(tx,ty){
+  const t = tileAt(tx,ty);
+  if(!solidType(t) || t==='#') return;
+  if(t==='D' && !state.pathOpen) return;
+  const key=tx+','+ty;
+  const max = t==='B'||t==='D' ? 2 : 3;
+  const left = (state.blockHp[key] ?? max) - (state.player.awaken>0 ? 2 : 1);
+  if(left>0){ state.blockHp[key]=left; burst(tx*TILE+16, ty*TILE+16, '#c4a27a', 4); return; }
+  delete state.blockHp[key];
+  state.tiles[ty][tx] = '.';
+  state.mined++;
+  burst(tx*TILE+16, ty*TILE+16, t==='G'?'#7dcc64':'#a56b3c', 8);
+  if(t==='O'){
+    state.falls.push({ x:tx*TILE+6, y:(ty-1)*TILE, w:20, h:16, vy:0, hit:false });
+  }
+  if(t==='G') openQuiz();
+}
+
+function mineFacing(){
+  const p=state.player;
+  const tx=Math.floor((p.x + p.w/2 + p.facing*TILE*0.9)/TILE);
+  const ty=Math.floor((p.y + p.h*0.55)/TILE);
+  breakTile(tx,ty); breakTile(tx, ty+1);
+  breakTile(Math.floor((p.x+p.w/2)/TILE), Math.floor((p.y+p.h+4)/TILE));
+}
+function mineWorld(wx,wy){
+  const p=state.player;
+  if(Math.hypot(wx-(p.x+p.w/2), wy-(p.y+p.h/2))>TILE*2.4) return;
+  breakTile(Math.floor(wx/TILE), Math.floor(wy/TILE));
+}
+
+function damageEnemy(e, dmg){
+  if(!e.alive) return;
+  e.hp -= dmg; e.hurt=10;
+  floatText(e.x, e.y, String(dmg), '#fff');
+  burst(e.x+e.w/2, e.y+10, '#ffb057', 6);
+  if(e.hp<=0){
+    e.alive=false; state.kills++;
+    burst(e.x+e.w/2, e.y+e.h/2, '#d7ff9a', 14);
+    if(state.enemies.filter(x=>x.opens && x.alive).length===0){
+      state.pathOpen=true;
+      for(let y=0;y<state.rows;y++) for(let x=0;x<state.cols;x++) if(state.tiles[y][x]==='D') state.tiles[y][x]='B';
+      if(state.seed) state.seed.open=true;
+      state.msg='길이 열렸다. 더 깊이 파라!';
+    }
+  }
+}
+function hurtPlayer(n){
+  const p=state.player;
+  if(p.hurt>0 || state.ended) return;
+  p.hp -= n; p.hurt=28; state.shake=8;
+  floatText(p.x, p.y, '-'+n, '#ff5d5d');
+  if(p.hp<=0){ p.hp=0; finish(false); }
+}
+
+function attack(){
+  const p=state.player;
+  if(p.atkCd>0) return;
+  p.atkCd = p.awaken>0 ? 10 : 16;
+  const power = (state.who==='jaden'?14:10) * (p.awaken>0?2:1);
+  mineFacing();
+  if(state.who==='jaden'){
+    const box={ x:p.x+(p.facing>0?p.w-4:-28), y:p.y+4, w:32, h:24 };
+    state.parts.push({ x:box.x+box.w/2, y:box.y+8, vx:p.facing*2, vy:-0.2, life:8, color:'#b6ff6a', sword:true });
+    state.enemies.forEach(e=>{ if(e.alive && overlaps(box,e)) damageEnemy(e, power); });
+    if(state.seed && state.seed.open && overlaps(box, {x:state.seed.x,y:state.seed.y,w:28,h:28})) hitSeed(power);
+  } else {
+    state.shots.push({ x:p.x+p.w/2, y:p.y+8, vx:p.facing*6.2, vy:0, life:42, dmg:power, w:16, h:14 });
+  }
+}
+function hitSeed(dmg){
+  state.seed.hp -= dmg;
+  floatText(state.seed.x, state.seed.y, String(dmg), '#d7ff9a');
+  burst(state.seed.x, state.seed.y, '#c6ff73', 8);
+  if(state.seed.hp<=0) finish(true);
+}
+function ultimate(){
+  const p=state.player;
+  if(p.ultCd>0) return;
+  p.ultCd = 480;
+  const power = (state.who==='jaden'?48:22) * (p.awaken>0?2:1);
+  if(state.who==='jaden'){
+    state.shake=16;
+    state.msg='엄마 소환! 등짝 스매싱!';
+    state.enemies.forEach(e=>{ if(e.alive) damageEnemy(e, power); });
+    if(state.seed && state.seed.open) hitSeed(power);
+    burst(p.x, p.y, '#ffd0e4', 24);
+  } else {
+    state.msg='귀여운 햄스터 돌격!';
+    for(let i=0;i<6;i++){
+      state.balls.push({ x:p.x, y:p.y-4+i*2, vx:p.facing*(4.2+i*0.15), vy:-1+i*0.2, life:70, dmg:power, w:18, h:16 });
+    }
+  }
+}
+
+function inLava(p){
+  const x0=Math.floor(p.x/TILE), x1=Math.floor((p.x+p.w-0.01)/TILE);
+  const y0=Math.floor(p.y/TILE), y1=Math.floor((p.y+p.h-0.01)/TILE);
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(tileAt(x,y)==='L') return true;
+  return false;
+}
+function onExit(p){
+  const x0=Math.floor((p.x+p.w/2)/TILE), y0=Math.floor((p.y+p.h-4)/TILE);
+  return tileAt(x0,y0)==='E' || tileAt(x0, y0+1)==='E';
+}
+
+function finish(win){
+  if(state.ended) return;
+  state.ended=true;
+  const sc=scoreNow();
+  saveRank(sc);
+  document.getElementById('endTitle').textContent = win ? '씨앗을 파괴했다!' : '지상(아파트 정원)에서 다시 시작';
+  document.getElementById('endText').textContent = win
+    ? '나무 괴물의 뿌리와 힘의 원천이 사라졌다. 서초동 정원이 조용해졌어.'
+    : '에너지가 다했거나 용암에 빠졌어. 아파트 정원에서 다시 시작한다.';
+  document.getElementById('endScore').textContent = state.name + '  ·  점수 ' + sc;
+  document.getElementById('endModal').classList.add('on');
+  renderRank();
+}
+
+function saveRank(score){
+  const row={ name:state.name||'player', score, who:state.who, at:Date.now() };
+  let list=[];
+  try { list=JSON.parse(localStorage.getItem('seocho-tree-top5')||'[]'); } catch(e){ list=[]; }
+  if(!Array.isArray(list)) list=[];
+  list.push(row);
+  list.sort((a,b)=>b.score-a.score);
+  list=list.slice(0,5);
+  localStorage.setItem('seocho-tree-top5', JSON.stringify(list));
+}
+function renderRank(){
+  let list=[];
+  try { list=JSON.parse(localStorage.getItem('seocho-tree-top5')||'[]'); } catch(e){ list=[]; }
+  const ol=document.getElementById('rankList');
+  if(!list.length){ ol.innerHTML='<li>아직 기록이 없어요</li>'; return; }
+  ol.innerHTML=list.map(r=>'<li>'+escapeHtml(r.name)+' · '+r.score+'</li>').join('');
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function update(){
+  if(state.mode!=='play' || state.quiz || state.ended) return;
+  const p=state.player;
+  const left=keys.has('arrowleft')||keys.has('a')||hold.left;
+  const right=keys.has('arrowright')||keys.has('d')||hold.right;
+  const jump=keys.has('arrowup')||keys.has('w')||keys.has(' ')||hold.jump;
+  p.vx = (right?2.55:0) - (left?2.55:0);
+  if(p.vx) p.facing=Math.sign(p.vx);
+  if(jump && p.onGround){ p.vy=-8.15; p.onGround=false; }
+  p.vy=Math.min(11, p.vy+0.42);
+  moveBody(p);
+  if(p.atkCd>0) p.atkCd--;
+  if(p.ultCd>0) p.ultCd--;
+  if(p.awaken>0) p.awaken--;
+  if(p.hurt>0) p.hurt--;
+  if(state.shake>0) state.shake--;
+
+  const wantAtk=keys.has('j')||hold.atk;
+  const wantUlt=keys.has('k')||hold.ult;
+  if(wantAtk && !state.attackLatch) attack();
+  if(wantUlt && !state.ultLatch) ultimate();
+  state.attackLatch=wantAtk; state.ultLatch=wantUlt;
+
+  if(state.surface && p.y>state.rows*TILE-4){
+    loadArea(false, 0, true);
+    return;
+  }
+  if(!state.surface && (inLava(p) || p.y>state.rows*TILE+8)){
+    p.hp=0; finish(false); return;
+  }
+  if(!state.surface && state.pathOpen && onExit(p)){
+    if(state.floor>=4){
+      if(state.seed && state.seed.hp>0) state.msg='씨앗을 공격해서 파괴해!';
+    } else {
+      loadArea(false, state.floor+1, true);
+      return;
+    }
+  }
+
+  state.enemies.forEach(e=>{
+    if(!e.alive) return;
+    const dir = (p.x+p.w/2) > (e.x+e.w/2) ? 1 : -1;
+    const near = Math.abs((p.x)-(e.x))<220;
+    e.facing = near?dir:e.facing;
+    e.vx = (near?dir:e.facing) * (e.kind==='ant'?1.7:e.kind==='spider'?1.25:1.05);
+    if(e.kind==='spider'){ e.hop++; if(e.hop>70 && e.onGround){ e.vy=-7; e.hop=0; } }
+    e.vy=Math.min(11,(e.vy||0)+0.42);
+    moveBody(e);
+    if(e.hurt>0) e.hurt--;
+    if(overlaps(p,e)) hurtPlayer(e.kind==='root'?18:10+state.floor);
+  });
+
+  const stepShot=(s,dig)=>{
+    s.x+=s.vx; s.y+=s.vy; s.life--;
+    s.vy=Math.min(6, s.vy+0.08);
+    const box={x:s.x,y:s.y,w:s.w,h:s.h};
+    if(hits(box)){
+      if(dig){ breakTile(Math.floor(s.x/TILE), Math.floor(s.y/TILE)); }
+      s.life=0; return;
+    }
+    state.enemies.forEach(e=>{ if(e.alive && overlaps(box,e)){ damageEnemy(e,s.dmg); s.life=0; } });
+    if(state.seed && state.seed.open && overlaps(box,{x:state.seed.x,y:state.seed.y,w:28,h:28})){ hitSeed(s.dmg); s.life=0; }
+  };
+  state.shots.forEach(s=>stepShot(s,false));
+  state.balls.forEach(s=>stepShot(s,true));
+  state.shots=state.shots.filter(s=>s.life>0);
+  state.balls=state.balls.filter(s=>s.life>0);
+
+  state.falls.forEach(f=>{
+    f.vy=Math.min(9,f.vy+0.45); f.y+=f.vy;
+    if(!f.hit && overlaps(f,p)){ f.hit=true; hurtPlayer(16); }
+    if(f.y>state.rows*TILE) f.life=0;
+  });
+  state.falls=state.falls.filter(f=>f.life!==0 && f.y<state.rows*TILE+20);
+  state.parts.forEach(pt=>{ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.12; pt.life--; });
+  state.parts=state.parts.filter(pt=>pt.life>0);
+  state.texts.forEach(t=>{ t.y-=0.6; t.life--; });
+  state.texts=state.texts.filter(t=>t.life>0);
+
+  const viewW=cv.width, viewH=cv.height;
+  state.camX=Math.max(0, Math.min(state.cols*TILE-viewW, p.x+p.w/2-viewW/2));
+  state.camY=Math.max(0, Math.min(state.rows*TILE-viewH, p.y+p.h/2-viewH/2));
+  paintHud();
+}
+
+function paintHud(){
+  const p=state.player;
+  document.getElementById('hudFloor').textContent = state.surface ? '아파트 정원' : FLOORS[state.floor].name+' '+FLOORS[state.floor].foe;
+  document.getElementById('hudHp').textContent = 'HP '+Math.max(0,Math.ceil(p.hp));
+  document.getElementById('hudScore').textContent = '점수 '+scoreNow();
+  const buff = p.awaken>0 ? '각성 '+(p.awaken/60).toFixed(1)+'초' : (p.ultCd>0 ? '필살 '+(p.ultCd/60).toFixed(1)+'초' : '필살 준비');
+  document.getElementById('hudBuff').textContent = buff;
+}
+
+function draw(){
+  if(state.mode!=='play') return;
+  const p=state.player;
+  ctx.save();
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(state.shake>0) ctx.translate((Math.random()-0.5)*state.shake, (Math.random()-0.5)*state.shake);
+  ctx.translate(-state.camX, -state.camY);
+  if(state.surface){
+    if(images.monster.complete) ctx.drawImage(images.monster, 0, 0, 16*TILE, 10*TILE);
+    if(images.plant.complete) ctx.drawImage(images.plant, 14*TILE, 0, 16*TILE, 10*TILE);
+  } else {
+    const sky=ctx.createLinearGradient(0,0,0,state.rows*TILE);
+    sky.addColorStop(0, state.floor<2?'#6ea6d8':'#3c4e68');
+    sky.addColorStop(1, '#1c140f');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,state.cols*TILE,state.rows*TILE);
+  }
+  for(let y=0;y<state.rows;y++) for(let x=0;x<state.cols;x++) drawTile(x,y,state.tiles[y][x]);
+  if(state.seed){
+    ctx.fillStyle = state.seed.open ? '#d6ff73' : '#5d6a3a';
+    ctx.beginPath(); ctx.ellipse(state.seed.x+14, state.seed.y+16, 12, 16, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#24170f'; ctx.stroke();
+    ctx.fillStyle='#24170f'; ctx.font='12px Jua, sans-serif'; ctx.fillText('씨앗', state.seed.x+2, state.seed.y+8);
+  }
+  state.falls.forEach(f=>{ ctx.fillStyle='#a56b3c'; ctx.fillRect(f.x,f.y,f.w,f.h); ctx.strokeStyle='#24170f'; ctx.strokeRect(f.x,f.y,f.w,f.h); });
+  state.enemies.forEach(e=>{ if(e.alive) drawEnemy(e); });
+  drawPlayer(p);
+  state.shots.forEach(s=>drawHamster(s.x,s.y,1));
+  state.balls.forEach(s=>drawHamster(s.x,s.y,1.2));
+  state.parts.forEach(pt=>{ ctx.fillStyle=pt.color; ctx.fillRect(pt.x, pt.y, pt.sword?16:4, pt.sword?4:4); });
+  state.texts.forEach(t=>{ ctx.fillStyle=t.color; ctx.font='16px Jua, sans-serif'; ctx.fillText(t.text, t.x, t.y); });
+  ctx.restore();
+  ctx.fillStyle='rgba(255,248,236,.9)'; ctx.font='16px Jua, sans-serif';
+  ctx.fillText(state.msg, 16, cv.height-78);
+  ctx.fillText('이동 A/D·←→   점프 W·↑·Space   공격 J·클릭   필살 K·우클릭', 16, cv.height-56);
+}
+
+function drawTile(x,y,t){
+  if(t==='.'||t==='S'||t==='M') return;
+  const px=x*TILE, py=y*TILE;
+  const colors={ '#':'#8b9098', B:'#a56b3c', O:'#d3923e', G:'#3e9a45', D:'#6b4428', L:'#ff5a2a', E:'#f2d26b' };
+  ctx.fillStyle=colors[t]||'#ccc';
+  if(t!=='L' && t!=='E') ctx.fillRect(px,py,TILE,TILE);
+  if(t==='L'){ ctx.fillRect(px, py+8, TILE, TILE-8); ctx.fillStyle='rgba(255,220,80,.7)'; ctx.fillRect(px+4, py+12, 8, 4); }
+  if(t==='#'){ ctx.strokeStyle='#5c6168'; ctx.strokeRect(px+2,py+2,TILE-4,TILE-4); }
+  if(t==='B'||t==='O'||t==='D'){ ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(px+4,py+18,10,4); ctx.fillRect(px+16,py+8,8,4); }
+  if(t==='G'){ ctx.fillStyle='#eaffc8'; ctx.font='18px Jua, sans-serif'; ctx.fillText('?', px+10, py+22); }
+  if(t==='E'){ ctx.fillStyle='#f2d26b'; ctx.fillRect(px+8,py+6,16,22); ctx.fillStyle='#24170f'; ctx.fillText('↓', px+10, py+24); }
+  if(t!=='L'){ ctx.strokeStyle='#24170f'; ctx.strokeRect(px+0.5,py+0.5,TILE-1,TILE-1); }
+}
+
+function drawPlayer(p){
+  ctx.save(); ctx.translate(p.x+p.w/2, p.y+p.h); if(p.facing<0) ctx.scale(-1,1);
+  if(p.awaken>0){ ctx.strokeStyle='#ffe14a'; ctx.lineWidth=3; ctx.strokeRect(-16,-34,32,36); }
+  if(state.who==='jaden'){
+    ctx.fillStyle='#3d342c'; ctx.fillRect(-8,-34,16,8);
+    ctx.fillStyle='#f2c2a0'; ctx.fillRect(-7,-28,14,10);
+    ctx.fillStyle='#3d7ec4'; ctx.fillRect(-11,-20,22,14);
+    ctx.fillStyle='#fff'; ctx.fillRect(-6,-18,12,6);
+    ctx.fillStyle='#c6b08a'; ctx.fillRect(-8,-8,16,8);
+    ctx.fillStyle='#2f4d9a'; ctx.fillRect(-8,0,7,6); ctx.fillRect(1,0,7,6);
+    ctx.fillStyle='#b6ff6a'; ctx.fillRect(8,-26,16,5);
+    ctx.fillStyle='#79e7ff'; ctx.fillRect(-12,-16,5,5);
+  } else {
+    ctx.fillStyle='#6a4632'; ctx.fillRect(6,-36,4,12);
+    ctx.fillStyle='#5a3828'; ctx.fillRect(-8,-34,16,8);
+    ctx.fillStyle='#f2c2a0'; ctx.fillRect(-7,-28,14,10);
+    ctx.fillStyle='#e7d3b0'; ctx.beginPath(); ctx.arc(-8,-32,4,0,6.3); ctx.arc(8,-32,4,0,6.3); ctx.fill();
+    ctx.fillStyle='#f3f0ea'; ctx.fillRect(-11,-20,22,14);
+    ctx.fillStyle='#8a5a32'; ctx.fillRect(-9,-18,18,8);
+    ctx.fillStyle='#4d7a3a'; ctx.fillRect(-8,-8,16,8);
+    ctx.fillStyle='#c48a4a'; ctx.fillRect(-8,0,7,6); ctx.fillRect(1,0,7,6);
+  }
+  ctx.restore();
+  if(p.hurt>0 && Math.floor(p.hurt/2)%2===0){ ctx.fillStyle='rgba(255,80,80,.35)'; ctx.fillRect(p.x-2,p.y-2,p.w+4,p.h+4); }
+}
+function drawHamster(x,y,s){
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle='#e7c08a'; ctx.beginPath(); ctx.ellipse(8,8,8,6,0,0,6.3); ctx.fill();
+  ctx.fillStyle='#f3e2c4'; ctx.beginPath(); ctx.arc(4,4,3,0,6.3); ctx.arc(12,4,3,0,6.3); ctx.fill();
+  ctx.fillStyle='#24170f'; ctx.fillRect(10,7,2,2);
+  ctx.restore();
+}
+function drawEnemy(e){
+  ctx.save(); ctx.translate(e.x,e.y);
+  if(e.kind==='mole'){ ctx.fillStyle='#6b4a32'; ctx.fillRect(2,8,24,16); ctx.fillStyle='#f0c9a0'; ctx.fillRect(14,10,10,8); ctx.fillStyle='#ffb703'; ctx.fillRect(16,12,6,3); }
+  else if(e.kind==='ant'){ ctx.fillStyle='#b42318'; ctx.beginPath(); ctx.ellipse(8,16,6,5,0,0,6.3); ctx.ellipse(18,14,7,6,0,0,6.3); ctx.fill(); ctx.fillStyle='#24170f'; ctx.fillRect(20,6,2,8); }
+  else if(e.kind==='centipede'){ ctx.fillStyle='#c45c12'; for(let i=0;i<4;i++){ ctx.beginPath(); ctx.ellipse(6+i*10,14,6,5,0,0,6.3); ctx.fill(); } }
+  else if(e.kind==='spider'){ ctx.fillStyle='#3a2a4a'; ctx.beginPath(); ctx.ellipse(14,14,10,8,0,0,6.3); ctx.fill(); ctx.strokeStyle='#24170f'; ctx.beginPath(); ctx.moveTo(4,14); ctx.lineTo(-2,6); ctx.moveTo(8,10); ctx.lineTo(2,2); ctx.moveTo(20,10); ctx.lineTo(28,2); ctx.moveTo(24,14); ctx.lineTo(32,8); ctx.stroke(); }
+  else if(e.kind==='potato'){ ctx.fillStyle='#e39a3c'; ctx.beginPath(); ctx.ellipse(14,16,12,9,0.3,0,6.3); ctx.fill(); ctx.fillStyle='#24170f'; ctx.fillRect(8,14,3,3); ctx.fillRect(16,14,3,3); }
+  else { ctx.fillStyle='#5d7038'; ctx.fillRect(0,10,54,30); ctx.fillStyle='#ffb703'; ctx.fillRect(18,16,8,6); ctx.fillRect(32,16,8,6); ctx.fillStyle='#7a1f1f'; ctx.fillRect(22,26,16,8); ctx.fillStyle='#c6ff73'; ctx.beginPath(); ctx.ellipse(28,8,8,6,0,0,6.3); ctx.fill(); }
+  ctx.restore();
+  const ratio=Math.max(0,e.hp/e.maxHp);
+  ctx.fillStyle='#24170f'; ctx.fillRect(e.x, e.y-8, e.w, 4);
+  ctx.fillStyle='#ff5d5d'; ctx.fillRect(e.x, e.y-8, e.w*ratio, 4);
+}
+
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+function beginRun(){
+  state.kills=0; state.mined=0; state.quizOk=0; state.ended=false; state.mode='play';
+  document.getElementById('endModal').classList.remove('on');
+  closeQuiz();
+  loadArea(true, 0);
+  show('play');
+}
+
+document.getElementById('startBtn').onclick=()=>{ state.mode='name'; show('nameScreen'); document.getElementById('nameInput').focus(); };
+document.getElementById('nameBack').onclick=()=>{ state.mode='title'; show('title'); };
+document.getElementById('nameNext').onclick=()=>{
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n){ document.getElementById('nameInput').focus(); return; }
+  state.name=n; state.mode='select'; show('selectScreen');
+};
+document.getElementById('pickJaden').onclick=()=>pick('jaden');
+document.getElementById('pickHyo').onclick=()=>pick('hyo');
+function pick(who){
+  state.who=who;
+  document.getElementById('pickJaden').classList.toggle('pick', who==='jaden');
+  document.getElementById('pickHyo').classList.toggle('pick', who==='hyo');
+  document.getElementById('whoBlurb').textContent = who==='jaden'
+    ? '제이드는 룬이 새겨진 나무 칼로 베고, 시계로 엄마 등짝 스매싱을 부른다.'
+    : '효는 햄스터를 날리고, 필살기로 햄스터 군단을 굴려 적과 블록을 쓸어 버린다.';
+}
+document.getElementById('selectBack').onclick=()=>{ state.mode='name'; show('nameScreen'); };
+document.getElementById('selectGo').onclick=beginRun;
+document.getElementById('ansA').onclick=()=>answerQuiz('A');
+document.getElementById('ansB').onclick=()=>answerQuiz('B');
+document.getElementById('endBtn').onclick=beginRun;
+
+addEventListener('keydown', e=>{
+  keys.add(e.key.toLowerCase());
+  if([' ','arrowup','arrowdown'].includes(e.key.toLowerCase()) && state.mode==='play') e.preventDefault();
+  if(state.quiz && (e.key.toLowerCase()==='a' || e.key==='1')) answerQuiz('A');
+  if(state.quiz && (e.key.toLowerCase()==='b' || e.key==='2')) answerQuiz('B');
+});
+addEventListener('keyup', e=>keys.delete(e.key.toLowerCase()));
+cv.addEventListener('mousedown', e=>{
+  if(e.button===0){ attack(); const r=cv.getBoundingClientRect(); const wx=(e.clientX-r.left)*(cv.width/r.width)+state.camX; const wy=(e.clientY-r.top)*(cv.height/r.height)+state.camY; mineWorld(wx,wy); }
+  if(e.button===2) ultimate();
+});
+cv.addEventListener('contextmenu', e=>e.preventDefault());
+function bindHold(id, key){
+  const el=document.getElementById(id);
+  const on=ev=>{ ev.preventDefault(); hold[key]=true; };
+  const off=()=>{ hold[key]=false; };
+  el.addEventListener('pointerdown', on);
+  el.addEventListener('pointerup', off);
+  el.addEventListener('pointerleave', off);
+}
+bindHold('btnLeft','left'); bindHold('btnRight','right'); bindHold('btnJump','jump'); bindHold('btnAtk','atk'); bindHold('btnUlt','ult');
+renderRank();
+requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
