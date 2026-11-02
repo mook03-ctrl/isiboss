@@ -30,16 +30,21 @@
     .arrow.left { left: max(12px, env(safe-area-inset-left)); }
     .arrow.right { right: max(12px, env(safe-area-inset-right)); }
     .caption {
-      position:absolute; left:50%; bottom: max(10px, env(safe-area-inset-bottom)); transform:translateX(-50%);
-      width:min(640px, calc(100% - 28px)); background:rgba(246,239,226,.94);
-      border:3px solid #24170f; border-radius:18px; padding:10px 14px 12px; text-align:center; z-index:2;
+      position:absolute; left:50%; bottom: max(8px, env(safe-area-inset-bottom)); transform:translateX(-50%);
+      width:min(720px, calc(100% - 120px)); background:transparent; border:none;
+      padding:0 8px 8px; text-align:center; z-index:2; pointer-events:none;
     }
+    .caption button { pointer-events:auto; }
     h1 { margin:0; font-size:clamp(22px, 4vh, 36px); }
     .sub { margin:4px 0 8px; color:#5c4634; font-size:clamp(14px, 2.4vh, 18px); }
+    .caption .sub { margin:0 0 8px; color:#fff; font-size:clamp(16px, 3vh, 22px); text-shadow:0 2px 8px #000, 0 0 3px #000; }
     .dots { display:flex; gap:6px; justify-content:center; margin-bottom:8px; }
-    .dots i { width:9px; height:9px; border-radius:50%; background:#cdb892; display:block; }
-    .dots i.on { background:#24170f; }
-    .rank { text-align:left; background:#fff8ec; border:2px solid #24170f; border-radius:12px; padding:6px 10px; margin-top:8px; }
+    .dots i { width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.45); display:block; box-shadow:0 1px 3px #000; }
+    .dots i.on { background:#fff; }
+    .rank {
+      position:absolute; top:max(8px, env(safe-area-inset-top)); left:max(12px, env(safe-area-inset-left));
+      z-index:2; color:#fff; text-shadow:0 2px 6px #000, 0 0 2px #000; background:transparent; max-width:46vw;
+    }
     .rank h2 { margin:0 0 2px; font-size:15px; }
     .rank ol { margin:0; padding-left:18px; font-size:14px; }
     .row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
@@ -62,11 +67,18 @@
     #play.on { display:block; }
     canvas { width:100%; height:100%; display:block; touch-action:none; }
     .hud {
-      position:absolute; left:10px; right:10px; top:max(6px, env(safe-area-inset-top));
-      display:flex; gap:6px; justify-content:space-between; pointer-events:none; color:#fff;
-      text-shadow:0 2px 0 #24170f; font-size:clamp(12px, 2.2vh, 16px);
+      position:absolute; left:10px; top:max(6px, env(safe-area-inset-top));
+      width:calc(50% - 86px); display:flex; gap:6px; justify-content:flex-start; flex-wrap:wrap;
+      pointer-events:none; color:#fff; text-shadow:0 2px 0 #24170f; font-size:clamp(12px, 2.2vh, 16px);
+    }
+    #btnBack {
+      position:absolute; top:max(6px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+      z-index:20; pointer-events:auto; border:1px solid rgba(255,255,255,.35);
+      background:rgba(20,16,12,.5); color:#fff; text-shadow:0 2px 4px #000;
+      border-radius:999px; padding:6px 14px; font-size:clamp(14px, 2.4vh, 18px);
     }
     .hud b { background:rgba(20,16,12,.55); border-radius:10px; padding:4px 8px; }
+    #hudFloor { font-size:clamp(16px, 3vh, 22px); background:rgba(90,40,12,.72); }
     .touch {
       position:absolute; left:0; right:0; bottom:0; height:46%;
       display:flex; justify-content:space-between; align-items:flex-end;
@@ -75,8 +87,9 @@
     }
     .dpad { width:34vh; height:34vh; position:relative; }
     .dpad button, .actions button {
-      pointer-events:auto; touch-action:none; border:3px solid #24170f; background:rgba(255,248,236,.9);
-      border-radius:50%; font-size:clamp(14px, 2.5vh, 20px); color:#24170f;
+      pointer-events:auto; touch-action:none; border:1px solid rgba(255,255,255,.28);
+      background:rgba(255,255,255,.16); color:#fff; text-shadow:0 2px 6px #000, 0 0 2px #000;
+      border-radius:50%; font-size:clamp(18px, 3.4vh, 28px);
     }
     .dpad button { position:absolute; width:12vh; height:12vh; }
     #btnUp { left:11vh; top:0; }
@@ -84,10 +97,8 @@
     #btnDown { left:11vh; top:22vh; }
     #btnRight { left:22vh; top:11vh; }
     .actions { display:flex; gap:2.2vh; align-items:flex-end; }
-    .actions button { width:15vh; height:15vh; }
-    #btnJump { background:#ffe08a; }
-    #btnAtk { background:#c9f5a4; }
-    #btnUlt { background:#bdebff; }
+    #btnJump { width:16vh; height:16vh; font-size:clamp(26px, 5vh, 40px); background:rgba(255,255,255,.14); }
+    #btnAtk, #btnUlt { width:11vh; height:11vh; font-size:clamp(20px, 3.6vh, 30px); background:rgba(255,255,255,.2); }
     .modal { position:absolute; inset:0; background:rgba(12,10,8,.4); display:none; place-items:center; padding:16px; }
     .modal.on { display:grid; }
     .box { width:min(460px, 94vw); background:#fff8ec; border:4px solid #24170f; border-radius:20px; padding:16px; text-align:center; }
@@ -110,15 +121,14 @@
     <div id="slideArt" class="art plant"></div>
     <button class="arrow left" id="prevSlide" type="button" aria-label="이전 장면">◀</button>
     <button class="arrow right" id="nextSlide" type="button" aria-label="다음 장면">▶</button>
+    <div class="rank">
+      <h2>랭킹 TOP 5</h2>
+      <ol id="rankList"></ol>
+    </div>
     <div class="caption">
-      <h1 id="slideTitle">씨앗을 심다</h1>
       <p class="sub" id="slideText"></p>
       <div class="dots" id="dots"></div>
       <button class="primary" id="startBtn" type="button">시작하기</button>
-      <div class="rank">
-        <h2>랭킹 TOP 5</h2>
-        <ol id="rankList"></ol>
-      </div>
     </div>
   </section>
 
@@ -136,7 +146,7 @@
 
   <section class="panel-screen" id="selectScreen">
     <div class="select-card">
-      <img src="heroes.jpg" alt="제이드와 효">
+      <img src="heroes.jpg" alt="제이든과 효">
       <div>
         <h1>누구로 싸울까?</h1>
         <div class="row" style="margin:8px 0">
@@ -158,7 +168,6 @@
       <b id="hudFloor">지상</b>
       <b id="hudHp">HP 100</b>
       <b id="hudScore">점수 0</b>
-      <b id="hudBuff">필살 준비</b>
     </div>
     <div class="touch">
       <div class="dpad" aria-label="이동">
@@ -168,15 +177,15 @@
         <button id="btnRight" type="button">▶</button>
       </div>
       <div class="actions">
-        <button id="btnJump" type="button">점프</button>
-        <button id="btnAtk" type="button">공격</button>
-        <button id="btnUlt" type="button">필살</button>
+        <button id="btnJump" type="button" aria-label="점프">↑</button>
+        <button id="btnAtk" type="button" aria-label="공격">A</button>
+        <button id="btnUlt" type="button" aria-label="필살">B</button>
       </div>
     </div>
     <div id="rotateHint">휴대폰을 가로로 돌려 주세요</div>
     <div class="modal" id="quizModal">
       <div class="box">
-        <h1>초록 블록의 각성</h1>
+        <h1>수학 문제</h1>
         <p class="sub">맞히면 10초 동안 공격과 채굴이 두 배가 된다.</p>
         <div class="q" id="quizQ"></div>
         <div class="row">
@@ -193,6 +202,7 @@
         <button class="primary" id="endBtn" type="button">지상에서 다시 시작</button>
       </div>
     </div>
+    <button id="btnBack" type="button">돌아가기</button>
   </section>
   <script>
 const TILE = 36;
@@ -248,71 +258,113 @@ function buildSurface(){
 }
 
 function buildFloor(index){
-  const W = 31, H = 19;
-  const g = Array.from({length:H}, () => Array(W).fill('#'));
-  const rand = mulberry32(9000 + index * 157);
-  const dirs = [[2,0],[-2,0],[0,2],[0,-2]];
-  const stack = [[1,1]];
-  g[1][1] = '.';
-  while (stack.length) {
-    const [x,y] = stack[stack.length-1];
-    const opts = [];
-    for (const [dx,dy] of dirs) {
-      const nx = x+dx, ny = y+dy;
-      if (nx>0 && ny>0 && nx<W-1 && ny<H-1 && g[ny][nx]==='#') opts.push([nx,ny]);
-    }
-    if (!opts.length) { stack.pop(); continue; }
-    const [nx,ny] = opts[Math.floor(rand()*opts.length)];
-    g[(y+ny)>>1][(x+nx)>>1] = '.';
-    g[ny][nx] = '.';
-    stack.push([nx,ny]);
-  }
-  const spots = [];
-  for (let y=1;y<H-2;y++) for (let x=5;x<W-3;x++) {
-    if (g[y][x]==='.' && '#BDOG'.includes(g[y+1][x])) spots.push({x,y});
-  }
-  spots.sort((a,b)=>(b.x+b.y)-(a.x+a.y));
-  const exit = spots[0] || {x:W-3,y:H-4};
-  for (let y=1;y<H-1;y++) for (let x=1;x<W-1;x++) {
-    if (g[y][x]!=='.') continue;
-    if (x<=4 && y<=4) continue;
-    if (Math.abs(x-exit.x)+Math.abs(y-exit.y)<3) continue;
-    const r = rand();
-    if (r<0.34) g[y][x] = 'B';
-    else if (r<0.4) g[y][x] = 'G';
-    else if (r<0.46) g[y][x] = 'O';
-  }
-  let lava = 0;
-  for (let y=5;y<H-3 && lava<2+index;y++) for (let x=6;x<W-4 && lava<2+index;x++) {
-    if (g[y][x]==='.' && g[y+1][x]==='#' && g[y-1][x]==='.' && rand()<0.05) { g[y][x]='L'; lava++; }
-  }
-  g[exit.y][exit.x] = 'D';
+  const maps = [
+    [
+      '####################',
+      '#S..M..............#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '#..GG......OO......#',
+      '####LL########BB####',
+      '#M......##......M..#',
+      '#BBB.##.##.##.BBB..#',
+      '#.....#....#......C#',
+      '#CC......##....OO..#',
+      '#..BBBBB.##.BBBBB..#',
+      '#..#.........#..M..#',
+      '#..#.LLL.LLL.#..BB.#',
+      '#..............E...#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '####################'
+    ],
+    [
+      '####################',
+      '#S.M...............#',
+      '#BBBBOOOBBBBGGGBBBB#',
+      '#.....##......##...#',
+      '#M.BB.##.LLLL.##.M.#',
+      '#BBBB....####....BB#',
+      '#CC.#.BBBBBBBB.#.CC#',
+      '#...#...M..M...#...#',
+      '#BB.#.########.#.BB#',
+      '#...#..OOOOOO..#...#',
+      '#.M....##LL##....M.#',
+      '#BBB..........BBBB.#',
+      '#........E.........#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '####################'
+    ],
+    [
+      '####################',
+      '#S....M............#',
+      '#BBBBBBBB##BBBBBBBB#',
+      '#GG..##...##..OO...#',
+      '#....##.LL##....M..#',
+      '#.##....##....##BB.#',
+      '#.##.CC.##.M..##...#',
+      '#......#...B#....C.#',
+      '#BBB#..#.OO.#..#BB.#',
+      '#...#..#....#..#...#',
+      '#.M.#..##LL##..#.M.#',
+      '#BB.#..........#.BB#',
+      '#...............E..#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '####################'
+    ],
+    [
+      '####################',
+      '#S..M..............#',
+      '#BBCCBBBBBBBBBBBBBB#',
+      '#......##GG##......#',
+      '#.LLLL.##..##.OOOO.#',
+      '#......M....M......#',
+      '#BBB##########BBBB.#',
+      '#...#........#...M.#',
+      '#.C.#.BBBBBB.#.C.B.#',
+      '#...#...LL...#.....#',
+      '#M..#........#..M..#',
+      '#BB............BBBB#',
+      '#..........E.......#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '####################'
+    ],
+    [
+      '####################',
+      '#S.M...............#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '#..OO....CC....GG..#',
+      '#.####.LLLLL.####..#',
+      '#.#M............M#.#',
+      '#.#BBBB######BBBB#.#',
+      '#......#....#......#',
+      '#.CCCC.#.OO.#.CCCC.#',
+      '#......#....#..M...#',
+      '#BB#######LL#####BB#',
+      '#M...............X.#',
+      '#.............E....#',
+      '#BBBBBBBBBBBBBBBBBB#',
+      '####################'
+    ]
+  ];
+  const rows = maps[index];
+  const g = rows.map(r => r.split(''));
   const kind = FLOORS[index].kind;
-  const monsters = [];
-  const pockets = [];
-  for (let y=1;y<H-2;y++) for (let x=6;x<W-4;x++) {
-    if (g[y][x]==='.' && '#BDOG'.includes(g[y+1][x])) pockets.push({x,y});
+  const enemies = [];
+  let spawn = { x:TILE+6, y:TILE };
+  let exit = null;
+  for (let y=0;y<g.length;y++) for (let x=0;x<g[0].length;x++) {
+    const t = g[y][x];
+    if (t==='S') { spawn = { x:x*TILE+6, y:y*TILE }; g[y][x] = '.'; }
+    if (t==='M' || t==='X') {
+      enemies.push({ x:x*TILE+2, y:y*TILE, kind:t==='X'?'root':kind, small:false, opens:true });
+      g[y][x] = '.';
+    }
+    if (t==='E') { exit = { x, y }; g[y][x] = 'D'; }
   }
-  for (let i=pockets.length-1;i>0;i--) {
-    const j = Math.floor(rand()*(i+1));
-    const tmp = pockets[i]; pockets[i]=pockets[j]; pockets[j]=tmp;
-  }
-  for (const s of pockets) {
-    if (monsters.length>=5+index) break;
-    if (Math.abs(s.x-exit.x)+Math.abs(s.y-exit.y)<4) continue;
-    if (monsters.some(m=>Math.abs(m.tx-s.x)+Math.abs(m.ty-s.y)<4)) continue;
-    monsters.push({ tx:s.x, ty:s.y, x:s.x*TILE, y:s.y*TILE, kind, small:true, opens:false });
-  }
-  let bx = exit.x-1, by = exit.y;
-  if (g[by] && g[by][bx]!=='.') { bx = exit.x; by = Math.max(1, exit.y-1); g[by][bx]='.'; }
-  monsters.push({ tx:bx, ty:by, x:bx*TILE, y:by*TILE, kind:index===4?'root':kind, small:false, opens:true });
   let seed = null;
-  if (index===4) {
-    const sx = Math.max(1, exit.x-1), sy = Math.max(1, exit.y-1);
-    g[sy][sx] = '.';
-    seed = { x:sx*TILE+4, y:sy*TILE, hp:40, open:false };
+  if (index===4 && exit) {
+    seed = { x:(exit.x-1)*TILE+4, y:(exit.y-1)*TILE, hp:48, open:false };
   }
-  return { tiles:g, spawn:{x:TILE+4, y:TILE}, enemies:monsters, seed, exit };
+  return { tiles:g, spawn, enemies, seed, exit };
 }
 
 function makePlayer(x,y){
@@ -327,8 +379,8 @@ function spawnEnemy(spec){
   return {
     x:spec.x, y:spec.y, kind:spec.kind, small:!!spec.small, opens:!!spec.opens,
     hp, maxHp:hp, facing:-1,
-    w: spec.kind==='root'?52 : spec.small?20:28,
-    h: spec.kind==='root'?44 : spec.small?18:26,
+    w: spec.kind==='root'?58 : 34,
+    h: spec.kind==='root'?48 : 32,
     vy:0, hurt:0, hop:0, alive:true
   };
 }
@@ -352,13 +404,13 @@ function loadArea(surface, floor, keep){
     state.player.awaken = prev.awaken;
     state.player.ultCd = prev.ultCd;
   }
-  state.msg = surface ? '괴물 반대편 흙을 파고 지하로 들어가자' : FLOORS[floor].name+' · '+FLOORS[floor].foe+'들이 미로를 지키고 있다';
+  state.msg = surface ? '괴물 반대편 흙을 파고 지하로 들어가자' : FLOORS[floor].name+'  '+ (floor+1) +'/5  ·  괴물을 모두 쓰러뜨리면 아래 문이 열린다';
 }
 function tileAt(tx,ty){
   if (ty<0||tx<0||ty>=state.rows||tx>=state.cols) return '#';
   return state.tiles[ty][tx];
 }
-function solidType(t){ return t==='#'||t==='B'||t==='O'||t==='G'||t==='D'; }
+function solidType(t){ return t==='#'||t==='B'||t==='O'||t==='G'||t==='D'||t==='C'; }
 function hits(box){
   const x0=Math.floor(box.x/TILE), x1=Math.floor((box.x+box.w-0.01)/TILE);
   const y0=Math.floor(box.y/TILE), y1=Math.floor((box.y+box.h-0.01)/TILE);
@@ -415,7 +467,6 @@ function answerQuiz(letter){
   if (ok) {
     state.quizOk++;
     state.player.awaken = 600;
-    floatText(state.player.x, state.player.y-18, '각성! 2배', '#ffe14a');
     burst(state.player.x, state.player.y, '#ffe14a', 14);
   } else {
     floatText(state.player.x, state.player.y-18, '틀렸어', '#ff8d7a');
@@ -460,12 +511,13 @@ function damageEnemy(e,dmg){
   if (e.hp<=0) {
     e.alive = false; state.kills++;
     burst(e.x+e.w/2, e.y+e.h/2, '#d7ff9a', 10);
-    if (!state.enemies.some(x=>x.opens && x.alive)) {
+    if (!state.enemies.some(x=>x.alive)) {
       state.pathOpen = true;
       if (state.exit) state.tiles[state.exit.y][state.exit.x] = 'E';
-      for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) if (state.tiles[y][x]==='D') state.tiles[y][x]='B';
+      for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) if (state.tiles[y][x]==='D') state.tiles[y][x]='E';
       if (state.seed) state.seed.open = true;
-      state.msg = '우두머리가 쓰러졌다. 더 깊이 내려갈 길이 열렸다.';
+      state.msg = state.floor>=4 ? '괴물을 쓰러뜨렸다. 씨앗을 파괴하면 나무가 돌아온다.' : '문이 열렸다. 빛나는 계단으로 다음 지하에 내려가자.';
+      if (state.exit) floatText(state.exit.x*TILE, state.exit.y*TILE-8, '다음 층', '#ffe14a');
     }
     checkClear();
   }
@@ -514,14 +566,41 @@ function ultimate(){
   const power = (state.who==='jaden'?50:22) * (p.awaken>0?2:1);
   if (state.who==='jaden') {
     state.shake = 14;
-    state.msg = '엄마 소환! 등짝 스매싱!';
     state.enemies.forEach(e=>{ if (e.alive) damageEnemy(e, power); });
     if (state.seed && state.seed.open) hitSeed(power);
     burst(p.x, p.y, '#ffd0e4', 20);
   } else {
-    state.msg = '귀여운 햄스터 돌격!';
-    for (let i=0;i<6;i++) state.balls.push({ x:p.x, y:p.y-2+i*2, vx:p.facing*(4+i*0.15), vy:-0.6, life:64, dmg:power, w:18, h:16 });
+    state.balls.push({
+      x:p.x+p.w/2, y:p.y+4, vx:p.facing*5.2, facing:p.facing,
+      grow:0, phase:'fly', butt:0, did:false, life:70,
+      dmg:(46 * (p.awaken>0?2:1)), w:16, h:14
+    });
   }
+}
+function stepHeadbutt(b){
+  if (b.phase==='fly') {
+    b.grow = Math.min(1, b.grow+0.028);
+    const s = 1+b.grow*3;
+    b.w = 16*s; b.h = 14*s;
+    b.x += b.vx;
+    const box = { x:b.facing>0?b.x:b.x-b.w, y:b.y, w:b.w, h:b.h };
+    const hitEnemy = state.enemies.some(e=>e.alive && overlaps(box,e));
+    const hitSeed = state.seed && state.seed.open && overlaps(box, seedBox());
+    if (hitEnemy || hitSeed) { b.phase='butt'; b.butt=0; return; }
+    if (hits(box)) { b.life=0; return; }
+    b.life--;
+    return;
+  }
+  b.butt++;
+  if (b.butt===4 && !b.did) {
+    b.did = true;
+    const box = { x:b.facing>0?b.x:b.x-b.w-12, y:b.y-4, w:b.w+12, h:b.h+8 };
+    state.enemies.forEach(e=>{ if (e.alive && overlaps(box,e)) damageEnemy(e, b.dmg); });
+    if (state.seed && state.seed.open && overlaps(box, seedBox())) hitSeed(b.dmg);
+    state.shake = 8;
+    burst(b.x, b.y, '#ffe1b0', 12);
+  }
+  if (b.butt>12) b.life = 0;
 }
 function inLava(p){
   const x0=Math.floor(p.x/TILE), x1=Math.floor((p.x+p.w-0.01)/TILE);
@@ -622,7 +701,7 @@ function update(){
     if (state.seed && state.seed.open && overlaps(box, seedBox())) { hitSeed(s.dmg); s.life=0; }
   };
   state.shots.forEach(s=>stepShot(s,false));
-  state.balls.forEach(s=>stepShot(s,true));
+  state.balls.forEach(stepHeadbutt);
   state.shots = state.shots.filter(s=>s.life>0);
   state.balls = state.balls.filter(s=>s.life>0);
   state.falls.forEach(f=>{
@@ -641,10 +720,9 @@ function update(){
 }
 function paintHud(){
   const p = state.player;
-  document.getElementById('hudFloor').textContent = state.surface ? '무너진 아파트' : FLOORS[state.floor].name;
+  document.getElementById('hudFloor').textContent = state.surface ? '지상 · 무너진 아파트' : FLOORS[state.floor].name+'  '+(state.floor+1)+' / 5';
   document.getElementById('hudHp').textContent = 'HP '+Math.max(0, Math.ceil(p.hp));
   document.getElementById('hudScore').textContent = '점수 '+scoreNow();
-  document.getElementById('hudBuff').textContent = p.awaken>0 ? '각성 '+(p.awaken/60).toFixed(1)+'초' : (p.ultCd>0 ? '필살 '+(p.ultCd/60).toFixed(0)+'초' : '필살 준비');
 }
 
 function draw(){
@@ -663,13 +741,21 @@ function draw(){
     ctx.fillRect(0,0,state.cols*TILE, state.rows*TILE);
   }
   for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) drawTile(x,y,state.tiles[y][x]);
+  if (!state.surface) drawRoots();
   if (state.surface) drawHoleMark();
   if (state.seed) drawSeed(state.seed);
   state.falls.forEach(f=>{ roundRect(f.x,f.y,f.w,f.h,4,'#a56b3c'); });
-  state.enemies.forEach(e=>{ if (e.alive) drawEnemy(e); });
+  state.enemies.forEach(e=>{
+    if (!e.alive) return;
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,90,60,.28)';
+    ctx.arc(e.x+e.w/2, e.y+e.h/2, 22+Math.sin(state.tick/7)*3, 0, 6.3);
+    ctx.fill();
+    drawEnemy(e);
+  });
   drawPlayer(state.player);
-  state.shots.forEach(s=>drawHamster(s.x,s.y,1));
-  state.balls.forEach(s=>drawHamster(s.x,s.y,1.15));
+  state.shots.forEach(s=>drawHamster(s.x,s.y,1,0));
+  state.balls.forEach(drawHeadbuttHamster);
   state.parts.forEach(pt=>{ ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,4,4); });
   state.texts.forEach(t=>{ ctx.fillStyle=t.color; ctx.font='15px Jua, sans-serif'; ctx.fillText(t.text,t.x,t.y); });
   ctx.restore();
@@ -680,9 +766,9 @@ function draw(){
     ctx.fillStyle = v;
     ctx.fillRect(0,0,viewW,viewH);
   }
-  ctx.fillStyle = 'rgba(255,248,236,.92)';
-  ctx.font = '15px Jua, sans-serif';
-  ctx.fillText(state.msg, 16, viewH-18);
+  ctx.fillStyle = '#fff8ec';
+  ctx.font = '16px Jua, sans-serif';
+  ctx.fillText(state.msg, 16, 52);
 }
 function drawSurfaceScene(){
   const gY = 8*TILE;
@@ -691,8 +777,8 @@ function drawSurfaceScene(){
   sky.addColorStop(1, '#d7ecff');
   ctx.fillStyle = sky;
   ctx.fillRect(0,0,state.cols*TILE, state.rows*TILE);
-  drawApartment(36, gY);
-  drawMonsterTree(150, gY, 0);
+  drawApartment(20, gY);
+  drawMonsterTree(250, gY, 0);
   ctx.fillStyle = 'rgba(90,70,50,.25)';
   ctx.beginPath(); ctx.ellipse(210, gY+8, 90, 10, 0, 0, 6.3); ctx.fill();
 }
@@ -721,38 +807,81 @@ function drawApartment(x, ground){
   ctx.fillRect(230, -20, 54, 20);
   ctx.restore();
 }
+function drawBranch(x1,y1,x2,y2,morph){
+  const wave = Math.sin(state.tick/10 + x1)*10;
+  ctx.strokeStyle = mix('#4a3018', '#6d8a3a', morph);
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.quadraticCurveTo((x1+x2)/2, (y1+y2)/2+wave, x2, y2+wave*0.3);
+  ctx.stroke();
+  ctx.fillStyle = mix('#2f6a32', '#8ed86a', morph);
+  ctx.beginPath(); ctx.ellipse(x2, y2+wave*0.3, 18, 12, 0.4, 0, 6.3); ctx.fill();
+}
 function drawMonsterTree(x, ground, morph){
+  const sway = Math.sin(state.tick/16)*0.05;
   ctx.save();
   ctx.translate(x, ground);
-  const leaf = mix('#2f6a32', '#7ed36a', morph);
+  ctx.strokeStyle = mix('#5a3a22', '#6a8a3a', morph);
+  ctx.lineWidth = 9;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-16,-6); ctx.quadraticCurveTo(-70, 28, -120, 18); ctx.moveTo(16,-6); ctx.quadraticCurveTo(80, 36, 150, 22);
+  ctx.moveTo(0,-4); ctx.quadraticCurveTo(20, 48, 10, 70);
+  ctx.stroke();
+  ctx.rotate(sway);
+  drawBranch(-28,-150,-92,-70+Math.sin(state.tick/11)*8, morph);
+  drawBranch(28,-150,98,-60+Math.cos(state.tick/13)*8, morph);
+  const leaf = mix('#245c2c', '#7ed36a', morph);
   ctx.fillStyle = leaf;
-  for (let i=0;i<7;i++) {
-    const a = i/7*6.28;
+  for (let i=0;i<9;i++) {
+    const a = i/9*6.28 + state.tick/80;
     ctx.beginPath();
-    ctx.ellipse(Math.cos(a)*34, -150+Math.sin(a)*18, 28, 22, a, 0, 6.3);
+    ctx.ellipse(Math.cos(a)*58, -188+Math.sin(a)*26, 40, 28, a, 0, 6.3);
     ctx.fill();
   }
   ctx.fillStyle = mix('#6b4a2e', '#8a5a32', morph);
-  ctx.fillRect(-18, -120, 36, 120);
-  ctx.strokeStyle = '#3d2a1c'; ctx.strokeRect(-18, -120, 36, 120);
+  ctx.fillRect(-28, -168, 56, 168);
+  ctx.strokeStyle = '#3d2a1c'; ctx.lineWidth = 3; ctx.strokeRect(-28, -168, 56, 168);
   const face = 1-morph;
   ctx.globalAlpha = face;
+  const blink = Math.sin(state.tick/20);
   ctx.fillStyle = '#ffcf4a';
-  eye(-8,-78); eye(8,-78);
+  eye(-14,-108); eye(14,-108);
   ctx.fillStyle = '#7a1d1d';
-  ctx.beginPath(); ctx.ellipse(0,-58,10,8,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,-82,16, 8+blink*3, 0, 0, 6.28); ctx.fill();
   ctx.fillStyle = '#f4efe6';
-  for (let i=-1;i<=1;i++) ctx.fillRect(i*6-2,-62,4,6);
+  for (let i=-2;i<=2;i++) ctx.fillRect(i*7-2,-88,5,8);
   ctx.globalAlpha = 1;
   if (morph>0.05) {
     ctx.globalAlpha = morph;
-    const peaches = [[-20,-160],[18,-150],[0,-132],[28,-176],[-30,-138],[8,-182]];
-    peaches.forEach(([px,py],i)=>{
+    [[-24,-210],[22,-198],[0,-176],[36,-230],[-40,-180],[10,-236],[48,-168]].forEach(([px,py],i)=>{
       ctx.fillStyle = i%2 ? '#ff8fab' : '#ffb35c';
-      ctx.beginPath(); ctx.arc(px,py,7,0,6.3); ctx.fill();
-      ctx.strokeStyle = '#2f6a32'; ctx.beginPath(); ctx.moveTo(px,py-7); ctx.lineTo(px+3,py-12); ctx.stroke();
+      ctx.beginPath(); ctx.arc(px,py,9,0,6.3); ctx.fill();
     });
     ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+function drawRoots(){
+  const bot = state.rows*TILE;
+  ctx.save();
+  ctx.strokeStyle = '#6d4a2a';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(22, 0);
+  for (let y=0;y<=bot;y+=20) ctx.lineTo(22+Math.sin((y+state.tick*2)/34)*7, y);
+  ctx.stroke();
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#8a6240';
+  for (let y=30;y<bot;y+=70) {
+    const sway = Math.sin(state.tick/14+y)*12;
+    ctx.beginPath();
+    ctx.moveTo(22, y);
+    ctx.quadraticCurveTo(50+sway, y+16, 80+sway, y+8);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -794,20 +923,26 @@ function drawEnding(t){
 function drawTile(x,y,t){
   if (t==='.'||t==='S'||t==='M') return;
   const px=x*TILE, py=y*TILE;
-  const colors = { '#':'#6e7682', B:'#a56b3c', O:'#d3923e', G:'#3e9a45', D:'#6a4324', L:'#ff4d2a', E:'#f2d36a' };
+  const colors = { '#':'#8ea0b8', B:'#c4844a', O:'#e2a24a', G:'#3fbe62', D:'#8d5a32', C:'#5ec2ff', E:'#ffe07a' };
   if (t==='L') {
-    ctx.fillStyle = '#ff5a2a'; ctx.fillRect(px, py+10, TILE, TILE-10);
-    ctx.fillStyle = 'rgba(255,220,90,.75)'; ctx.fillRect(px+6, py+16, 10, 4);
+    const wob = Math.sin(state.tick/6+x)*4;
+    ctx.fillStyle = '#ff3b1f'; ctx.fillRect(px, py+8, TILE, TILE-8);
+    ctx.fillStyle = '#ffd15a'; ctx.fillRect(px+6, py+12+wob*0.2, 12, 5);
     return;
   }
   ctx.fillStyle = colors[t]||'#ccc';
   ctx.fillRect(px,py,TILE,TILE);
-  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(px,py,TILE,6);
-  ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fillRect(px,py+TILE-6,TILE,6);
-  if (t==='#'||t==='B'||t==='O'||t==='D') { ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fillRect(px+6,py+14,8,4); ctx.fillRect(px+18,py+8,7,4); }
+  ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(px,py,TILE,7);
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(px,py+TILE-7,TILE,7);
+  if (t==='C') { ctx.fillStyle='#e9fbff'; ctx.fillRect(px+10,py+8,6,14); ctx.fillRect(px+6,py+12,14,6); }
+  if (t==='#'||t==='B'||t==='O'||t==='D') { ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(px+6,py+14,8,4); ctx.fillRect(px+18,py+8,7,4); }
   if (t==='G') { ctx.fillStyle='#f3ffd8'; ctx.font='18px Jua, sans-serif'; ctx.fillText('?', px+12, py+24); }
-  if (t==='E') { ctx.fillStyle='#24170f'; ctx.font='18px Jua, sans-serif'; ctx.fillText('↓', px+11, py+24); }
-  ctx.strokeStyle = '#24170f'; ctx.strokeRect(px+0.5,py+0.5,TILE-1,TILE-1);
+  if (t==='D') { ctx.fillStyle='#ffe9a0'; ctx.font='11px Jua, sans-serif'; ctx.fillText('문', px+10, py+22); }
+  if (t==='E') {
+    ctx.fillStyle = 'rgba(255,220,80,.35)'; ctx.fillRect(px,py,TILE,TILE);
+    ctx.fillStyle='#24170f'; ctx.font='18px Jua, sans-serif'; ctx.fillText('↓', px+11, py+24);
+  }
+  ctx.strokeStyle = 'rgba(20,16,12,.55)'; ctx.strokeRect(px+0.5,py+0.5,TILE-1,TILE-1);
 }
 function drawPlayer(p){
   ctx.save();
@@ -878,14 +1013,23 @@ function drawHyo(){
   ctx.fillStyle = '#4e7d3e'; ctx.fillRect(-8,-7,16,8);
   ctx.fillStyle = '#c48a4a'; ctx.fillRect(-8,0,7,5); ctx.fillRect(1,0,7,5);
 }
-function drawHamster(x,y,s){
+function drawHamster(x,y,s,lunge){
+  lunge = lunge || 0;
   ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
   ctx.fillStyle = '#e7c08a';
   ctx.beginPath(); ctx.ellipse(8,8,8,6,0,0,6.3); ctx.fill();
+  ctx.fillStyle = '#f3d2a4';
+  ctx.beginPath(); ctx.ellipse(12+lunge,6,6,5,0,0,6.3); ctx.fill();
   ctx.fillStyle = '#f6e2c4';
-  ctx.beginPath(); ctx.arc(4,3,3,0,6.3); ctx.arc(12,3,3,0,6.3); ctx.fill();
-  ctx.fillStyle = '#24170f'; ctx.fillRect(10,7,2,2); ctx.fillRect(6,7,2,2);
+  ctx.beginPath(); ctx.arc(8+lunge,2,2.4,0,6.3); ctx.arc(15+lunge,2,2.4,0,6.3); ctx.fill();
+  ctx.fillStyle = '#24170f'; ctx.fillRect(13+lunge,5,2,2);
   ctx.restore();
+}
+function drawHeadbuttHamster(b){
+  const s = 1+b.grow*3;
+  const lunge = b.phase==='butt' ? Math.sin(Math.min(1,b.butt/6)*Math.PI)*10 : 0;
+  const x = (b.facing>0?b.x:b.x-b.w) + b.facing*lunge*s*0.35;
+  drawHamster(x, b.y, b.facing*s, lunge);
 }
 function drawEnemy(e){
   ctx.save(); ctx.translate(e.x+e.w/2, e.y+e.h); if (e.facing<0) ctx.scale(-1,1);
@@ -955,7 +1099,6 @@ function renderSlide(){
   const s = SLIDES[slide];
   const art = document.getElementById('slideArt');
   art.className = 'art '+s.cls;
-  document.getElementById('slideTitle').textContent = s.title;
   document.getElementById('slideText').textContent = s.text;
   document.getElementById('dots').innerHTML = SLIDES.map((_,i)=>'<i class="'+(i===slide?'on':'')+'"></i>').join('');
 }
@@ -963,6 +1106,21 @@ function goLandscape(){
   const el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{});
+}
+function backToTitle(){
+  state.mode = 'title';
+  state.ended = false;
+  state.cinematic = false;
+  state.cine = 0;
+  state.quiz = null;
+  keys.clear();
+  Object.keys(hold).forEach(k=>{ hold[k] = false; });
+  state.attackLatch = false;
+  state.ultLatch = false;
+  closeQuiz();
+  document.getElementById('endModal').classList.remove('on');
+  show('title');
+  renderSlide();
 }
 function beginRun(){
   state.kills=0; state.mined=0; state.quizOk=0; state.ended=false; state.cinematic=false; state.cine=0; state.mode='play';
@@ -978,8 +1136,8 @@ function pick(who){
   document.getElementById('pickJaden').classList.toggle('pick', who==='jaden');
   document.getElementById('pickHyo').classList.toggle('pick', who==='hyo');
   document.getElementById('whoBlurb').textContent = who==='jaden'
-    ? '제이드는 빛나는 나무 칼과 손목의 시계를 가졌다. 시계로 엄마 등짝 스매싱을 부른다.'
-    : '효는 머리핀 햄스터를 날리고, 필살기로 햄스터 군단을 굴려 길과 적을 쓸어 버린다.';
+    ? '제이든은 빛나는 나무 칼과 손목의 시계를 가졌다. 시계로 엄마 등짝 스매싱을 부른다.'
+    : '효는 작은 햄스터를 날린다. 필살기는 커진 햄스터가 적과 씨앗에 박치기한다.';
 }
 
 document.getElementById('prevSlide').onclick = ()=>{ slide = (slide+SLIDES.length-1)%SLIDES.length; renderSlide(); };
@@ -998,6 +1156,7 @@ document.getElementById('selectGo').onclick = beginRun;
 document.getElementById('ansA').onclick = ()=>answerQuiz('A');
 document.getElementById('ansB').onclick = ()=>answerQuiz('B');
 document.getElementById('endBtn').onclick = beginRun;
+document.getElementById('btnBack').onclick = backToTitle;
 let swipeX = 0;
 document.getElementById('slideArt').addEventListener('pointerdown', e=>{ swipeX = e.clientX; });
 document.getElementById('slideArt').addEventListener('pointerup', e=>{
