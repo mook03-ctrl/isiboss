@@ -232,11 +232,11 @@ const SLIDES = [
 let slide = 0;
 
 const FLOORS = [
-  { name:'지하 1층', foe:'두더지 괴물', kind:'mole' },
-  { name:'지하 2층', foe:'개미 괴물', kind:'ant' },
-  { name:'지하 3층', foe:'지네 괴물', kind:'centipede' },
-  { name:'지하 4층', foe:'땅거미 괴물', kind:'spider' },
-  { name:'지하 5층', foe:'고구마 괴물', kind:'potato' }
+  { name:'두더지 굴', foe:'두더지 괴물', kind:'mole' },
+  { name:'개미굴', foe:'개미 괴물', kind:'ant' },
+  { name:'지네굴', foe:'지네 괴물', kind:'centipede' },
+  { name:'거미굴', foe:'땅거미 괴물', kind:'spider' },
+  { name:'고구마와 뿌리', foe:'고구마 괴물', kind:'potato' }
 ];
 
 const state = {
@@ -270,19 +270,40 @@ function buildSurface(){
   return { tiles:g, spawn:{x:7*TILE, y:(ground-3)*TILE}, enemies:[], seed:null, exit:null };
 }
 
+const SHAFT_X = [6, 7, 8];
+const LINK_ROWS = 4;
 function linkBand(){
   const paint = [
     (i)=> i%4===1 ? 'B' : (i%4===2 ? 'O' : (i%4===3 ? 'B' : '.')),
-    (i)=> i%4===1 ? 'O' : (i%4===0 ? '#' : 'B'),
+    (i)=> i%4===1 ? 'O' : 'B',
     (i)=> i%4===1 ? 'B' : (i%5===0 ? '.' : (i%3===0 ? 'O' : 'B')),
     (i)=> i%4===1 ? 'B' : (i%4===3 ? '.' : 'O')
   ];
   return paint.map(fn=>{
     const row = ['#'];
-    for (let i=0;i<18;i++) row.push(fn(i));
+    for (let i=0;i<18;i++) row.push(SHAFT_X.includes(i+1) ? '.' : fn(i));
     row.push('#');
     return row;
   });
+}
+function openShafts(tiles, bands){
+  const last = tiles.length - 1;
+  const setShaft = (y, tile)=>{
+    if (y<1 || y>=last) return;
+    for (const x of SHAFT_X) tiles[y][x] = tile;
+  };
+  setShaft(bands[0].start + 2, '.');
+  for (let i=0; i<bands.length-1; i++) {
+    const yFloor = bands[i].end - LINK_ROWS - 1;
+    const yCeil = bands[i+1].start;
+    for (let y=yFloor; y<=yCeil; y++) setShaft(y, '.');
+  }
+  for (let y=1; y<last; y++) {
+    for (const x of SHAFT_X) {
+      const t = tiles[y][x];
+      if (t==='#' || t==='L' || t==='D') tiles[y][x] = 'B';
+    }
+  }
 }
 function buildDepths(){
   const maps = [
@@ -384,8 +405,8 @@ function buildDepths(){
     const end = index===maps.length-1 ? parsed.length : parsed.length-1;
     for (let y=start; y<end; y++) {
       const row = parsed[y].slice();
-      if (index<4 && y===parsed.length-2 && row.every((c,i)=> i===0 || i===row.length-1 || c==='B')) {
-        for (let x=1; x<row.length-1; x++) row[x] = (x%4===2) ? 'O' : 'B';
+      if (index<4 && y===parsed.length-2) {
+        for (const x of SHAFT_X) row[x] = '.';
       }
       const gy = tiles.length;
       for (let x=0; x<row.length; x++) {
@@ -401,13 +422,17 @@ function buildDepths(){
         }
       }
       if (index>0 && y===0) {
-        for (let x=1; x<row.length-1; x++) row[x] = (x%4===2) ? 'B' : (x%5===0 ? '#' : (x%2===0 ? 'O' : 'B'));
+        for (let x=1; x<row.length-1; x++) {
+          if (SHAFT_X.includes(x)) row[x] = '.';
+          else if (row[x]==='#') row[x] = 'B';
+        }
       }
       tiles.push(row);
     }
     if (index<maps.length-1) linkBand().forEach(r=>tiles.push(r));
     bands.push({ start:y0, end:tiles.length, floor:index });
   });
+  openShafts(tiles, bands);
   if (!seed) seed = { x:13*TILE+4, y:(tiles.length-4)*TILE, hp:48, open:false };
   return { tiles, spawn, enemies, seed, exit:null, bands };
 }
@@ -451,7 +476,7 @@ function loadArea(surface, floor, keep){
     state.player.awaken = prev.awaken;
     state.player.ultCd = prev.ultCd;
   }
-  state.msg = surface ? '괴물 반대편 흙을 파고 지하로 들어가자' : '지하 1층  1/5  ·  두더지 괴물  ·  흙을 파고 아래로 내려가자';
+  state.msg = surface ? '괴물 반대편 흙을 파고 지하로 들어가자' : '두더지 굴  ·  아래로 파고 내려가기';
 }
 function floorAt(py){
   const ty = Math.floor(py/TILE);
@@ -734,7 +759,7 @@ function update(){
     state.floor = f;
     if (f!==state.depthShown) {
       state.depthShown = f;
-      if (state.enemies.some(e=>e.alive)) state.msg = FLOORS[f].name+'  '+(f+1)+'/5  ·  '+FLOORS[f].foe+'  ·  흙을 파고 내려가자';
+      if (state.enemies.some(e=>e.alive)) state.msg = f===4 ? FLOORS[f].name+'  ·  힘의 씨앗' : FLOORS[f].name+'  ·  아래로 파고 내려가기';
     }
   }
 
@@ -777,7 +802,7 @@ function update(){
 }
 function paintHud(){
   const p = state.player;
-  document.getElementById('hudFloor').textContent = state.surface ? '지상 · 무너진 아파트' : FLOORS[state.floor].name+'  '+(state.floor+1)+' / 5';
+  document.getElementById('hudFloor').textContent = state.surface ? '지상 · 무너진 아파트' : FLOORS[state.floor].name;
   document.getElementById('hudHp').textContent = 'HP '+Math.max(0, Math.ceil(p.hp));
   document.getElementById('hudScore').textContent = '점수 '+scoreNow();
 }
@@ -798,7 +823,7 @@ function draw(){
     ctx.fillRect(0,0,state.cols*TILE, state.rows*TILE);
   }
   for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) drawTile(x,y,state.tiles[y][x]);
-  if (!state.surface) { drawRoots(); drawFloorTags(); }
+  if (!state.surface) { drawRoots(); drawFloorTags(); drawShaftHint(); }
   if (state.surface) { drawRootStem(250, 8*TILE-48, state.rows*TILE+48); drawHoleMark(); }
   if (state.seed) drawSeed(state.seed);
   state.falls.forEach(f=>{ roundRect(f.x,f.y,f.w,f.h,4,'#a56b3c'); });
@@ -959,8 +984,17 @@ function drawFloorTags(){
   ctx.fillStyle = 'rgba(255,236,200,.82)';
   ctx.font = '18px Jua, sans-serif';
   (state.bands||[]).forEach(b=>{
-    ctx.fillText(FLOORS[b.floor].name+'  '+(b.floor+1)+' / 5', 10, b.start*TILE+32);
+    ctx.fillText(FLOORS[b.floor].name, 10, b.start*TILE+32);
   });
+  ctx.restore();
+}
+function drawShaftHint(){
+  const b = (state.bands||[])[0];
+  if (!b) return;
+  ctx.save();
+  ctx.fillStyle = '#ffe9b8';
+  ctx.font = '16px Jua, sans-serif';
+  ctx.fillText('아래로 파고 내려가기', 9*TILE, (b.start+2)*TILE-4);
   ctx.restore();
 }
 function eye(x,y){
