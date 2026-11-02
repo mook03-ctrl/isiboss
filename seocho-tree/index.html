@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>서초동 나무 괴물 — angrywork.com</title>
   <link rel="canonical" href="https://angrywork.com/seocho-tree/">
@@ -15,14 +15,18 @@
   <style>
     :root { --ink:#24170f; --paper:#f6efe2; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin:0; height:100%; background:#121820; color:var(--ink); font-family:"Jua","Apple SD Gothic Neo",sans-serif; }
+    html, body {
+      width:100%; height:100%; margin:0; padding:0; overflow:hidden;
+      background-color:#000; color:var(--ink); touch-action:none;
+      font-family:"Jua","Apple SD Gothic Neo",sans-serif;
+    }
     button, input { font-family: inherit; }
     .screen { display:none; min-height:100dvh; position:relative; }
     .screen.on { display:block; }
     .art { position:absolute; inset:0; background:#14202b center/cover no-repeat; }
-    .art.plant { background-image:url("plant.jpg"); background-position:center 28%; }
-    .art.grow { background-image:url("monster.jpg"); background-size:200% 100%; background-position:left center; }
-    .art.monster { background-image:url("monster.jpg"); background-size:200% 100%; background-position:right center; }
+    .art.plant { background-position:center 28%; }
+    .art.grow { background-size:200% 100%; background-position:left center; }
+    .art.monster { background-size:200% 100%; background-position:right center; }
     .arrow {
       position:absolute; top:42%; z-index:2; width:16vh; height:16vh; min-width:54px; min-height:54px;
       border-radius:50%; border:3px solid #24170f; background:rgba(255,244,220,.92); font-size:28px; cursor:pointer;
@@ -63,9 +67,17 @@
     }
     .select-card { display:grid; grid-template-columns:1.05fr .95fr; gap:12px; align-items:center; }
     .select-card img { width:100%; max-height:70dvh; object-fit:cover; border-radius:14px; border:3px solid #24170f; }
-    #play { height:100dvh; background:#14110e; overflow:hidden; }
+    #play { position:fixed; inset:0; width:100%; height:100%; background:#14110e; overflow:hidden; }
     #play.on { display:block; }
-    canvas { width:100%; height:100%; display:block; touch-action:none; }
+    canvas {
+      display:block;
+      width:100vw;
+      height:100vh;
+      height:100dvh;
+      object-fit:contain;
+      touch-action:none;
+      background:#000;
+    }
     .hud {
       position:absolute; left:10px; top:max(6px, env(safe-area-inset-top));
       width:calc(50% - 86px); display:flex; gap:6px; justify-content:flex-start; flex-wrap:wrap;
@@ -146,7 +158,7 @@
 
   <section class="panel-screen" id="selectScreen">
     <div class="select-card">
-      <img src="heroes.jpg" alt="제이든과 효">
+      <img id="heroesArt" alt="제이든과 효">
       <div>
         <h1>누구로 싸울까?</h1>
         <div class="row" style="margin:8px 0">
@@ -163,7 +175,7 @@
   </section>
 
   <section class="screen" id="play">
-    <canvas id="cv"></canvas>
+    <canvas id="gameCanvas"></canvas>
     <div class="hud">
       <b id="hudFloor">지상</b>
       <b id="hudHp">HP 100</b>
@@ -206,8 +218,8 @@
   </section>
   <script>
 const TILE = 36;
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
+const gameCanvas = document.getElementById('gameCanvas');
+const ctx = gameCanvas.getContext('2d');
 const keys = new Set();
 const hold = { left:false, right:false, up:false, down:false, jump:false, atk:false, ult:false };
 let viewW = 960, viewH = 540;
@@ -233,7 +245,8 @@ const state = {
   shots:[], balls:[], falls:[], parts:[], texts:[], blockHp:{},
   kills:0, mined:0, quizOk:0, pathOpen:false, seed:null,
   shake:0, camX:0, camY:0, quiz:null, ended:false, msg:'',
-  attackLatch:false, ultLatch:false, cinematic:false, cine:0, tick:0
+  attackLatch:false, ultLatch:false, cinematic:false, cine:0, tick:0,
+  bands:[], depthShown:-1
 };
 
 function mulberry32(a){
@@ -257,11 +270,25 @@ function buildSurface(){
   return { tiles:g, spawn:{x:7*TILE, y:(ground-3)*TILE}, enemies:[], seed:null, exit:null };
 }
 
-function buildFloor(index){
+function linkBand(){
+  const paint = [
+    (i)=> i%4===1 ? 'B' : (i%4===2 ? 'O' : (i%4===3 ? 'B' : '.')),
+    (i)=> i%4===1 ? 'O' : (i%4===0 ? '#' : 'B'),
+    (i)=> i%4===1 ? 'B' : (i%5===0 ? '.' : (i%3===0 ? 'O' : 'B')),
+    (i)=> i%4===1 ? 'B' : (i%4===3 ? '.' : 'O')
+  ];
+  return paint.map(fn=>{
+    const row = ['#'];
+    for (let i=0;i<18;i++) row.push(fn(i));
+    row.push('#');
+    return row;
+  });
+}
+function buildDepths(){
   const maps = [
     [
       '####################',
-      '#S..M..............#',
+      '#..M............S..#',
       '#BBBBBBBBBBBBBBBBBB#',
       '#..GG......OO......#',
       '####LL########BB####',
@@ -345,33 +372,51 @@ function buildFloor(index){
       '####################'
     ]
   ];
-  const rows = maps[index];
-  const g = rows.map(r => r.split(''));
-  const kind = FLOORS[index].kind;
+  const tiles = [];
   const enemies = [];
-  let spawn = { x:TILE+6, y:TILE };
-  let exit = null;
-  for (let y=0;y<g.length;y++) for (let x=0;x<g[0].length;x++) {
-    const t = g[y][x];
-    if (t==='S') { spawn = { x:x*TILE+6, y:y*TILE }; g[y][x] = '.'; }
-    if (t==='M' || t==='X') {
-      enemies.push({ x:x*TILE+2, y:y*TILE, kind:t==='X'?'root':kind, small:false, opens:true });
-      g[y][x] = '.';
-    }
-    if (t==='E') { exit = { x, y }; g[y][x] = 'D'; }
-  }
+  const bands = [];
+  let spawn = { x:16*TILE+6, y:TILE };
   let seed = null;
-  if (index===4 && exit) {
-    seed = { x:(exit.x-1)*TILE+4, y:(exit.y-1)*TILE, hp:48, open:false };
-  }
-  return { tiles:g, spawn, enemies, seed, exit };
+  maps.forEach((floorRows, index)=>{
+    const parsed = floorRows.map(r=>r.split(''));
+    const y0 = tiles.length;
+    const start = 0;
+    const end = index===maps.length-1 ? parsed.length : parsed.length-1;
+    for (let y=start; y<end; y++) {
+      const row = parsed[y].slice();
+      if (index<4 && y===parsed.length-2 && row.every((c,i)=> i===0 || i===row.length-1 || c==='B')) {
+        for (let x=1; x<row.length-1; x++) row[x] = (x%4===2) ? 'O' : 'B';
+      }
+      const gy = tiles.length;
+      for (let x=0; x<row.length; x++) {
+        const t = row[x];
+        if (t==='S') { if (index===0) spawn = { x:x*TILE+6, y:gy*TILE }; row[x] = '.'; }
+        if (t==='M' || t==='X') {
+          enemies.push({ x:x*TILE+2, y:gy*TILE, kind:t==='X'?'root':FLOORS[index].kind, floor:index, small:false, opens:true });
+          row[x] = '.';
+        }
+        if (t==='E' || t==='D') {
+          if (index===4) seed = { x:(x-1)*TILE+4, y:(gy-1)*TILE, hp:48, open:false };
+          row[x] = '.';
+        }
+      }
+      if (index>0 && y===0) {
+        for (let x=1; x<row.length-1; x++) row[x] = (x%4===2) ? 'B' : (x%5===0 ? '#' : (x%2===0 ? 'O' : 'B'));
+      }
+      tiles.push(row);
+    }
+    if (index<maps.length-1) linkBand().forEach(r=>tiles.push(r));
+    bands.push({ start:y0, end:tiles.length, floor:index });
+  });
+  if (!seed) seed = { x:13*TILE+4, y:(tiles.length-4)*TILE, hp:48, open:false };
+  return { tiles, spawn, enemies, seed, exit:null, bands };
 }
 
 function makePlayer(x,y){
   return { x, y, w:22, h:32, vx:0, vy:0, facing:1, hp:100, maxHp:100, onGround:false, atkCd:0, ultCd:0, awaken:0, hurt:0, swing:0 };
 }
 function spawnEnemy(spec){
-  const floor = state.floor+1;
+  const floor = (spec.floor!=null ? spec.floor : state.floor)+1;
   const table = spec.small
     ? { mole:20, ant:22, centipede:26, spider:28, potato:24, root:80 }
     : { mole:70, ant:84, centipede:110, spider:130, potato:90, root:260 };
@@ -386,9 +431,11 @@ function spawnEnemy(spec){
 }
 function loadArea(surface, floor, keep){
   const prev = state.player;
-  const built = surface ? buildSurface() : buildFloor(floor);
+  const built = surface ? buildSurface() : buildDepths();
   state.surface = surface;
-  state.floor = floor;
+  state.floor = 0;
+  state.bands = built.bands || [];
+  state.depthShown = surface ? -1 : 0;
   state.tiles = built.tiles;
   state.rows = built.tiles.length;
   state.cols = built.tiles[0].length;
@@ -404,7 +451,13 @@ function loadArea(surface, floor, keep){
     state.player.awaken = prev.awaken;
     state.player.ultCd = prev.ultCd;
   }
-  state.msg = surface ? '괴물 반대편 흙을 파고 지하로 들어가자' : FLOORS[floor].name+'  '+ (floor+1) +'/5  ·  괴물을 모두 쓰러뜨리면 아래 문이 열린다';
+  state.msg = surface ? '괴물 반대편 흙을 파고 지하로 들어가자' : '지하 1층  1/5  ·  두더지 괴물  ·  흙을 파고 아래로 내려가자';
+}
+function floorAt(py){
+  const ty = Math.floor(py/TILE);
+  const bands = state.bands||[];
+  for (const b of bands) if (ty>=b.start && ty<b.end) return b.floor;
+  return bands.length ? bands[bands.length-1].floor : 0;
 }
 function tileAt(tx,ty){
   if (ty<0||tx<0||ty>=state.rows||tx>=state.cols) return '#';
@@ -453,7 +506,7 @@ function makeQuiz(floor){
   return { q, A:flip?wrong:ans, B:flip?ans:wrong, correct:flip?'B':'A' };
 }
 function openQuiz(){
-  state.quiz = makeQuiz((state.floor||0)+1);
+  state.quiz = makeQuiz(floorAt(state.player.y)+1);
   document.getElementById('quizQ').textContent = state.quiz.q;
   document.getElementById('ansA').textContent = 'A. '+state.quiz.A;
   document.getElementById('ansB').textContent = 'B. '+state.quiz.B;
@@ -513,11 +566,8 @@ function damageEnemy(e,dmg){
     burst(e.x+e.w/2, e.y+e.h/2, '#d7ff9a', 10);
     if (!state.enemies.some(x=>x.alive)) {
       state.pathOpen = true;
-      if (state.exit) state.tiles[state.exit.y][state.exit.x] = 'E';
-      for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) if (state.tiles[y][x]==='D') state.tiles[y][x]='E';
       if (state.seed) state.seed.open = true;
-      state.msg = state.floor>=4 ? '괴물을 쓰러뜨렸다. 씨앗을 파괴하면 나무가 돌아온다.' : '문이 열렸다. 빛나는 계단으로 다음 지하에 내려가자.';
-      if (state.exit) floatText(state.exit.x*TILE, state.exit.y*TILE-8, '다음 층', '#ffe14a');
+      state.msg = '괴물을 쓰러뜨렸다. 아래의 씨앗을 파괴하면 나무가 돌아온다.';
     }
     checkClear();
   }
@@ -536,7 +586,7 @@ function hitSeed(dmg){
   if (state.seed.hp<=0) { state.seed.hp=0; checkClear(); }
 }
 function checkClear(){
-  if (state.surface || state.floor<4 || state.cinematic || state.ended) return;
+  if (state.surface || !state.seed || state.cinematic || state.ended) return;
   const monsters = state.enemies.some(e=>e.alive);
   const seed = state.seed && state.seed.hp>0;
   if (!monsters && !seed) startEnding();
@@ -679,7 +729,14 @@ function update(){
 
   if (state.surface && p.y>state.rows*TILE-4) { loadArea(false, 0, true); return; }
   if (!state.surface && (inLava(p) || p.y>state.rows*TILE+20)) { p.hp=0; finish(false); return; }
-  if (!state.surface && state.pathOpen && onExit(p) && state.floor<4) { loadArea(false, state.floor+1, true); return; }
+  if (!state.surface) {
+    const f = floorAt(p.y+p.h*0.5);
+    state.floor = f;
+    if (f!==state.depthShown) {
+      state.depthShown = f;
+      if (state.enemies.some(e=>e.alive)) state.msg = FLOORS[f].name+'  '+(f+1)+'/5  ·  '+FLOORS[f].foe+'  ·  흙을 파고 내려가자';
+    }
+  }
 
   state.enemies.forEach(e=>{
     if (!e.alive) return;
@@ -715,7 +772,7 @@ function update(){
   state.texts = state.texts.filter(t=>t.life>0);
   const mapW = state.cols*TILE, mapH = state.rows*TILE;
   state.camX = Math.max(0, Math.min(Math.max(0, mapW-viewW), p.x+p.w/2-viewW*0.42));
-  state.camY = Math.max(0, Math.min(Math.max(0, mapH-viewH), p.y+p.h/2-viewH*0.62));
+  state.camY = Math.max(0, Math.min(Math.max(0, mapH-viewH), p.y+p.h/2-viewH*0.36));
   paintHud();
 }
 function paintHud(){
@@ -741,8 +798,8 @@ function draw(){
     ctx.fillRect(0,0,state.cols*TILE, state.rows*TILE);
   }
   for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) drawTile(x,y,state.tiles[y][x]);
-  if (!state.surface) drawRoots();
-  if (state.surface) drawHoleMark();
+  if (!state.surface) { drawRoots(); drawFloorTags(); }
+  if (state.surface) { drawRootStem(250, 8*TILE-48, state.rows*TILE+48); drawHoleMark(); }
   if (state.seed) drawSeed(state.seed);
   state.falls.forEach(f=>{ roundRect(f.x,f.y,f.w,f.h,4,'#a56b3c'); });
   state.enemies.forEach(e=>{
@@ -864,25 +921,46 @@ function drawMonsterTree(x, ground, morph){
   }
   ctx.restore();
 }
+function drawRootStem(x, y0, y1){
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x, y0);
+  for (let y=y0; y<=y1; y+=12) ctx.lineTo(x+Math.sin(y/48)*8, y);
+  ctx.strokeStyle = '#4e3118';
+  ctx.lineWidth = 22;
+  ctx.stroke();
+  ctx.strokeStyle = '#c48a52';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+  ctx.restore();
+}
 function drawRoots(){
   const bot = state.rows*TILE;
+  const x = 250;
+  drawRootStem(x, -40, bot+40);
   ctx.save();
-  ctx.strokeStyle = '#6d4a2a';
-  ctx.lineWidth = 14;
   ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(22, 0);
-  for (let y=0;y<=bot;y+=20) ctx.lineTo(22+Math.sin((y+state.tick*2)/34)*7, y);
-  ctx.stroke();
+  ctx.strokeStyle = '#7a5230';
   ctx.lineWidth = 6;
-  ctx.strokeStyle = '#8a6240';
-  for (let y=30;y<bot;y+=70) {
-    const sway = Math.sin(state.tick/14+y)*12;
+  for (let y=48; y<bot-10; y+=78) {
+    const dir = (Math.floor(y/78)%2) ? 1 : -1;
+    const sway = Math.sin(y*0.05)*14;
     ctx.beginPath();
-    ctx.moveTo(22, y);
-    ctx.quadraticCurveTo(50+sway, y+16, 80+sway, y+8);
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x+dir*(36+sway), y+28, x+dir*(78+sway), y+8);
     ctx.stroke();
   }
+  ctx.restore();
+}
+function drawFloorTags(){
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,236,200,.82)';
+  ctx.font = '18px Jua, sans-serif';
+  (state.bands||[]).forEach(b=>{
+    ctx.fillText(FLOORS[b.floor].name+'  '+(b.floor+1)+' / 5', 10, b.start*TILE+32);
+  });
   ctx.restore();
 }
 function eye(x,y){
@@ -1082,25 +1160,78 @@ function mix(a,b,t){
 }
 
 function resizeCanvas(){
-  const rect = cv.getBoundingClientRect();
-  const dpr = Math.min(2, window.devicePixelRatio||1);
-  viewW = Math.max(280, rect.width);
-  viewH = Math.max(160, rect.height);
-  cv.width = Math.floor(viewW*dpr);
-  cv.height = Math.floor(viewH*dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const vv = window.visualViewport;
+  const cssW = vv && vv.width ? vv.width : window.innerWidth;
+  const cssH = vv && vv.height ? vv.height : window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  viewW = Math.max(1, cssW);
+  viewH = Math.max(1, cssH);
+  gameCanvas.width = Math.max(1, Math.floor(viewW * dpr));
+  gameCanvas.height = Math.max(1, Math.floor(viewH * dpr));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 function show(id){
   document.querySelectorAll('.screen, .panel-screen').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
 }
+const AssetLoader = {
+  files: ['plant.jpg', 'monster.jpg', 'heroes.jpg'],
+  images: {},
+  status: {},
+  ready: false,
+  load(timeoutMs){
+    const wait = timeoutMs == null ? 2000 : timeoutMs;
+    return new Promise((resolve)=>{
+      let left = this.files.length;
+      let finished = false;
+      const finish = ()=>{
+        if (finished) return;
+        finished = true;
+        this.ready = true;
+        resolve(this);
+      };
+      this.files.forEach((name)=>{
+        const img = new Image();
+        img.onload = ()=>{ this.status[name] = 'loaded'; this.images[name] = img; if (--left<=0) finish(); if (this.ready) startIntro(); };
+        img.onerror = ()=>{ this.status[name] = 'failed'; this.images[name] = null; if (--left<=0) finish(); if (this.ready) startIntro(); };
+        img.src = name;
+      });
+      setTimeout(finish, wait);
+    });
+  },
+  url(name){
+    const img = this.images[name];
+    return img && img.naturalWidth ? img.src : name;
+  }
+};
+function applySlideArt(art, cls){
+  const file = cls==='plant' ? 'plant.jpg' : 'monster.jpg';
+  art.style.backgroundImage = 'url("'+AssetLoader.url(file)+'")';
+  if (cls==='plant') {
+    art.style.backgroundSize = 'cover';
+    art.style.backgroundPosition = 'center 28%';
+  } else if (cls==='grow') {
+    art.style.backgroundSize = '200% 100%';
+    art.style.backgroundPosition = 'left center';
+  } else {
+    art.style.backgroundSize = '200% 100%';
+    art.style.backgroundPosition = 'right center';
+  }
+}
 function renderSlide(){
   const s = SLIDES[slide];
   const art = document.getElementById('slideArt');
   art.className = 'art '+s.cls;
+  applySlideArt(art, s.cls);
   document.getElementById('slideText').textContent = s.text;
   document.getElementById('dots').innerHTML = SLIDES.map((_,i)=>'<i class="'+(i===slide?'on':'')+'"></i>').join('');
+}
+function startIntro(){
+  const heroes = document.getElementById('heroesArt');
+  if (heroes) heroes.src = AssetLoader.url('heroes.jpg');
+  renderSlide();
+  renderRank();
 }
 function goLandscape(){
   const el = document.documentElement;
@@ -1173,13 +1304,13 @@ addEventListener('keydown', e=>{
   if (state.quiz && (e.key.toLowerCase()==='b'||e.key==='2')) answerQuiz('B');
 });
 addEventListener('keyup', e=>keys.delete(e.key.toLowerCase()));
-cv.addEventListener('pointerdown', e=>{
+gameCanvas.addEventListener('pointerdown', e=>{
   if (e.button!==0) return;
   attack();
-  const r = cv.getBoundingClientRect();
+  const r = gameCanvas.getBoundingClientRect();
   mineWorld((e.clientX-r.left)*(viewW/r.width)+state.camX, (e.clientY-r.top)*(viewH/r.height)+state.camY);
 });
-cv.addEventListener('contextmenu', e=>{ e.preventDefault(); ultimate(); });
+gameCanvas.addEventListener('contextmenu', e=>{ e.preventDefault(); ultimate(); });
 function bindHold(id, key){
   const el = document.getElementById(id);
   const down = ev=>{ ev.preventDefault(); hold[key]=true; };
@@ -1192,11 +1323,12 @@ function bindHold(id, key){
 bindHold('btnLeft','left'); bindHold('btnRight','right'); bindHold('btnUp','up'); bindHold('btnDown','down');
 bindHold('btnJump','jump'); bindHold('btnAtk','atk'); bindHold('btnUlt','ult');
 addEventListener('resize', resizeCanvas);
+addEventListener('orientationchange', ()=>{ resizeCanvas(); requestAnimationFrame(resizeCanvas); });
+if (window.visualViewport) visualViewport.addEventListener('resize', resizeCanvas);
 pick('jaden');
-renderSlide();
-renderRank();
 resizeCanvas();
 requestAnimationFrame(loop);
+AssetLoader.load(2000).then(startIntro);
   </script>
 </body>
 </html>
