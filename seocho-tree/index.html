@@ -1312,8 +1312,8 @@ function pick(who){
   document.getElementById('pickJaden').classList.toggle('pick', who==='jaden');
   document.getElementById('pickHyo').classList.toggle('pick', who==='hyo');
   document.getElementById('whoBlurb').textContent = who==='jaden'
-    ? '제이든은 빛나는 나무 칼과 손목의 시계를 가졌다. 시계로 엄마 등짝 스매싱을 부른다.'
-    : '효는 작은 햄스터를 날린다. 필살기는 커진 햄스터가 적과 씨앗에 박치기한다.';
+    ? '제이든은 빛나는 나무 칼과 손목의 시계를 가졌다. 나무 칼로 공격하고 시계로 엄마 등짝 스매싱 공격을 부른다.'
+    : '효는 머리 위에 달린 작은 햄스터를 날린다. 필살기는 커진 햄스터를 던져서 박치기 공격을 한다.';
 }
 
 document.getElementById('prevSlide').onclick = ()=>{ slide = (slide+SLIDES.length-1)%SLIDES.length; renderSlide(); };
