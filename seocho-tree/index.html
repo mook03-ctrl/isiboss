@@ -266,7 +266,7 @@ function buildSurface(){
   for (let x = 1; x < W - 1; x++) g[ground][x] = '#';
   for (let x = 26; x <= 30; x++) g[ground][x] = 'B';
   for (let y = ground + 1; y < H; y++) for (let x = 1; x < W - 1; x++) g[y][x] = '.';
-  return { tiles:g, spawn:{x:7*TILE, y:(ground-3)*TILE}, enemies:[], seed:null, exit:null };
+  return { tiles:g, spawn:{x:31*TILE, y:(ground-2)*TILE}, enemies:[], seed:null, exit:null };
 }
 
 const SHAFT_X = [6, 7, 8];
@@ -470,6 +470,7 @@ function loadArea(surface, floor, keep){
   state.seed = built.seed;
   state.shots = []; state.balls = []; state.falls = []; state.parts = []; state.texts = [];
   state.player = makePlayer(built.spawn.x, built.spawn.y);
+  if (surface) state.player.facing = -1;
   if (keep && prev) {
     state.player.hp = prev.hp;
     state.player.awaken = prev.awaken;
@@ -836,6 +837,7 @@ function draw(){
     drawEnemy(e);
   });
   drawPlayer(state.player);
+  if (state.surface) drawStartBubble(state.player);
   state.shots.forEach(s=>drawHamster(s.x,s.y,1,0));
   state.balls.forEach(drawHeadbuttHamster);
   state.parts.forEach(pt=>{ ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,4,4); });
@@ -1074,6 +1076,54 @@ function drawTile(x,y,t){
     ctx.fillStyle='#24170f'; ctx.font='18px Jua, sans-serif'; ctx.fillText('↓', px+11, py+24);
   }
   ctx.strokeStyle = 'rgba(20,16,12,.55)'; ctx.strokeRect(px+0.5,py+0.5,TILE-1,TILE-1);
+}
+function wrapText(text, maxW){
+  const lines = [];
+  let line = '';
+  for (const ch of text) {
+    const next = line + ch;
+    if (line && ctx.measureText(next).width > maxW) { lines.push(line); line = ch; }
+    else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function drawStartBubble(p){
+  const text = '땅을 파고 지하로 내려가서 나무 괴물의 뿌리 씨앗을 파괴하면 될거야!';
+  ctx.save();
+  ctx.font = '16px Jua, sans-serif';
+  const maxW = Math.min(280, Math.max(140, viewW - 36));
+  const lines = wrapText(text, maxW);
+  const lineH = 22;
+  const padX = 14, padY = 10;
+  const w = Math.ceil(Math.max(...lines.map(line => ctx.measureText(line).width)) + padX * 2);
+  const h = lines.length * lineH + padY * 2;
+  const headX = p.x + p.w / 2;
+  let x = headX - w / 2;
+  let y = p.y - h - 16;
+  x = Math.max(state.camX + 8, Math.min(x, state.camX + viewW - w - 8));
+  y = Math.max(state.camY + 8, y);
+  roundRect(x, y, w, h, 16, '#fff8ec');
+  ctx.strokeStyle = '#24170f';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  const tip = Math.max(x + 18, Math.min(headX, x + w - 18));
+  ctx.beginPath();
+  ctx.moveTo(tip - 9, y + h - 2);
+  ctx.lineTo(tip + 9, y + h - 2);
+  ctx.lineTo(headX, p.y - 2);
+  ctx.closePath();
+  ctx.fillStyle = '#fff8ec';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(tip - 9, y + h);
+  ctx.lineTo(headX, p.y - 2);
+  ctx.lineTo(tip + 9, y + h);
+  ctx.stroke();
+  ctx.fillStyle = '#24170f';
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i) => ctx.fillText(line, x + padX, y + padY + i * lineH));
+  ctx.restore();
 }
 function drawPlayer(p){
   ctx.save();
