@@ -825,7 +825,7 @@ function draw(){
   }
   for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) drawTile(x,y,state.tiles[y][x]);
   if (!state.surface) { drawRoots(); drawFloorTags(); drawShaftHint(); }
-  if (state.surface) { drawRootStem(250, 8*TILE-48, state.rows*TILE+48); drawHoleMark(); }
+  if (state.surface) { drawSurfaceRoots(250, 8*TILE, 0); drawRootStem(250, 8*TILE, state.rows*TILE+48, '#6b4a2e'); drawHoleMark(); }
   if (state.seed) drawSeed(state.seed);
   state.falls.forEach(f=>{ roundRect(f.x,f.y,f.w,f.h,4,'#a56b3c'); });
   state.enemies.forEach(e=>{
@@ -906,13 +906,6 @@ function drawMonsterTree(x, ground, morph){
   const sway = Math.sin(state.tick/16)*0.05;
   ctx.save();
   ctx.translate(x, ground);
-  ctx.strokeStyle = mix('#5a3a22', '#6a8a3a', morph);
-  ctx.lineWidth = 9;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(-16,-6); ctx.quadraticCurveTo(-70, 28, -120, 18); ctx.moveTo(16,-6); ctx.quadraticCurveTo(80, 36, 150, 22);
-  ctx.moveTo(0,-4); ctx.quadraticCurveTo(20, 48, 10, 70);
-  ctx.stroke();
   ctx.rotate(sway);
   drawBranch(-28,-150,-92,-70+Math.sin(state.tick/11)*8, morph);
   drawBranch(28,-150,98,-60+Math.cos(state.tick/13)*8, morph);
@@ -947,19 +940,44 @@ function drawMonsterTree(x, ground, morph){
   }
   ctx.restore();
 }
-function drawRootStem(x, y0, y1){
+function drawSurfaceRoots(x, ground, morph){
+  const wood = mix('#6b4a2e', '#8a5a32', morph);
+  ctx.save();
+  ctx.translate(x, ground);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = wood;
+  ctx.fillStyle = wood;
+  ctx.beginPath();
+  ctx.moveTo(-18, 0);
+  ctx.quadraticCurveTo(0, 14, 18, 0);
+  ctx.lineTo(12, 0);
+  ctx.quadraticCurveTo(0, 8, -12, 0);
+  ctx.fill();
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  ctx.moveTo(-8, 2); ctx.quadraticCurveTo(-48, 10, -118, 4);
+  ctx.moveTo(8, 2); ctx.quadraticCurveTo(52, 12, 132, 3);
+  ctx.moveTo(-4, 4); ctx.quadraticCurveTo(-24, 16, -72, 10);
+  ctx.moveTo(6, 4); ctx.quadraticCurveTo(28, 18, 84, 8);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawRootStem(x, y0, y1, color){
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
   ctx.moveTo(x, y0);
-  for (let y=y0; y<=y1; y+=12) ctx.lineTo(x+Math.sin(y/48)*8, y);
-  ctx.strokeStyle = '#4e3118';
+  for (let y=y0; y<=y1; y+=12) ctx.lineTo(x + (y===y0 ? 0 : Math.sin((y-y0)/48)*8), y);
+  ctx.strokeStyle = color || '#4e3118';
   ctx.lineWidth = 22;
   ctx.stroke();
-  ctx.strokeStyle = '#c48a52';
-  ctx.lineWidth = 8;
-  ctx.stroke();
+  if (!color) {
+    ctx.strokeStyle = '#c48a52';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+  }
   ctx.restore();
 }
 function drawRoots(){
@@ -1029,6 +1047,7 @@ function drawEnding(t){
   drawMonsterTree(viewW*0.48, ground, t);
   ctx.fillStyle = mix('#3a332c', '#67a34a', t);
   ctx.fillRect(0, ground, viewW, viewH-ground);
+  drawSurfaceRoots(viewW*0.48, ground, t);
   ctx.fillStyle = '#24170f';
   ctx.font = '28px Jua, sans-serif';
   ctx.fillText(t<0.55 ? '나무 괴물이 잠잠해진다' : '복숭아 나무가 되었다', viewW*0.28, 48);
