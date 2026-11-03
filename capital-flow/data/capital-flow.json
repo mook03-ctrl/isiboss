@@ -1,7 +1,7 @@
 {
   "source": "yahoo-chart+yahoo-finance2+coingecko",
-  "fetchedAt": "2026-11-03T14:33:59.653Z",
-  "totalDollarVolume": 38305434344.69,
+  "fetchedAt": "2026-11-03T14:42:26.331Z",
+  "totalDollarVolume": 38680859434.679,
   "assets": [
     {
       "id": "CRYPTO",
@@ -9,13 +9,13 @@
       "name": "Bitcoin + Ethereum",
       "nameKo": "암호화폐 (BTC+ETH)",
       "category": "risk-crypto",
-      "price": 77194,
-      "volume": 37382611208,
-      "dollarVolume": 37382611208,
-      "change24h": -0.7255312167885447,
-      "marketCap": 1831233081658,
-      "weight": 97.59088194018108,
-      "flowEstimate": -271222513.9647333
+      "price": 77238,
+      "volume": 37288781440,
+      "dollarVolume": 37288781440,
+      "change24h": -0.6334108722896512,
+      "marketCap": 1832171532603,
+      "weight": 96.40111927443125,
+      "flowEstimate": -236191195.78528556
     },
     {
       "id": "SMH",
@@ -23,14 +23,14 @@
       "name": "VanEck Semiconductor ETF",
       "nameKo": "반도체 (SMH)",
       "category": "risk-equity",
-      "price": 520.485,
-      "volume": 654262,
-      "dollarVolume": 340533557.07,
-      "change24h": 2.395,
+      "price": 522.15,
+      "volume": 1012220,
+      "dollarVolume": 528530673,
+      "change24h": 2.723,
       "marketCap": null,
       "highlight": true,
-      "weight": 0.8889954203513832,
-      "flowEstimate": 8155778.691826499
+      "weight": 1.3663881328504046,
+      "flowEstimate": 14391890.225789998
     },
     {
       "id": "GLD",
@@ -38,29 +38,14 @@
       "name": "SPDR Gold Shares",
       "nameKo": "금 (GLD)",
       "category": "safe",
-      "price": 361.47,
-      "volume": 755737,
-      "dollarVolume": 273176253.39000005,
-      "change24h": -0.025,
+      "price": 361.54,
+      "volume": 907684,
+      "dollarVolume": 328164073.36,
+      "change24h": -0.006,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.7131527368462497,
-      "flowEstimate": -68294.0633475
-    },
-    {
-      "id": "TLT",
-      "symbol": "TLT",
-      "name": "iShares 20+ Year Treasury Bond ",
-      "nameKo": "미 국채 (TLT)",
-      "category": "safe",
-      "price": 81.365,
-      "volume": 1778774,
-      "dollarVolume": 144729946.51,
-      "change24h": -0.447,
-      "marketCap": null,
-      "highlight": false,
-      "weight": 0.37783136775751724,
-      "flowEstimate": -646942.8608997
+      "weight": 0.8483887849342542,
+      "flowEstimate": -19689.844401600003
     },
     {
       "id": "XLV",
@@ -68,14 +53,29 @@
       "name": "State Street Health Care Select",
       "nameKo": "헬스케어 (XLV)",
       "category": "risk-equity",
-      "price": 184.775,
-      "volume": 509852,
-      "dollarVolume": 94207903.3,
-      "change24h": 0.068,
+      "price": 184.912,
+      "volume": 1099397,
+      "dollarVolume": 203291698.064,
+      "change24h": 0.142,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.24593874188261056,
-      "flowEstimate": 64061.374244000006
+      "weight": 0.5255614819192475,
+      "flowEstimate": 288674.21125088
+    },
+    {
+      "id": "TLT",
+      "symbol": "TLT",
+      "name": "iShares 20+ Year Treasury Bond ",
+      "nameKo": "미 국채 (TLT)",
+      "category": "safe",
+      "price": 81.305,
+      "volume": 2320053,
+      "dollarVolume": 188631909.16500002,
+      "change24h": -0.52,
+      "marketCap": null,
+      "highlight": false,
+      "weight": 0.48766214588263174,
+      "flowEstimate": -980885.927658
     },
     {
       "id": "XLF",
@@ -83,14 +83,14 @@
       "name": "State Street Financial Select S",
       "nameKo": "금융 (XLF)",
       "category": "risk-equity",
-      "price": 57.24,
-      "volume": 1179861,
-      "dollarVolume": 67535243.64,
-      "change24h": -0.521,
+      "price": 56.98,
+      "volume": 2458573,
+      "dollarVolume": 140089489.54,
+      "change24h": -0.973,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.1763072127894091,
-      "flowEstimate": -351858.61936440005
+      "weight": 0.3621674688396503,
+      "flowEstimate": -1363070.7332241999
     },
     {
       "id": "BOTZ",
@@ -98,14 +98,14 @@
       "name": "Global X Robotics & Artificial ",
       "nameKo": "AI·로보틱스 (BOTZ)",
       "category": "risk-equity",
-      "price": 32.42,
-      "volume": 79709,
-      "dollarVolume": 2584165.7800000003,
-      "change24h": 0.465,
+      "price": 32.41,
+      "volume": 102255,
+      "dollarVolume": 3314084.55,
+      "change24h": 0.434,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.0067462119258235856,
-      "flowEstimate": 12016.370877000003
+      "weight": 0.00856776348415047,
+      "flowEstimate": 14383.126946999999
     },
     {
       "id": "CARZ",
@@ -119,7 +119,7 @@
       "change24h": -1.011,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.0001463682659110016,
+      "weight": 0.00014494765840113052,
       "flowEstimate": -566.8373699999999
     }
   ],
@@ -127,10 +127,10 @@
     "kind": "NEUTRAL",
     "label": "NEUTRAL / CONSOLIDATION",
     "summary": "위험 자산과 반도체 간 자금 흐름이 균형을 이루는 구간입니다. 추세 확인 후 분할 대응하세요.",
-    "smhWeight": 0.8889954203513832,
-    "smhWeightDeltaProxy": 2.6401666666666666,
-    "netFlowEstimate": 8155778.691826499,
-    "relativeVolumeRatio": 0.04534764510571158,
-    "riskVolumeChangeAvg": 0.11174479720190929
+    "smhWeight": 1.3663881328504046,
+    "smhWeightDeltaProxy": 3.0453333333333332,
+    "netFlowEstimate": 14391890.225789998,
+    "relativeVolumeRatio": 0.07021697767657863,
+    "riskVolumeChangeAvg": 0.11359818795172479
   }
 }
