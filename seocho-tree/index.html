@@ -266,7 +266,7 @@ function buildSurface(){
   const ground = 8;
   for (let x = 1; x < W - 1; x++) g[ground][x] = '#';
   for (let x = 26; x <= 30; x++) g[ground][x] = 'B';
-  for (let y = ground + 1; y < H; y++) for (let x = 26; x <= 30; x++) g[y][x] = '.';
+  for (let y = ground + 1; y < H; y++) for (let x = 1; x < W - 1; x++) g[y][x] = '.';
   return { tiles:g, spawn:{x:7*TILE, y:(ground-3)*TILE}, enemies:[], seed:null, exit:null };
 }
 
@@ -301,7 +301,7 @@ function openShafts(tiles, bands){
   for (let y=1; y<last; y++) {
     for (const x of SHAFT_X) {
       const t = tiles[y][x];
-      if (t==='#' || t==='L' || t==='D') tiles[y][x] = 'B';
+      if (t!=='.' && t!=='B') tiles[y][x] = 'B';
     }
   }
 }
@@ -485,7 +485,8 @@ function floorAt(py){
   return bands.length ? bands[bands.length-1].floor : 0;
 }
 function tileAt(tx,ty){
-  if (ty<0||tx<0||ty>=state.rows||tx>=state.cols) return '#';
+  if (tx<0||tx>=state.cols||ty<0) return '#';
+  if (ty>=state.rows) return state.surface ? '.' : '#';
   return state.tiles[ty][tx];
 }
 function solidType(t){ return t==='#'||t==='B'||t==='O'||t==='G'||t==='D'||t==='C'; }
@@ -752,7 +753,7 @@ function update(){
   if (wantUlt && !state.ultLatch) ultimate();
   state.ultLatch = wantUlt;
 
-  if (state.surface && p.y>state.rows*TILE-4) { loadArea(false, 0, true); return; }
+  if (state.surface && p.y + p.h >= state.rows*TILE) { loadArea(false, 0, true); return; }
   if (!state.surface && (inLava(p) || p.y>state.rows*TILE+20)) { p.hp=0; finish(false); return; }
   if (!state.surface) {
     const f = floorAt(p.y+p.h*0.5);

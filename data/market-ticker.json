@@ -1,35 +1,35 @@
 {
-  "savedAt": 1793657826101,
+  "savedAt": 1793715678697,
   "source": "pykrx+yahoo",
   "quotes": {
     "^KS11": {
       "symbol": "^KS11",
-      "regularMarketPrice": 5859.08,
-      "regularMarketChangePercent": 2.239,
+      "regularMarketPrice": 5648.79,
+      "regularMarketChangePercent": -3.589,
       "source": "yahoo"
     },
     "005930.KS": {
       "symbol": "005930.KS",
-      "regularMarketPrice": 230000.0,
-      "regularMarketChangePercent": 4.308390022675737,
+      "regularMarketPrice": 222000.0,
+      "regularMarketChangePercent": -3.4782608695652173,
       "source": "pykrx"
     },
     "000660.KS": {
       "symbol": "000660.KS",
-      "regularMarketPrice": 1480000.0,
-      "regularMarketChangePercent": 6.398274622573688,
+      "regularMarketPrice": 1414000.0,
+      "regularMarketChangePercent": -4.45945945945946,
       "source": "pykrx"
     },
     "^IXIC": {
       "symbol": "^IXIC",
-      "regularMarketPrice": 25164.316,
+      "regularMarketPrice": 25164.363,
       "regularMarketChangePercent": -1.072,
       "source": "yahoo"
     },
     "KRW=X": {
       "symbol": "KRW=X",
-      "regularMarketPrice": 1346.54,
-      "regularMarketChangePercent": 0.9825,
+      "regularMarketPrice": 1342.58,
+      "regularMarketChangePercent": -0.2111,
       "source": "yahoo"
     }
   }
