@@ -23,9 +23,7 @@
     button, input { font-family: inherit; }
     .screen { display:none; min-height:100dvh; position:relative; }
     .screen.on { display:block; }
-    .art { position:absolute; inset:0; background:#14202b center/cover no-repeat; }
-    .art.plant { background-position:center 28%; }
-    .art.grow, .art.monster { background-position:center center; }
+    .art { position:absolute; inset:0; background:#14202b center/contain no-repeat; }
     .arrow {
       position:absolute; top:42%; z-index:2; width:16vh; height:16vh; min-width:54px; min-height:54px;
       border-radius:50%; border:3px solid #24170f; background:rgba(255,244,220,.92); font-size:28px; cursor:pointer;
@@ -1308,11 +1306,29 @@ const AssetLoader = {
     return img && img.naturalWidth ? img.src : name;
   }
 };
+function edgeColor(img){
+  const w = 20, h = 20;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently:true });
+  g.drawImage(img, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  let r = 0, gc = 0, b = 0, n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (x && y && x < w - 1 && y < h - 1) continue;
+    const i = (y * w + x) * 4;
+    r += d[i]; gc += d[i + 1]; b += d[i + 2]; n++;
+  }
+  return 'rgb(' + (r / n | 0) + ',' + (gc / n | 0) + ',' + (b / n | 0) + ')';
+}
 function applySlideArt(art, cls){
   const file = cls==='plant' ? 'plant.jpg' : (cls==='grow' ? 'grow.jpg' : 'monster-close.jpg');
-  art.style.backgroundImage = 'url("'+AssetLoader.url(file)+'")';
-  art.style.backgroundSize = 'cover';
-  art.style.backgroundPosition = cls==='plant' ? 'center 28%' : 'center center';
+  const img = AssetLoader.images[file];
+  art.style.backgroundImage = 'url("' + AssetLoader.url(file) + '")';
+  art.style.backgroundSize = 'contain';
+  art.style.backgroundRepeat = 'no-repeat';
+  art.style.backgroundPosition = 'center center';
+  if (img && img.naturalWidth) art.style.backgroundColor = edgeColor(img);
 }
 function renderSlide(){
   const s = SLIDES[slide];
