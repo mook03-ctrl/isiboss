@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>서초동 나무 괴물 — angrywork.com</title>
+  <title>The Seed of Seocho — angrywork.com</title>
   <link rel="canonical" href="https://angrywork.com/seocho-tree/">
-  <meta property="og:title" content="서초동 나무 괴물">
+  <meta property="og:title" content="The Seed of Seocho">
   <meta property="og:url" content="https://angrywork.com/seocho-tree/">
   <meta property="og:image" content="https://angrywork.com/seocho-tree/plant.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,6 +86,12 @@
       background:rgba(20,16,12,.5); color:#fff; text-shadow:0 2px 4px #000;
       border-radius:999px; padding:6px 14px; font-size:clamp(14px, 2.4vh, 18px);
     }
+    #toGames {
+      position:absolute; top:max(8px, env(safe-area-inset-top)); right:max(12px, env(safe-area-inset-right));
+      z-index:4; text-decoration:none; border:3px solid #24170f; background:rgba(255,244,220,.92);
+      color:#24170f; border-radius:999px; padding:6px 14px; font-size:clamp(15px, 2.6vh, 18px);
+      user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+    }
     .hud b { background:rgba(20,16,12,.55); border-radius:10px; padding:4px 8px; }
     #hudFloor { font-size:clamp(16px, 3vh, 22px); background:rgba(90,40,12,.72); }
     .touch {
@@ -99,7 +105,14 @@
       pointer-events:auto; touch-action:none; border:1px solid rgba(255,255,255,.28);
       background:rgba(255,255,255,.16); color:#fff; text-shadow:0 2px 6px #000, 0 0 2px #000;
       border-radius:50%; font-size:clamp(18px, 3.4vh, 28px);
+      display:grid; place-items:center; padding:0;
+      user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; -webkit-user-drag:none;
     }
+    .dpad button svg, .actions button svg {
+      width:48%; height:48%; display:block; pointer-events:none;
+      user-select:none; -webkit-user-select:none;
+    }
+    #btnJump svg { width:42%; height:42%; }
     .dpad button { position:absolute; width:12vh; height:12vh; }
     #btnUp { left:11vh; top:0; }
     #btnLeft { left:0; top:11vh; }
@@ -128,6 +141,7 @@
 <body>
   <section class="screen title on" id="title">
     <div id="slideArt" class="art plant"></div>
+    <a id="toGames" href="../games/">돌아가기</a>
     <button class="arrow left" id="prevSlide" type="button" aria-label="이전 장면">◀</button>
     <button class="arrow right" id="nextSlide" type="button" aria-label="다음 장면">▶</button>
     <div class="rank">
@@ -180,22 +194,22 @@
     </div>
     <div class="touch">
       <div class="dpad" aria-label="이동">
-        <button id="btnUp" type="button">▲</button>
-        <button id="btnLeft" type="button">◀</button>
-        <button id="btnDown" type="button">▼</button>
-        <button id="btnRight" type="button">▶</button>
+        <button id="btnUp" type="button" aria-label="위"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 4l9 14H3z"/></svg></button>
+        <button id="btnLeft" type="button" aria-label="왼쪽"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 12l14-9v18z"/></svg></button>
+        <button id="btnDown" type="button" aria-label="아래"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 20L3 6h18z"/></svg></button>
+        <button id="btnRight" type="button" aria-label="오른쪽"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20 12L6 3v18z"/></svg></button>
       </div>
       <div class="actions">
-        <button id="btnJump" type="button" aria-label="점프">↑</button>
-        <button id="btnAtk" type="button" aria-label="공격">A</button>
-        <button id="btnUlt" type="button" aria-label="필살">B</button>
+        <button id="btnJump" type="button" aria-label="점프"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3l8 13H4z"/></svg></button>
+        <button id="btnAtk" type="button" aria-label="공격"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><text x="12" y="17" text-anchor="middle" font-size="16" font-family="Jua,sans-serif" fill="currentColor">A</text></svg></button>
+        <button id="btnUlt" type="button" aria-label="필살"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><text x="12" y="17" text-anchor="middle" font-size="16" font-family="Jua,sans-serif" fill="currentColor">B</text></svg></button>
       </div>
     </div>
     <div id="rotateHint">휴대폰을 가로로 돌려 주세요</div>
     <div class="modal" id="quizModal">
       <div class="box">
         <h1>수학 문제</h1>
-        <p class="sub">맞히면 10초 동안 공격과 채굴이 두 배가 된다.</p>
+        <p class="sub">맞히면 HP가 50 오르고, 공격력이 커진다.</p>
         <div class="q" id="quizQ"></div>
         <div class="row">
           <button class="choice" id="ansA" type="button">A</button>
@@ -308,12 +322,12 @@ function buildDepths(){
       '####################',
       '#..M............S..#',
       '#BBBBBBBBBBBBBBBBBB#',
-      '#..GG......OO......#',
+      '#..GG.....GOO..GG..#',
       '####LL########BB####',
       '#M......##......M..#',
       '#BBB.##.##.##.BBB..#',
-      '#.....#....#......C#',
-      '#CC......##....OO..#',
+      '#.G...#..G.#..G...C#',
+      '#CC.G....##.G..OOG.#',
       '#..BBBBB.##.BBBBB..#',
       '#..#.........#..M..#',
       '#..#.LLL.LLL.#..BB.#',
@@ -325,7 +339,7 @@ function buildDepths(){
       '####################',
       '#S.M...............#',
       '#BBBBOOOBBBBGGGBBBB#',
-      '#.....##......##...#',
+      '#.GG..##.G....##.G.#',
       '#M.BB.##.LLLL.##.M.#',
       '#BBBB....####....BB#',
       '#CC.#.BBBBBBBB.#.CC#',
@@ -333,7 +347,7 @@ function buildDepths(){
       '#BB.#.########.#.BB#',
       '#...#..OOOOOO..#...#',
       '#.M....##LL##....M.#',
-      '#BBB..........BBBB.#',
+      '#BBBGG...GG...BBBB.#',
       '#........E.........#',
       '#BBBBBBBBBBBBBBBBBB#',
       '####################'
@@ -343,8 +357,8 @@ function buildDepths(){
       '#S....M............#',
       '#BBBBBBBB##BBBBBBBB#',
       '#GG..##...##..OO...#',
-      '#....##.LL##....M..#',
-      '#.##....##....##BB.#',
+      '#.GG.##.LL##.GG.M..#',
+      '#.##.G..##.GG.##BB.#',
       '#.##.CC.##.M..##...#',
       '#......#...B#....C.#',
       '#BBB#..#.OO.#..#BB.#',
@@ -363,11 +377,11 @@ function buildDepths(){
       '#.LLLL.##..##.OOOO.#',
       '#......M....M......#',
       '#BBB##########BBBB.#',
-      '#...#........#...M.#',
+      '#.G.#........#.GGM.#',
       '#.C.#.BBBBBB.#.C.B.#',
       '#...#...LL...#.....#',
       '#M..#........#..M..#',
-      '#BB............BBBB#',
+      '#BB.GG......GG.BBBB#',
       '#..........E.......#',
       '#BBBBBBBBBBBBBBBBBB#',
       '####################'
@@ -376,13 +390,13 @@ function buildDepths(){
       '####################',
       '#S.M...............#',
       '#BBBBBBBBBBBBBBBBBB#',
-      '#..OO....CC....GG..#',
+      '#G.OO....CC..GGGGG.#',
       '#.####.LLLLL.####..#',
       '#.#M............M#.#',
       '#.#BBBB######BBBB#.#',
       '#......#....#......#',
       '#.CCCC.#.OO.#.CCCC.#',
-      '#......#....#..M...#',
+      '#.GG...#.GG.#..M.G.#',
       '#BB#######LL#####BB#',
       '#M...............X.#',
       '#.............E....#',
@@ -435,7 +449,7 @@ function buildDepths(){
 }
 
 function makePlayer(x,y){
-  return { x, y, w:22, h:32, vx:0, vy:0, facing:1, hp:100, maxHp:100, onGround:false, atkCd:0, ultCd:0, awaken:0, hurt:0, swing:0 };
+  return { x, y, w:22, h:32, vx:0, vy:0, facing:1, hp:100, maxHp:100, might:0, onGround:false, atkCd:0, ultCd:0, awaken:0, hurt:0, swing:0 };
 }
 function spawnEnemy(spec){
   const floor = (spec.floor!=null ? spec.floor : state.floor)+1;
@@ -471,6 +485,8 @@ function loadArea(surface, floor, keep){
   if (surface) state.player.facing = -1;
   if (keep && prev) {
     state.player.hp = prev.hp;
+    state.player.maxHp = prev.maxHp;
+    state.player.might = prev.might || 0;
     state.player.awaken = prev.awaken;
     state.player.ultCd = prev.ultCd;
   }
@@ -542,9 +558,15 @@ function answerQuiz(letter){
   const ok = letter===state.quiz.correct;
   closeQuiz();
   if (ok) {
+    const p = state.player;
     state.quizOk++;
-    state.player.awaken = 600;
-    burst(state.player.x, state.player.y, '#ffe14a', 14);
+    p.hp += 50;
+    p.maxHp += 50;
+    p.might = (p.might || 0) + 8;
+    p.awaken = 600;
+    burst(p.x, p.y, '#ffe14a', 14);
+    floatText(p.x, p.y - 28, '+50 HP', '#9dff7a');
+    floatText(p.x, p.y - 46, '공격력 상승', '#ffe14a');
   } else {
     floatText(state.player.x, state.player.y-18, '틀렸어', '#ff8d7a');
     state.shake = 6;
@@ -622,7 +644,7 @@ function attack(){
   if (p.atkCd>0 || state.cinematic) return;
   p.atkCd = p.awaken>0 ? 9 : 15;
   p.swing = 8;
-  const power = (state.who==='jaden'?14:10) * (p.awaken>0?2:1);
+  const power = strikePower(state.who==='jaden'?14:10);
   mineFacing();
   if (state.who==='jaden') {
     const box = { x:p.x+(p.facing>0?p.w-2:-34), y:p.y+2, w:36, h:26 };
@@ -633,11 +655,15 @@ function attack(){
   }
 }
 function seedBox(){ return { x:state.seed.x, y:state.seed.y, w:26, h:30 }; }
+function strikePower(base){
+  const p = state.player;
+  return (base + (p.might || 0)) * (p.awaken>0 ? 2 : 1);
+}
 function ultimate(){
   const p = state.player;
   if (p.ultCd>0 || state.cinematic) return;
   p.ultCd = 480;
-  const power = (state.who==='jaden'?50:22) * (p.awaken>0?2:1);
+  const power = strikePower(state.who==='jaden'?50:22);
   if (state.who==='jaden') {
     state.shake = 14;
     state.enemies.forEach(e=>{ if (e.alive) damageEnemy(e, power); });
@@ -647,7 +673,7 @@ function ultimate(){
     state.balls.push({
       x:p.x+p.w/2, y:p.y+4, vx:p.facing*5.2, facing:p.facing,
       grow:0, phase:'fly', butt:0, did:false, life:70,
-      dmg:(46 * (p.awaken>0?2:1)), w:16, h:14
+      dmg:strikePower(46), w:16, h:14
     });
   }
 }
@@ -823,7 +849,7 @@ function draw(){
   }
   for (let y=0;y<state.rows;y++) for (let x=0;x<state.cols;x++) drawTile(x,y,state.tiles[y][x]);
   if (!state.surface) { drawRoots(); drawFloorTags(); drawShaftHint(); }
-  if (state.surface) { drawSurfaceRoots(250, 8*TILE, 0); drawRootStem(250, 8*TILE, state.rows*TILE+48, '#6b4a2e'); drawHoleMark(); }
+  if (state.surface) { drawSurfaceRoots(250, 8*TILE, 0); drawRootStem(250, 8*TILE, state.rows*TILE+48, '#6b4a2e'); drawHoleMark(); drawSurfaceGuide(); }
   if (state.seed) drawSeed(state.seed);
   state.falls.forEach(f=>{ roundRect(f.x,f.y,f.w,f.h,4,'#a56b3c'); });
   state.enemies.forEach(e=>{
@@ -1025,6 +1051,29 @@ function drawHoleMark(){
   ctx.fillStyle = '#24170f';
   ctx.font = '16px Jua, sans-serif';
   ctx.fillText('여기 파기', 25.2*TILE, 8*TILE-14);
+}
+function drawSurfaceGuide(){
+  const samples = [
+    { x:24, kind:'B', name:'팔 수 있는 땅', line:'캐서 길을 열어요' },
+    { x:27, kind:'G', name:'초록 상자', line:'퀴즈 · HP+50' },
+    { x:30, kind:'L', name:'용암', line:'닿으면 죽어요' }
+  ];
+  ctx.save();
+  ctx.font = '13px Jua, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#fff8ec';
+  ctx.fillStyle = '#24170f';
+  samples.forEach(s=>{
+    drawTile(s.x, 2, s.kind);
+    const cx = s.x*TILE + TILE/2;
+    const top = 2*TILE - 30;
+    ctx.strokeText(s.name, cx, top);
+    ctx.fillText(s.name, cx, top);
+    ctx.strokeText(s.line, cx, top + 15);
+    ctx.fillText(s.line, cx, top + 15);
+  });
+  ctx.restore();
 }
 function drawSeed(s){
   ctx.save();
@@ -1344,11 +1393,26 @@ function startIntro(){
   renderSlide();
   renderRank();
 }
-function goLandscape(){
-  const el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+function lockLandscape(){
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{});
 }
+function enterFullscreen(){
+  const el = document.documentElement;
+  if (document.fullscreenElement || document.webkitFullscreenElement) { lockLandscape(); return Promise.resolve(); }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req) return Promise.resolve();
+  return Promise.resolve(req.call(el)).then(lockLandscape).catch(()=>{});
+}
+function goLandscape(){ enterFullscreen(); }
+let fullscreenFromGesture = false;
+function enterFullscreenOnce(){
+  if (fullscreenFromGesture) return;
+  fullscreenFromGesture = true;
+  enterFullscreen();
+}
+addEventListener('DOMContentLoaded', enterFullscreen);
+addEventListener('pageshow', enterFullscreen);
+['pointerdown','touchend','click'].forEach(type=>addEventListener(type, enterFullscreenOnce, true));
 function backToTitle(){
   state.mode = 'title';
   state.ended = false;
@@ -1430,6 +1494,8 @@ function bindHold(id, key){
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
   el.addEventListener('pointerleave', up);
+  el.addEventListener('contextmenu', ev=>ev.preventDefault());
+  el.addEventListener('selectstart', ev=>ev.preventDefault());
 }
 bindHold('btnLeft','left'); bindHold('btnRight','right'); bindHold('btnUp','up'); bindHold('btnDown','down');
 bindHold('btnJump','jump'); bindHold('btnAtk','atk'); bindHold('btnUlt','ult');

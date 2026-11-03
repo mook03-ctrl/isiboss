@@ -27,9 +27,9 @@
         <img src="../quiz-dash/start-screen.svg?v=3" alt="Quiz Dash 시작 화면">
         <span class="name">Quiz Dash</span>
       </a>
-      <a class="banner" href="../seocho-tree/">
-        <img src="../seocho-tree/plant.jpg?v=1" alt="서초동 나무 괴물 시작 화면">
-        <span class="name">서초동 나무 괴물</span>
+      <a class="banner" id="seochoEnter" href="../seocho-tree/">
+        <img src="../seocho-tree/plant.jpg?v=1" alt="The Seed of Seocho 시작 화면">
+        <span class="name">The Seed of Seocho</span>
       </a>
       <div class="banner banner--soon">
         <div class="soon-shot" aria-hidden="true"><span>준비중</span></div>
@@ -41,5 +41,18 @@
       </div>
     </div>
   </main>
+  <script>
+    document.getElementById('seochoEnter').addEventListener('click', function(e){
+      e.preventDefault();
+      const href = this.href;
+      const go = ()=>{ location.href = href; };
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (!req) { go(); return; }
+      Promise.resolve(req.call(el)).then(function(){
+        if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape').catch(function(){});
+      }).catch(function(){}).then(go);
+    });
+  </script>
 </body>
 </html>
