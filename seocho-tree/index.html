@@ -1155,24 +1155,34 @@ function drawHoleMark(){
 }
 function drawSurfaceGuide(){
   const samples = [
-    { x:15, kind:'B', name:'팔 수 있는 땅', line:'캐서 길을 열어요' },
-    { x:18, kind:'G', name:'초록 상자', line:'퀴즈 · 공격 +30' },
-    { x:21, kind:'L', name:'용암', line:'닿으면 죽어요' }
+    { x:14, kind:'B', name:'팔 수 있는 땅', line:'캐서 길을 열어요' },
+    { x:19, kind:'G', name:'초록 상자', line:'퀴즈 · 공격 +30' },
+    { x:24, kind:'L', name:'용암', line:'닿으면 죽어요' }
   ];
   ctx.save();
-  ctx.font = '13px Jua, sans-serif';
   ctx.textAlign = 'center';
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#fff8ec';
-  ctx.fillStyle = '#24170f';
+  ctx.textBaseline = 'top';
   samples.forEach(s=>{
     drawTile(s.x, 2, s.kind);
     const cx = s.x*TILE + TILE/2;
-    const top = 3*TILE + 16;
+    const top = 3*TILE + 10;
+    ctx.font = '18px Jua, sans-serif';
+    const nameW = ctx.measureText(s.name).width;
+    ctx.font = '15px Jua, sans-serif';
+    const lineW = ctx.measureText(s.line).width;
+    const w = Math.max(nameW, lineW) + 22;
+    const h = 50;
+    roundRect(cx - w/2, top - 6, w, h, 10, 'rgba(20,14,8,.88)');
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#1a120c';
+    ctx.fillStyle = '#fffdf6';
+    ctx.font = '18px Jua, sans-serif';
     ctx.strokeText(s.name, cx, top);
     ctx.fillText(s.name, cx, top);
-    ctx.strokeText(s.line, cx, top + 15);
-    ctx.fillText(s.line, cx, top + 15);
+    ctx.font = '15px Jua, sans-serif';
+    ctx.fillStyle = '#ffe27a';
+    ctx.strokeText(s.line, cx, top + 24);
+    ctx.fillText(s.line, cx, top + 24);
   });
   ctx.restore();
 }
