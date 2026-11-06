@@ -95,9 +95,9 @@
     .hud b { background:rgba(20,16,12,.55); border-radius:10px; padding:4px 8px; }
     #hudFloor { font-size:clamp(16px, 3vh, 22px); background:rgba(90,40,12,.72); }
     .touch {
-      position:absolute; left:0; right:0; bottom:0; height:46%;
+      position:absolute; left:0; right:0; bottom:0; height:58%;
       display:flex; justify-content:space-between; align-items:flex-end;
-      padding:0 max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      padding:0 max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
       pointer-events:none;
     }
     .dpad { width:34vh; height:34vh; position:relative; }
@@ -118,9 +118,9 @@
     #btnLeft { left:0; top:11vh; }
     #btnDown { left:11vh; top:22vh; }
     #btnRight { left:22vh; top:11vh; }
-    .actions { display:flex; gap:2.2vh; align-items:flex-end; }
-    #btnJump { width:16vh; height:16vh; font-size:clamp(26px, 5vh, 40px); background:rgba(255,255,255,.14); }
-    #btnAtk, #btnUlt { width:11vh; height:11vh; font-size:clamp(20px, 3.6vh, 30px); background:rgba(255,255,255,.2); }
+    .actions { display:flex; gap:1.4vh; align-items:flex-end; }
+    #btnJump { width:clamp(84px, 24vh, 132px); height:clamp(84px, 24vh, 132px); font-size:clamp(28px, 5vh, 44px); background:rgba(255,255,255,.2); }
+    #btnAtk, #btnUlt { width:clamp(72px, 20vh, 116px); height:clamp(72px, 20vh, 116px); font-size:clamp(24px, 4.2vh, 36px); background:rgba(255,255,255,.24); }
     .modal { position:absolute; inset:0; background:rgba(12,10,8,.4); display:none; place-items:center; padding:16px; }
     .modal.on { display:grid; }
     #endModal.modal { background:linear-gradient(to bottom, rgba(12,10,8,0) 46%, rgba(12,10,8,.28) 100%); align-items:end; padding-bottom:max(10px, env(safe-area-inset-bottom)); }
@@ -448,10 +448,28 @@ function buildDepths(){
   });
   openShafts(tiles, bands);
   sprinklePlus(tiles);
-  if (!seed) seed = { x:7*TILE+4, y:(tiles.length-4)*TILE, hp:48, open:false };
-  seed.x = 7*TILE+4;
-  enemies.push({ x:seed.x-TILE+4, y:seed.y+4, kind:'boss', floor:4, small:false, opens:true, boss:true });
+  if (!seed) seed = { x:7*TILE+4, y:(tiles.length-4)*TILE, hp:5, hits:0, open:true };
+  seatSeed(tiles, seed);
+  enemies.push({ x:seed.x-TILE*1.2, y:seed.y, kind:'boss', floor:4, small:false, opens:true, boss:true });
   return { tiles, spawn, enemies, seed, exit:null, bands };
+}
+function seatSeed(tiles, seed){
+  const col = 7;
+  let floor = tiles.length - 1;
+  for (let y = tiles.length - 1; y >= 1; y--) {
+    if (solidType(tiles[y][col]) && !solidType(tiles[y-1][col])) { floor = y; break; }
+  }
+  const above = floor - 1;
+  if (above > 0) {
+    for (const x of [5,6,7,8,9]) {
+      if (tiles[above][x] && tiles[above][x] !== '.') tiles[above][x] = '.';
+    }
+  }
+  seed.x = col*TILE + 4;
+  seed.y = floor*TILE - 32;
+  seed.hp = 5;
+  seed.hits = 0;
+  seed.open = true;
 }
 function sprinklePlus(tiles){
   const last = tiles.length-1;
@@ -669,20 +687,26 @@ function hurtPlayer(n){
   p.hp -= n; p.hurt = 26; state.shake = 7;
   if (p.hp<=0) { p.hp=0; finish(false); }
 }
-function hitSeed(dmg){
-  if (!state.seed || !state.seed.open) return;
-  state.seed.hp -= dmg;
-  floatText(state.seed.x, state.seed.y, String(Math.round(dmg)), '#d7ff9a');
-  burst(state.seed.x, state.seed.y, '#c6ff73', 8);
-  if (state.seed.hp<=0) { state.seed.hp=0; checkClear(); }
+function hitSeed(){
+  const s = state.seed;
+  if (!s || s.hp<=0 || !s.open) return;
+  if (attackStat()<250) {
+    floatText(s.x, s.y-18, '공격력 250 필요', '#ffb0b0');
+    return;
+  }
+  s.hits = (s.hits||0) + 1;
+  s.hp = Math.max(0, 5 - s.hits);
+  floatText(s.x, s.y-16, s.hits+'/5', '#ffe27a');
+  burst(s.x+12, s.y+14, '#ff5a1f', 10);
+  if (s.hits>=5) {
+    s.hp = 0;
+    state.msg = '씨앗이 부서졌다.';
+    checkClear();
+  }
 }
 function checkClear(){
   if (state.surface || !state.seed || state.cinematic || state.ended) return;
-  const monsters = state.enemies.some(e=>e.alive);
-  const seed = state.seed && state.seed.hp>0;
-  if (!monsters && !seed) startEnding();
-  else if (!seed && monsters) state.msg = '씨앗은 부서졌다. 남은 괴물도 쓰러뜨려라.';
-  else if (!monsters && seed) state.msg = '괴물은 사라졌다. 힘의 씨앗을 파괴해라.';
+  if (state.seed.hp<=0) startEnding();
 }
 function attack(){
   const p = state.player;
@@ -694,12 +718,12 @@ function attack(){
   if (state.who==='jaden') {
     const box = { x:p.x+(p.facing>0?p.w-2:-34), y:p.y+2, w:36, h:26 };
     state.enemies.forEach(e=>{ if (e.alive && overlaps(box,e)) damageEnemy(e, power); });
-    if (state.seed && state.seed.open && overlaps(box, seedBox())) hitSeed(power);
+    if (state.seed && state.seed.open && overlaps(box, seedBox())) hitSeed();
   } else {
     state.shots.push({ x:p.x+p.w/2, y:p.y+6, vx:p.facing*6.4, vy:-0.4, life:40, dmg:power, w:16, h:14 });
   }
 }
-function seedBox(){ return { x:state.seed.x, y:state.seed.y, w:26, h:30 }; }
+function seedBox(){ return { x:state.seed.x-6, y:state.seed.y, w:40, h:34 }; }
 function strikePower(base){
   return Math.max(1, Math.round(base * attackStat() / 100));
 }
@@ -741,7 +765,7 @@ function stepHeadbutt(b){
     b.did = true;
     const box = { x:b.facing>0?b.x:b.x-b.w-12, y:b.y-4, w:b.w+12, h:b.h+8 };
     state.enemies.forEach(e=>{ if (e.alive && overlaps(box,e)) damageEnemy(e, b.dmg); });
-    if (state.seed && state.seed.open && overlaps(box, seedBox())) hitSeed(b.dmg);
+    if (state.seed && state.seed.open && overlaps(box, seedBox())) hitSeed();
     state.shake = 8;
     burst(b.x, b.y, '#ffe1b0', 12);
   }
@@ -760,7 +784,7 @@ function stepPalm(s){
   });
   if (state.seed && state.seed.open && !s.seedHit && overlaps(box, seedBox())) {
     s.seedHit = true;
-    hitSeed(s.dmg);
+    hitSeed();
   }
 }
 function drawPalm(s){
@@ -902,7 +926,7 @@ function update(){
     const box = {x:s.x,y:s.y,w:s.w,h:s.h};
     if (hits(box)) { if (dig) breakTile(Math.floor(s.x/TILE), Math.floor(s.y/TILE)); s.life=0; return; }
     state.enemies.forEach(e=>{ if (e.alive && overlaps(box,e)) { damageEnemy(e,s.dmg); s.life=0; } });
-    if (state.seed && state.seed.open && overlaps(box, seedBox())) { hitSeed(s.dmg); s.life=0; }
+    if (state.seed && state.seed.open && overlaps(box, seedBox())) { hitSeed(); s.life=0; }
   };
   state.shots.forEach(s=>stepShot(s,false));
   state.palms.forEach(stepPalm);
@@ -1206,7 +1230,7 @@ function drawSeed(s){
   ctx.fillStyle = '#ffb03a';
   ctx.beginPath(); ctx.ellipse(10,14,4,6,0.4,0,6.3); ctx.fill();
   ctx.strokeStyle = '#6a120c'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#fff4e8'; ctx.font = '12px Jua, sans-serif'; ctx.fillText('씨앗', 0, 10);
+  ctx.fillStyle = '#fff4e8'; ctx.font = '12px Jua, sans-serif'; ctx.fillText('씨앗 '+(s.hits||0)+'/5', -6, 8);
   ctx.restore();
 }
 function drawEnding(t){
