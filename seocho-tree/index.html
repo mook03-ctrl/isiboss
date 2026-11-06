@@ -1381,7 +1381,6 @@ const TILE_TEX = {
   O: bakeDirt('#8a5418', '#e2a24a', '#f3d48a', '#6b4420'),
   D: bakeDirt('#4a2c18', '#8d5a32', '#c48a4a', '#2c1a10'),
   '#': bakeRock(),
-  G: bakeMarked('#3fbe62', '#b6f58a'),
   P: bakeMarked('#2f8fd0', '#9ad8ff'),
   C: null
 };
@@ -1403,22 +1402,35 @@ function drawTile(x,y,t){
   if (t==='.'||t==='S'||t==='M') return;
   const px=x*TILE, py=y*TILE;
   if (t==='L') { drawLavaTile(px, py, x); return; }
+  if (t==='G') {
+    ctx.fillStyle = '#3fbe62';
+    ctx.fillRect(px, py, TILE, TILE);
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    ctx.fillRect(px, py, TILE, 7);
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.fillRect(px, py+TILE-7, TILE, 7);
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#f3ffd8';
+    ctx.font = '18px Jua, sans-serif';
+    ctx.fillText('?', px+12, py+24);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(20,16,12,.55)';
+    ctx.strokeRect(px+0.5, py+0.5, TILE-1, TILE-1);
+    return;
+  }
   const tex = TILE_TEX[t];
   if (tex) ctx.drawImage(tex, px, py, TILE, TILE);
   else {
     ctx.fillStyle = '#ccc';
     ctx.fillRect(px, py, TILE, TILE);
   }
-  if (t==='G' || t==='P' || t==='C') {
-    if (t==='G') {
-      const a = 0.12 + Math.sin(state.tick/9 + x + y)*0.12;
-      ctx.fillStyle = 'rgba(255,236,150,'+a.toFixed(3)+')';
-      ctx.fillRect(px+4, py+4, TILE-8, TILE-8);
-    }
+  if (t==='P' || t==='C') {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = t==='G' ? '#ffe9a0' : '#fff';
+    ctx.fillStyle = '#fff';
     ctx.font = '22px Jua, sans-serif';
     ctx.fillText('?', px+TILE/2, py+TILE/2+1);
     ctx.restore();
