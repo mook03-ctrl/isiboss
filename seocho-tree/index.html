@@ -643,7 +643,12 @@ function breakTile(tx,ty){
   if (t==='B' || t==='O' || t==='#') sprayDirt(tx*TILE+18, ty*TILE+18, t);
   if (t==='O') state.falls.push({ x:tx*TILE+8, y:(ty-1)*TILE, w:18, h:14, vy:0 });
   if (t==='G') openQuiz();
-  if (t==='P' || t==='C') openMystery(tx, ty);
+  if (t==='C') openMystery(tx, ty);
+  if (t==='P') {
+    state.player.hp += 30;
+    state.player.maxHp += 30;
+    floatText(tx*TILE, ty*TILE-8, '+30 HP', '#9ad8ff');
+  }
 }
 function openMystery(tx, ty){
   if (Math.random() < 0.5) {
@@ -1234,7 +1239,7 @@ function drawSurfaceGuide(){
     { x:14, kind:'B', name:'팔 수 있는 땅', line:'캐서 길을 열어요' },
     { x:19, kind:'G', name:'초록 상자', line:'퀴즈 · 공격 +30' },
     { x:24, kind:'L', name:'용암', line:'닿으면 죽어요' },
-    { x:29, kind:'P', name:'물음표 상자', line:'괴물 또는 10초 무적' }
+    { x:29, kind:'P', name:'하늘색 십자가', line:'깨면 체력 +30' }
   ];
   ctx.save();
   ctx.textAlign = 'center';
@@ -1381,10 +1386,8 @@ const TILE_TEX = {
   O: bakeDirt('#8a5418', '#e2a24a', '#f3d48a', '#6b4420'),
   D: bakeDirt('#4a2c18', '#8d5a32', '#c48a4a', '#2c1a10'),
   '#': bakeRock(),
-  P: bakeMarked('#2f8fd0', '#9ad8ff'),
-  C: null
+  C: bakeMarked('#2f8fd0', '#9ad8ff')
 };
-TILE_TEX.C = TILE_TEX.P;
 function drawLavaTile(px, py, x){
   const g = ctx.createLinearGradient(px, py, px, py+TILE);
   g.addColorStop(0, '#ffd56a'); g.addColorStop(0.42, '#ff4a16'); g.addColorStop(1, '#6a100c');
@@ -1420,13 +1423,27 @@ function drawTile(x,y,t){
     ctx.strokeRect(px+0.5, py+0.5, TILE-1, TILE-1);
     return;
   }
+  if (t==='P') {
+    ctx.fillStyle = '#3ec6ff';
+    ctx.fillRect(px, py, TILE, TILE);
+    ctx.fillStyle = 'rgba(255,255,255,.28)';
+    ctx.fillRect(px, py, TILE, 7);
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.fillRect(px, py+TILE-7, TILE, 7);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(px+15, py+6, 6, 24);
+    ctx.fillRect(px+6, py+15, 24, 6);
+    ctx.strokeStyle = 'rgba(20,40,70,.7)';
+    ctx.strokeRect(px+0.5, py+0.5, TILE-1, TILE-1);
+    return;
+  }
   const tex = TILE_TEX[t];
   if (tex) ctx.drawImage(tex, px, py, TILE, TILE);
   else {
     ctx.fillStyle = '#ccc';
     ctx.fillRect(px, py, TILE, TILE);
   }
-  if (t==='P' || t==='C') {
+  if (t==='C') {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
