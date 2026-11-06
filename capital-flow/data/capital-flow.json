@@ -1,7 +1,7 @@
 {
   "source": "yahoo-chart+yahoo-finance2+coingecko",
-  "fetchedAt": "2026-11-06T12:48:44.284Z",
-  "totalDollarVolume": 92485473117,
+  "fetchedAt": "2026-11-06T12:56:15.515Z",
+  "totalDollarVolume": 92593629559,
   "assets": [
     {
       "id": "CRYPTO",
@@ -9,13 +9,13 @@
       "name": "Bitcoin + Ethereum",
       "nameKo": "암호화폐 (BTC+ETH)",
       "category": "risk-crypto",
-      "price": 76143,
-      "volume": 62169930207,
-      "dollarVolume": 62169930207,
-      "change24h": -4.9750100867487355,
-      "marketCap": 1804781411158,
-      "weight": 67.22129228700716,
-      "flowEstimate": -3092960298.722899
+      "price": 75989,
+      "volume": 62278086649,
+      "dollarVolume": 62278086649,
+      "change24h": -5.0097527569653355,
+      "marketCap": 1801024548947,
+      "weight": 67.25958032492598,
+      "flowEstimate": -3119978162.8835382
     },
     {
       "id": "SMH",
@@ -29,7 +29,7 @@
       "change24h": -11.212,
       "marketCap": null,
       "highlight": true,
-      "weight": 13.946244938037882,
+      "weight": 13.92995465717361,
       "flowEstimate": -1446151858.72956
     },
     {
@@ -44,7 +44,7 @@
       "change24h": 0.805,
       "marketCap": null,
       "highlight": false,
-      "weight": 4.973202279217789,
+      "weight": 4.967393198545303,
       "flowEstimate": 37025891.73885
     },
     {
@@ -59,7 +59,7 @@
       "change24h": -2.504,
       "marketCap": null,
       "highlight": false,
-      "weight": 4.902624097801748,
+      "weight": 4.896897457843825,
       "flowEstimate": -113536745.90368
     },
     {
@@ -74,7 +74,7 @@
       "change24h": 0.208,
       "marketCap": null,
       "highlight": false,
-      "weight": 4.446875610180592,
+      "weight": 4.441681319317339,
       "flowEstimate": 8554445.00976
     },
     {
@@ -89,7 +89,7 @@
       "change24h": -2.872,
       "marketCap": null,
       "highlight": false,
-      "weight": 4.442451459163032,
+      "weight": 4.43726233604658,
       "flowEstimate": -117999631.02
     },
     {
@@ -104,7 +104,7 @@
       "change24h": -6.614,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.06668642536106928,
+      "weight": 0.06660853051526722,
       "flowEstimate": -4079201.43184
     },
     {
@@ -119,7 +119,7 @@
       "change24h": -7.629,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.0006229032307281417,
+      "weight": 0.000622175632107516,
       "flowEstimate": -43950.28755
     }
   ],
@@ -127,10 +127,10 @@
     "kind": "OUTFLOW_WARNING",
     "label": "OUTFLOW WARNING",
     "summary": "SMH 모멘텀이 약하고 여타 자산 대비 상대 약세입니다. 반도체 자금 이탈 구간일 수 있습니다.",
-    "smhWeight": 13.946244938037882,
+    "smhWeight": 13.92995465717361,
     "smhWeightDeltaProxy": -8.110999999999999,
     "netFlowEstimate": -1446151858.72956,
-    "relativeVolumeRatio": 0.9099292538601355,
-    "riskVolumeChangeAvg": -5.967668347791456
+    "relativeVolumeRatio": 0.9085428026328544,
+    "riskVolumeChangeAvg": -5.973458792827556
   }
 }
