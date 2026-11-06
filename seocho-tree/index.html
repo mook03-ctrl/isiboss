@@ -1181,8 +1181,8 @@ function drawSurfaceGuide(){
   const samples = [
     { x:14, kind:'B', name:'팔 수 있는 땅', line:'캐서 길을 열어요' },
     { x:19, kind:'G', name:'초록 상자', line:'퀴즈 · 공격 +30' },
-    { x:24, kind:'P', name:'하늘색 십자가', line:'깨면 체력 +30' },
-    { x:29, kind:'L', name:'용암', line:'닿으면 죽어요' }
+    { x:24, kind:'L', name:'용암', line:'닿으면 죽어요' },
+    { x:29, kind:'P', name:'하늘색 십자가', line:'깨면 체력 +30' }
   ];
   ctx.save();
   ctx.textAlign = 'center';
@@ -1257,7 +1257,7 @@ function drawEnding(t){
 function drawTile(x,y,t){
   if (t==='.'||t==='S'||t==='M') return;
   const px=x*TILE, py=y*TILE;
-  const colors = { '#':'#8ea0b8', B:'#c4844a', O:'#e2a24a', G:'#3fbe62', D:'#8d5a32', C:'#5ec2ff', P:'#7ecbff', E:'#ffe07a' };
+  const colors = { '#':'#8ea0b8', B:'#c4844a', O:'#e2a24a', G:'#3fbe62', D:'#8d5a32', C:'#5ec2ff', P:'#2f93d6', E:'#ffe07a' };
   if (t==='L') {
     const wob = Math.sin(state.tick/6+x)*4;
     ctx.fillStyle = '#ff3b1f'; ctx.fillRect(px, py+8, TILE, TILE-8);
@@ -1270,8 +1270,12 @@ function drawTile(x,y,t){
   ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(px,py+TILE-7,TILE,7);
   if (t==='C') { ctx.fillStyle='#e9fbff'; ctx.fillRect(px+10,py+8,6,14); ctx.fillRect(px+6,py+12,14,6); }
   if (t==='#'||t==='B'||t==='O'||t==='D') { ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(px+6,py+14,8,4); ctx.fillRect(px+18,py+8,7,4); }
-  if (t==='G') { ctx.fillStyle='#f3ffd8'; ctx.font='18px Jua, sans-serif'; ctx.fillText('?', px+12, py+24); }
-  if (t==='P') { ctx.fillStyle='#fff'; ctx.font='22px Jua, sans-serif'; ctx.fillText('+', px+10, py+26); }
+  if (t==='G') { ctx.save(); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillStyle='#f3ffd8'; ctx.font='18px Jua, sans-serif'; ctx.fillText('?', px+12, py+24); ctx.restore(); }
+  if (t==='P') {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(px+15, py+6, 6, 24);
+    ctx.fillRect(px+6, py+15, 24, 6);
+  }
   if (t==='D') { ctx.fillStyle='#ffe9a0'; ctx.font='11px Jua, sans-serif'; ctx.fillText('문', px+10, py+22); }
   if (t==='E') {
     ctx.fillStyle = 'rgba(255,220,80,.35)'; ctx.fillRect(px,py,TILE,TILE);
