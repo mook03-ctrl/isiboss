@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070b14">
+  <title>강남역 파괴</title>
+  <script type="module" crossorigin src="./assets/index-hD5NrtJb.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-B3EOxYd-.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="view"></canvas>
+    <div id="flash"></div>
+    <div id="loading">
+      <h1>강남역 파괴</h1>
+      <p id="loadText">지도를 준비하고 있습니다</p>
+      <p class="tip">한 손가락으로 공격하고, 두 손가락으로 돌리고 확대합니다.</p>
+    </div>
+    <div id="hint"></div>
+    <header id="top">
+      <a id="back" href="../games/">돌아가기</a>
+      <div id="stats">
+        <div id="count">파괴 0동</div>
+        <div id="money">피해 0.00조</div>
+        <button id="reset" type="button">도시 복구</button>
+      </div>
+    </header>
+    <p id="attrib">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a></p>
+    <button id="det" type="button" hidden>DETONATE</button>
+    <nav id="weapons" aria-label="무기">
+      <button type="button" data-w="rpg" class="on"><b>1</b><span>RPG<br>미사일</span></button>
+      <button type="button" data-w="laser"><b>2</b><span>고출력<br>레이저</span></button>
+      <button type="button" data-w="nuke"><b>3</b><span>전술<br>핵폭탄</span></button>
+      <button type="button" data-w="tnt"><b>4</b><span>원격<br>TNT</span></button>
+      <button type="button" data-w="zilla"><b>5</b><span>고질라<br>소환</span></button>
+    </nav>
+    <div id="zillaHud" hidden>
+      <div id="stick" aria-label="이동 조이스틱"><div id="knob"></div></div>
+      <div id="zillaActs">
+        <button id="stomp" type="button">발구르기</button>
+        <button id="breath" type="button">원자 브레스</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

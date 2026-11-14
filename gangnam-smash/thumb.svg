@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#070b16"/>
+      <stop offset="0.55" stop-color="#141a2b"/>
+      <stop offset="1" stop-color="#2a160f"/>
+    </linearGradient>
+    <radialGradient id="blast" cx="50%" cy="62%" r="40%">
+      <stop offset="0" stop-color="#fff1c2"/>
+      <stop offset="0.35" stop-color="#ff7a1a"/>
+      <stop offset="1" stop-color="#ff3a00" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#sky)"/>
+  <g fill="#121722" stroke="#243044" stroke-width="2">
+    <rect x="40" y="250" width="70" height="390"/>
+    <rect x="120" y="180" width="54" height="460"/>
+    <rect x="184" y="300" width="80" height="340"/>
+    <rect x="360" y="210" width="62" height="430"/>
+    <rect x="432" y="140" width="48" height="500"/>
+    <rect x="490" y="280" width="78" height="360"/>
+  </g>
+  <g fill="#ffcf86" opacity="0.85">
+    <rect x="52" y="270" width="8" height="12"/>
+    <rect x="70" y="300" width="8" height="12"/>
+    <rect x="132" y="210" width="8" height="12"/>
+    <rect x="148" y="250" width="8" height="12"/>
+    <rect x="200" y="330" width="8" height="12"/>
+    <rect x="228" y="360" width="8" height="12"/>
+    <rect x="376" y="240" width="8" height="12"/>
+    <rect x="444" y="180" width="8" height="12"/>
+    <rect x="508" y="310" width="8" height="12"/>
+    <rect x="532" y="360" width="8" height="12"/>
+  </g>
+  <path d="M0 640 H600" stroke="#2c3544" stroke-width="46"/>
+  <path d="M0 640 H600" stroke="#3d4654" stroke-width="4" stroke-dasharray="28 18"/>
+  <ellipse cx="300" cy="560" rx="150" ry="70" fill="url(#blast)"/>
+  <path d="M300 430 C270 470 250 520 246 590 C280 540 300 520 300 520 C300 520 322 548 356 598 C348 520 330 470 300 430" fill="#6d5348"/>
+  <ellipse cx="300" cy="400" rx="92" ry="48" fill="#e15a22"/>
+  <ellipse cx="300" cy="392" rx="48" ry="22" fill="#ffd27a"/>
+  <g transform="translate(250 560)">
+    <path d="M40 90 L20 40 L48 58 L70 8 L78 60 L120 36 L92 78 L110 110 L70 92 L40 90" fill="#1f6a34"/>
+    <circle cx="78" cy="48" r="6" fill="#d6ff4a"/>
+    <circle cx="96" cy="48" r="6" fill="#d6ff4a"/>
+    <path d="M70 70 L110 86" stroke="#9cff6a" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>
