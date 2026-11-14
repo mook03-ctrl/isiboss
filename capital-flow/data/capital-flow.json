@@ -1,7 +1,7 @@
 {
   "source": "yahoo-chart+yahoo-finance2+coingecko",
-  "fetchedAt": "2026-11-14T01:34:29.215Z",
-  "totalDollarVolume": 72902538630,
+  "fetchedAt": "2026-11-14T02:56:49.446Z",
+  "totalDollarVolume": 73431038171,
   "assets": [
     {
       "id": "CRYPTO",
@@ -9,13 +9,13 @@
       "name": "Bitcoin + Ethereum",
       "nameKo": "암호화폐 (BTC+ETH)",
       "category": "risk-crypto",
-      "price": 68257,
-      "volume": 57253389302,
-      "dollarVolume": 57253389302,
-      "change24h": -3.997349949842496,
-      "marketCap": 1608501386746,
-      "weight": 78.53415035733715,
-      "flowEstimate": -2288618328.546626
+      "price": 67592,
+      "volume": 57785033704,
+      "dollarVolume": 57785033704,
+      "change24h": -3.8429784117815005,
+      "marketCap": 1592812624688,
+      "weight": 78.6929276002269,
+      "flowEstimate": -2220666370.485384
     },
     {
       "id": "SMH",
@@ -29,7 +29,7 @@
       "change24h": -2.986,
       "marketCap": null,
       "highlight": true,
-      "weight": 8.267451296297883,
+      "weight": 8.20794860745998,
       "flowEstimate": -179971650.7875
     },
     {
@@ -44,7 +44,7 @@
       "change24h": 0.158,
       "marketCap": null,
       "highlight": false,
-      "weight": 5.784466953068024,
+      "weight": 5.7428348557183035,
       "flowEstimate": 6662896.7429
     },
     {
@@ -59,7 +59,7 @@
       "change24h": -0.426,
       "marketCap": null,
       "highlight": false,
-      "weight": 3.4669994893153144,
+      "weight": 3.4420467215976163,
       "flowEstimate": -10767280.53492
     },
     {
@@ -74,7 +74,7 @@
       "change24h": 0.807,
       "marketCap": null,
       "highlight": false,
-      "weight": 2.4088065861637333,
+      "weight": 2.3914698685187954,
       "flowEstimate": 14171574.89664
     },
     {
@@ -89,7 +89,7 @@
       "change24h": 0.543,
       "marketCap": null,
       "highlight": false,
-      "weight": 1.5102811104947114,
+      "weight": 1.4994112808755429,
       "flowEstimate": 5978610.656100001
     },
     {
@@ -99,13 +99,13 @@
       "nameKo": "AI·로보틱스 (BOTZ)",
       "category": "risk-equity",
       "price": 31.23,
-      "volume": 641100,
-      "dollarVolume": 20021553,
+      "volume": 540400,
+      "dollarVolume": 16876692,
       "change24h": -0.605,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.02746345103510698,
-      "flowEstimate": -121130.39564999999
+      "weight": 0.022983049702632534,
+      "flowEstimate": -102103.9866
     },
     {
       "id": "CARZ",
@@ -119,7 +119,7 @@
       "change24h": -1.849,
       "marketCap": null,
       "highlight": false,
-      "weight": 0.00038075628807495755,
+      "weight": 0.00037801590024315443,
       "flowEstimate": -5132.47269
     }
   ],
@@ -127,10 +127,10 @@
     "kind": "OUTFLOW_WARNING",
     "label": "OUTFLOW WARNING",
     "summary": "SMH 모멘텀이 약하고 여타 자산 대비 상대 약세입니다. 반도체 자금 이탈 구간일 수 있습니다.",
-    "smhWeight": 8.267451296297883,
+    "smhWeight": 8.20794860745998,
     "smhWeightDeltaProxy": -2.7573333333333334,
     "netFlowEstimate": -179971650.7875,
-    "relativeVolumeRatio": 0.5011725761614476,
-    "riskVolumeChangeAvg": -1.3478916583070826
+    "relativeVolumeRatio": 0.4968060657337333,
+    "riskVolumeChangeAvg": -1.32216306863025
   }
 }
