@@ -31,10 +31,10 @@
         <img src="../seocho-tree/plant.jpg?v=1" alt="The Seed of Seocho 시작 화면">
         <span class="name">The Seed of Seocho</span>
       </a>
-      <div class="banner banner--soon">
-        <div class="soon-shot" aria-hidden="true"><span>준비중</span></div>
-        <span class="name">준비중</span>
-      </div>
+      <a class="banner" id="gangnamEnter" href="../gangnam-smash/?v=1">
+        <img src="../gangnam-smash/thumb.svg?v=1" alt="강남역 파괴 시작 화면">
+        <span class="name">Gangnam Smash</span>
+      </a>
       <div class="banner banner--soon">
         <div class="soon-shot" aria-hidden="true"><span>준비중</span></div>
         <span class="name">준비중</span>
@@ -43,17 +43,23 @@
     <p class="coffee"><a href="https://buymeacoffee.com/rockybed" target="_blank" rel="noopener noreferrer">Buy me a coffee</a></p>
   </main>
   <script>
-    document.getElementById('seochoEnter').addEventListener('click', function(e){
-      e.preventDefault();
-      const href = this.href;
-      const go = ()=>{ location.href = href; };
-      const el = document.documentElement;
-      const req = el.requestFullscreen || el.webkitRequestFullscreen;
-      if (!req) { go(); return; }
-      Promise.resolve(req.call(el)).then(function(){
-        if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape').catch(function(){});
-      }).catch(function(){}).then(go);
-    });
+    function bindFullscreenEnter(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        var href = this.href;
+        var go = function () { location.href = href; };
+        var root = document.documentElement;
+        var req = root.requestFullscreen || root.webkitRequestFullscreen;
+        if (!req) { go(); return; }
+        Promise.resolve(req.call(root)).then(function () {
+          if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape').catch(function () {});
+        }).catch(function () {}).then(go);
+      });
+    }
+    bindFullscreenEnter('seochoEnter');
+    bindFullscreenEnter('gangnamEnter');
   </script>
 </body>
 </html>
